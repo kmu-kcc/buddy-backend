@@ -1,10 +1,10 @@
-GOCMD		= go
-GOBUILD	= $(GOCMD) build
-GORUN		= $(GOCMD) run
-GOTEST	= $(GOCMD) test
-GOCLEAN	= $(GOCMD) clean
-BINARY	= buddy
-RM			= rm
+GOCMD   = go
+GOBUILD = $(GOCMD) build
+GORUN   = $(GOCMD) run
+GOTEST  = $(GOCMD) test
+GOCLEAN = $(GOCMD) clean
+BINARY  = buddy
+RM      = rm
 
 all: run
 
