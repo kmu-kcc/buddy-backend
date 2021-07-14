@@ -1,6 +1,8 @@
 package activity
 
 //activity represents an activity state
+//TODO
+//Discussion for Storing Pictures
 type Activity struct {
 	ID          string   `json:"id"`          //Activity ID*
 	Date        uint     `json:"date"`        //Event Day
