@@ -8,6 +8,7 @@ import (
 
 	"github.com/akamensky/argparse"
 	"github.com/gin-gonic/gin"
+	"github.com/kmu-kcc/buddy-backend/middleware"
 )
 
 func main() {
@@ -26,6 +27,17 @@ func main() {
 	gin.SetMode(gin.DebugMode)
 
 	engine := gin.Default()
+
+	api := engine.Group("/api")
+	{
+		v1 := api.Group("/v1")
+		{
+			v1.POST("signup", middleware.SignUp())
+			v1.POST("approve", middleware.Approve())
+			v1.POST("reject", middleware.Reject())
+			v1.POST("exit", middleware.Exit())
+		}
+	}
 
 	log.Fatalln(engine.Run(fmt.Sprintf(":%d", *port)))
 }

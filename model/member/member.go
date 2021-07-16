@@ -3,6 +3,7 @@ package member
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,22 +13,24 @@ import (
 
 // Member represents a club member state.
 type Member struct {
-	ID         string `json:"id"`           // student ID
-	password   string `json:"-"`            // password - soon deprecated
-	Name       string `json:"name"`         // Name
-	Department string `json:"department"`   // department - magic number needed
-	Grade      uint   `json:"grade,string"` // grade
-	Phone      string `json:"phone"`        // phone number
-	Email      string `json:"email"`        // e-mail address
-	Enrollment string `json:"enrollment"`   // enrollment state (attending/absent/graduated) - magic number needed
-	Verified   bool   `json:"verified"`     // e-mail verified or not
-	Approved   bool   `json:"approved"`     // approved or not
-	Privileged bool   `json:"privileged"`   // is administrator or not - soon deprecated
-	OnDelete   bool   `json:"on_delete"`    // on withdrawal process or not
+	ID         string `json:"id"`         // student ID
+	password   string `json:"-"`          // password - soon deprecated
+	Name       string `json:"name"`       // Name
+	Department string `json:"department"` // department - magic number needed
+	Grade      string `json:"grade"`      // grade
+	Phone      string `json:"phone"`      // phone number
+	Email      string `json:"email"`      // e-mail address
+	Enrollment string `json:"enrollment"` // enrollment state (attending/absent/graduated) - magic number needed
+	Verified   bool   `json:"verified"`   // e-mail verified or not
+	Approved   bool   `json:"approved"`   // approved or not
+	Privileged bool   `json:"privileged"` // is administrator or not - soon deprecated
+	OnDelete   bool   `json:"on_delete"`  // on exit process or not
+	CreatedAt  int64  `json:"created_at"` // when created - Unix timestamp
+	UpdatedAt  int64  `json:"updated_at"` // last updated - Unix timestamp
 }
 
 // New returns a new club member.
-func New(id string, name string, department string, grade uint, phone string, email string, enrollment string) *Member {
+func New(id string, name string, department string, grade string, phone string, email string, enrollment string) *Member {
 	return &Member{
 		ID:         id,
 		password:   id,
@@ -41,11 +44,13 @@ func New(id string, name string, department string, grade uint, phone string, em
 		Approved:   false,
 		Privileged: false,
 		OnDelete:   false,
+		CreatedAt:  time.Now().Unix(),
+		UpdatedAt:  time.Now().Unix(),
 	}
 }
 
-// ToBSON converts m to an ordered BSON document.
-func (m *Member) ToBSON() bson.D {
+// toBSON converts m to an ordered BSON document.
+func (m Member) toBSON() bson.D {
 	return bson.D{
 		bson.E{Key: "id", Value: m.ID},
 		bson.E{Key: "password", Value: m.password},
@@ -59,13 +64,15 @@ func (m *Member) ToBSON() bson.D {
 		bson.E{Key: "approved", Value: m.Approved},
 		bson.E{Key: "privileged", Value: m.Privileged},
 		bson.E{Key: "on_delete", Value: m.OnDelete},
+		bson.E{Key: "created_at", Value: m.CreatedAt},
+		bson.E{Key: "updated_at", Value: m.UpdatedAt},
 	}
 }
 
 // SignUp applies a membership of m.
 // If m already exists (approved or not), nothing changes.
 // Else it registers an unapproved member.
-func (m *Member) SignUp() error {
+func (m Member) SignUp() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -77,22 +84,26 @@ func (m *Member) SignUp() error {
 	}
 
 	members := client.Database("club").Collection("members")
-	if _, err = members.Find(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}); err == mongo.ErrNoDocuments {
-		if _, err = members.InsertOne(ctx, m.ToBSON()); err != nil {
+	member := new(Member)
+
+	if err = members.FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err == mongo.ErrNoDocuments {
+		if _, err = members.InsertOne(ctx, m.toBSON()); err != nil {
 			return err
 		}
+		return client.Disconnect(ctx)
 	} else if err != nil {
 		return err
-	}
-
-	if err = client.Disconnect(ctx); err != nil {
+	} else if err = client.Disconnect(ctx); err != nil {
 		return err
+	} else if member.Approved {
+		return errors.New("already a member")
+	} else {
+		return errors.New("under review")
 	}
-	return nil
 }
 
 // Verify sets m to be verified.
-func (m *Member) Verify() error {
+func (m Member) Verify() error {
 	// TODO
 	// e-mail verification (OAuth)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -113,9 +124,5 @@ func (m *Member) Verify() error {
 		return err
 	}
 
-	if err = client.Disconnect(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return client.Disconnect(ctx)
 }
