@@ -1,4 +1,4 @@
-// Package member provides the CRUD operations for the club member of the Buddy System.
+// Package member provides access to the club member of the Buddy System.
 package member
 
 import (
@@ -83,7 +83,7 @@ func (m Member) SignUp() error {
 		return err
 	}
 
-	members := client.Database("club").Collection("members")
+	members := client.Database("club").Collection("member")
 	member := new(Member)
 
 	if err = members.FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err == mongo.ErrNoDocuments {
@@ -117,7 +117,7 @@ func (m Member) Verify() error {
 	}
 
 	if _, err = client.Database("club").
-		Collection("members").
+		Collection("member").
 		UpdateOne(ctx,
 			bson.D{bson.E{Key: "id", Value: m.ID}},
 			bson.D{bson.E{Key: "verified", Value: true}}); err != nil {
