@@ -1,5 +1,5 @@
-// Package middleware defines the router layer of the Buddy System.
-package middleware
+// Package router defines the router layer of the Buddy System.
+package router
 
 import "github.com/gin-gonic/gin"
 

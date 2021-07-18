@@ -83,11 +83,11 @@ func (m Member) SignUp() error {
 		return err
 	}
 
-	members := client.Database("club").Collection("member")
+	collection := client.Database("club").Collection("members")
 	member := new(Member)
 
-	if err = members.FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err == mongo.ErrNoDocuments {
-		if _, err = members.InsertOne(ctx, m.toBSON()); err != nil {
+	if err = collection.FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err == mongo.ErrNoDocuments {
+		if _, err = collection.InsertOne(ctx, m.toBSON()); err != nil {
 			return err
 		}
 		return client.Disconnect(ctx)
@@ -100,6 +100,172 @@ func (m Member) SignUp() error {
 	} else {
 		return errors.New("under review")
 	}
+}
+
+// Approve approves the signup requests of ids.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
+func Approve(ids []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	// TODO
+	// update URI
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database("club").Collection("members")
+
+	for _, id := range ids {
+		if _, err = collection.UpdateOne(ctx, bson.D{bson.E{Key: "id", Value: id}}, bson.D{bson.E{Key: "approved", Value: true}}); err != nil {
+			return err
+		}
+	}
+
+	return client.Disconnect(ctx)
+}
+
+// Reject deletes the signup requests of ids.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
+func Reject(ids []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	// TODO
+	// update URI
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database("club").Collection("members")
+
+	for _, id := range ids {
+		if _, err = collection.DeleteOne(ctx, bson.D{bson.E{Key: "id", Value: id}}); err != nil {
+			return err
+		}
+	}
+
+	return client.Disconnect(ctx)
+}
+
+// Exit applies an exit of m.
+//
+// NOTE:
+//
+// It is a member-limited operation:
+//	Only the authenticated members can access to this operation.
+func (m Member) Exit() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	// TODO
+	// update URI
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		return err
+	}
+
+	member := new(Member)
+
+	if err = client.Database("club").
+		Collection("members").
+		FindOneAndUpdate(
+			ctx,
+			bson.D{bson.E{Key: "id", Value: m.ID}},
+			bson.D{bson.E{Key: "on_delete", Value: true}}).
+		Decode(member); err != nil {
+		return err
+	}
+
+	if member.OnDelete {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return errors.New("already on delete")
+	} else {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return errors.New("exit request success")
+	}
+}
+
+// Delete deletes the members of ids.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
+func Delete(ids []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	// TODO
+	// update URI
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database("club").Collection("members")
+
+	for _, id := range ids {
+		if _, err = collection.DeleteOne(ctx, bson.D{bson.E{Key: "id", Value: id}}); err != nil {
+			return err
+		}
+	}
+
+	return client.Disconnect(ctx)
+}
+
+// Members returns the all member state.
+//
+// NOTE:
+//
+// It is a member-limited operation:
+//	Only the authenticated members can access to this operation.
+func Members() (members []Member, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	// TODO
+	// update URI
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		return
+	}
+
+	member := new(Member)
+
+	cur, err := client.Database("club").
+		Collection("members").
+		Find(ctx, bson.D{})
+	if err != nil {
+		return
+	}
+
+	for cur.Next(ctx) {
+		if err = cur.Decode(member); err != nil {
+			return
+		}
+		members = append(members, *member)
+	}
+
+	if err = cur.Close(ctx); err != nil {
+		return
+	}
+
+	return members, client.Disconnect(ctx)
 }
 
 // Verify sets m to be verified.

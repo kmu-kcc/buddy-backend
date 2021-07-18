@@ -1,5 +1,5 @@
-// Package middleware defines the router layer of the Buddy System.
-package middleware
+// Package router defines the router layer of the Buddy System.
+package router
 
 import (
 	"encoding/json"
@@ -16,10 +16,17 @@ func SignUp() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		body := new(member.Member)
-		var err error
+		var (
+			res struct {
+				Error string `json:"error"`
+			}
+			err error
+		)
 
 		if err = json.NewDecoder(c.Request.Body).Decode(body); err != nil {
-			c.JSON(http.StatusBadRequest, nil)
+			res.Error = err.Error()
+			c.JSON(http.StatusBadRequest, res)
+			return
 		}
 
 		guest := member.New(body.ID, body.Name, body.Department, body.Grade, body.Phone, body.Email, body.Enrollment)
@@ -28,8 +35,7 @@ func SignUp() gin.HandlerFunc {
 			err = errors.New("signup request success")
 		}
 
-		c.JSON(http.StatusOK, struct {
-			Error string `json:"error"`
-		}{Error: err.Error()})
+		res.Error = err.Error()
+		c.JSON(http.StatusOK, res)
 	}
 }
