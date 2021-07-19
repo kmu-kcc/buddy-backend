@@ -69,7 +69,12 @@ func (m Member) SingIn() error {
 
 	member := new(Member)
 
-	if err = client.Database("club").Collection("members").FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err == mongo.ErrNoDocuments {
+	if err = client.Database("club").
+		Collection("members").
+		FindOne(
+			ctx,
+			bson.D{bson.E{Key: "id", Value: m.ID}}).
+		Decode(member); err == mongo.ErrNoDocuments {
 		if err = client.Disconnect(ctx); err != nil {
 			return err
 		}
