@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  node: circleci/go@1.7.0
+  go: circleci/go@1.7.0
   slack: circleci/slack@4.4.2
 
 jobs:
