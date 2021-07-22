@@ -41,6 +41,8 @@ workflows:
   ci:
     jobs:
       - build
+          context: slack
       - test:
+          context: slack
           requires:
             - build
