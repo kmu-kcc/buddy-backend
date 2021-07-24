@@ -8,7 +8,6 @@ import (
 
 	"github.com/akamensky/argparse"
 	"github.com/gin-gonic/gin"
-	"github.com/kmu-kcc/buddy-backend/router"
 )
 
 func main() {
@@ -23,9 +22,7 @@ func main() {
 		log.Fatalln(parser.Usage(err))
 	}
 
-	// TODO
-	// set to release mode
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(gin.ReleaseMode)
 
 	engine := gin.Default()
 
@@ -35,12 +32,7 @@ func main() {
 		{
 			member := v1.Group("/member")
 			{
-				member.POST("/singup", router.SignUp())
-				member.POST("/approve", router.Approve())
-				member.POST("/reject", router.Reject())
-				member.POST("/exit", router.Exit())
-				member.POST("/delete", router.Delete())
-				member.GET("/members", router.Members())
+				_ = member
 			}
 		}
 	}
