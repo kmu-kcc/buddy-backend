@@ -6,50 +6,62 @@ import (
 	"errors"
 	"time"
 
+	"github.com/kmu-kcc/buddy-backend/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	Attending = iota
+	Absent
+	Graduate
+)
+
+var (
+	ErrWrongPassword = errors.New("wrong password")
+	ErrAlreadyMember = errors.New("already a member")
+	ErrUnderReview   = errors.New("under review")
+	ErrOnDelete      = errors.New("already on delete")
+	ErrNotOnDelete   = errors.New("not on delete")
+)
+
 // Member represents a club member state.
 type Member struct {
 	ID         string `json:"id" bson:"id"`                 // student ID
-	password   string `json:"-" bson:"-"`                   // password - soon deprecated
+	Password   string `json:"password" bson:"password"`     // password
 	Name       string `json:"name" bson:"name"`             // Name
-	Department string `json:"department" bson:"department"` // department - magic number needed
+	Department string `json:"department" bson:"department"` // department
 	Grade      string `json:"grade" bson:"grade"`           // grade
 	Phone      string `json:"phone" bson:"phone"`           // phone number
 	Email      string `json:"email" bson:"email"`           // e-mail address
-	Enrollment string `json:"enrollment" bson:"enrollment"` // enrollment state (attending/absent/graduated) - magic number needed
-	Verified   bool   `json:"verified" bson:"verified"`     // e-mail verified or not
+	Attendance int    `json:"attendance" bson:"attendance"` // attendance status (attending/absent/graduate)
 	Approved   bool   `json:"approved" bson:"approved"`     // approved or not
-	Privileged bool   `json:"privileged" bson:"privileged"` // is administrator or not - soon deprecated
 	OnDelete   bool   `json:"on_delete" bson:"on_delete"`   // on exit process or not
 	CreatedAt  int64  `json:"created_at" bson:"created_at"` // when created - Unix timestamp
 	UpdatedAt  int64  `json:"updated_at" bson:"updated_at"` // last updated - Unix timestamp
 }
 
 // New returns a new club member.
-func New(id string, name string, department string, grade string, phone string, email string, enrollment string) *Member {
+func New(id string, name string, department string, grade string, phone string, email string, attendance int) *Member {
+	now := time.Now().Unix()
 	return &Member{
 		ID:         id,
-		password:   id,
+		Password:   id,
 		Name:       name,
 		Department: department,
 		Grade:      grade,
 		Phone:      phone,
 		Email:      email,
-		Enrollment: enrollment,
-		Verified:   false,
+		Attendance: attendance,
 		Approved:   false,
-		Privileged: false,
 		OnDelete:   false,
-		CreatedAt:  time.Now().Unix(),
-		UpdatedAt:  time.Now().Unix(),
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
 }
 
-// SingIn checks whether m is verified and approved.
+// SingIn checks whether m is a club member.
 //
 // NOTE:
 //
@@ -59,10 +71,7 @@ func (m Member) SingIn() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
@@ -81,15 +90,17 @@ func (m Member) SingIn() error {
 		return mongo.ErrNoDocuments
 	} else if err != nil {
 		return err
-	} else if err = client.Disconnect(ctx); err != nil {
-		return err
-	} else if !member.Verified {
-		return errors.New("not yet verified")
-	} else if !member.Approved {
-		return errors.New("under review")
-	} else {
-		return nil
 	}
+	if err = client.Disconnect(ctx); err != nil {
+		return err
+	}
+	if !member.Approved {
+		return ErrUnderReview
+	}
+	if m.Password != member.Password {
+		return ErrWrongPassword
+	}
+	return nil
 }
 
 // SignUp applies a membership of m.
@@ -99,10 +110,7 @@ func (m Member) SignUp() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
@@ -120,13 +128,14 @@ func (m Member) SignUp() error {
 		return client.Disconnect(ctx)
 	} else if err != nil {
 		return err
-	} else if err = client.Disconnect(ctx); err != nil {
-		return err
-	} else if member.Approved {
-		return errors.New("already a member")
-	} else {
-		return errors.New("under review")
 	}
+	if err = client.Disconnect(ctx); err != nil {
+		return err
+	}
+	if member.Approved {
+		return ErrAlreadyMember
+	}
+	return ErrUnderReview
 }
 
 // SignUps returns the signup request list.
@@ -139,10 +148,7 @@ func SignUps() (members []Member, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
 	}
@@ -169,7 +175,6 @@ func SignUps() (members []Member, err error) {
 	if err = cur.Close(ctx); err != nil {
 		return
 	}
-
 	return members, client.Disconnect(ctx)
 }
 
@@ -183,66 +188,58 @@ func Approve(ids []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
 
-	collection := client.Database("club").Collection("members")
-
-	// FIXME
-	//
-	// This loop takes O(N) disk access and O(N^2) lookups in the worst case.
-	// Consider using $in and bson.A
-	//
-	// See https://www.mongodb.com/blog/post/mongodb-go-driver-tutorial
-	for _, id := range ids {
-		if _, err = collection.UpdateOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: id}},
-			bson.D{bson.E{Key: "approved", Value: true}}); err != nil {
-			return err
+	filter := func() bson.D {
+		arr := make(bson.A, len(ids))
+		for idx, id := range ids {
+			arr[idx] = id
 		}
+		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
+	}()
+
+	if _, err = client.Database("club").
+		Collection("members").
+		UpdateMany(
+			ctx,
+			filter,
+			bson.D{bson.E{Key: "approved", Value: true}}); err != nil {
+		return err
 	}
 
 	return client.Disconnect(ctx)
 }
 
-// Reject deletes the signup requests of ids.
+// Delete deletes the members of ids.
 //
 // NOTE:
 //
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
-func Reject(ids []string) error {
+func Delete(ids []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
 
-	collection := client.Database("club").Collection("members")
-
-	// FIXME
-	//
-	// This loop takes O(N) disk access and O(N^2) lookups in the worst case.
-	// Consider using $in and bson.A
-	//
-	// See https://www.mongodb.com/blog/post/mongodb-go-driver-tutorial
-	for _, id := range ids {
-		if _, err = collection.DeleteOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: id}}); err != nil {
-			return err
+	filter := func() bson.D {
+		arr := make(bson.A, len(ids))
+		for idx, id := range ids {
+			arr[idx] = id
 		}
+		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
+	}()
+
+	if _, err = client.Database("club").
+		Collection("members").
+		DeleteMany(ctx, filter); err != nil {
+		return err
 	}
 
 	return client.Disconnect(ctx)
@@ -258,10 +255,7 @@ func (m Member) Exit() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
@@ -278,17 +272,13 @@ func (m Member) Exit() error {
 		return err
 	}
 
-	if member.OnDelete {
-		if err = client.Disconnect(ctx); err != nil {
-			return err
-		}
-		return errors.New("already on delete")
-	} else {
-		if err = client.Disconnect(ctx); err != nil {
-			return err
-		}
-		return errors.New("exit request success")
+	if err = client.Disconnect(ctx); err != nil {
+		return err
 	}
+	if member.OnDelete {
+		return ErrOnDelete
+	}
+	return nil
 }
 
 // Exits returns the exit request list.
@@ -301,10 +291,7 @@ func Exits() (members []Member, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
 	}
@@ -335,37 +322,6 @@ func Exits() (members []Member, err error) {
 	return members, client.Disconnect(ctx)
 }
 
-// Delete deletes the members of ids.
-//
-// NOTE:
-//
-// It is a privileged operation:
-//	Only the club managers can access to this operation.
-func Delete(ids []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
-	if err != nil {
-		return err
-	}
-
-	collection := client.Database("club").Collection("members")
-
-	for _, id := range ids {
-		if _, err = collection.DeleteOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: id}}); err != nil {
-			return err
-		}
-	}
-
-	return client.Disconnect(ctx)
-}
-
 // CancelExit cancels the exit request of m.
 //
 // NOTE:
@@ -376,10 +332,7 @@ func (m Member) CancelExit() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
@@ -396,17 +349,13 @@ func (m Member) CancelExit() error {
 		return err
 	}
 
-	if member.OnDelete {
-		if err = client.Disconnect(ctx); err != nil {
-			return err
-		}
-		return errors.New("exit cancel request success")
-	} else {
-		if err = client.Disconnect(ctx); err != nil {
-			return err
-		}
-		return errors.New("never applied for exit")
+	if err = client.Disconnect(ctx); err != nil {
+		return err
 	}
+	if !member.OnDelete {
+		return ErrNotOnDelete
+	}
+	return nil
 }
 
 // Members returns the all club member state.
@@ -419,10 +368,7 @@ func Members() (members []Member, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
 	}
@@ -451,32 +397,4 @@ func Members() (members []Member, err error) {
 	}
 
 	return members, client.Disconnect(ctx)
-}
-
-// Verify sets m to be verified.
-func (m Member) Verify() error {
-	// TODO
-	//
-	// e-mail verification (OAuth)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	// TODO
-	//
-	// update URI
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
-	if err != nil {
-		return err
-	}
-
-	if _, err = client.Database("club").
-		Collection("member").
-		UpdateOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: m.ID}},
-			bson.D{bson.E{Key: "verified", Value: true}}); err != nil {
-		return err
-	}
-
-	return client.Disconnect(ctx)
 }
