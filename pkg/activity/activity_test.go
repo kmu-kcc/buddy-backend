@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func TestInsert(t *testing.T) {
+func TestInsertMany(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -39,6 +39,7 @@ func TestInsert(t *testing.T) {
 		t.Error(err)
 	}
 }
+
 func TestSearch(t *testing.T) {
 	filters := []map[string]interface{}{
 		{
@@ -71,7 +72,8 @@ func TestUpdate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	filters := []map[string]interface{}{
+
+  filters := []map[string]interface{}{
 		{
 			"_id":  objectId,
 			"type": "meet",
@@ -90,7 +92,8 @@ func TestDelete(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if err := activity.Delete(objectId); err != nil {
+
+  if err := activity.Delete(objectId); err != nil {
 		t.Error(err)
 	}
 }
@@ -100,9 +103,67 @@ func TestParticipants(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if members, err := activity.Participants(objectId); err != nil {
+
+  if members, err := activity.Participants(objectId); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(members)
+	}
+}
+
+func TestApplyP(t *testing.T) {
+	res, err := primitive.ObjectIDFromHex("60fd5ad1e26bd52bc5b0bf47")
+	if err != nil {
+		t.Error(err)
+	}
+
+  if err = activity.ApplyP(res, "20172228"); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestPapplies(t *testing.T) {
+	res, err := primitive.ObjectIDFromHex("60fd54362b5226020a8c945b")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if li, err := activity.Papplies(res); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(li)
+	}
+}
+
+func TestApproveP(t *testing.T) {
+	res, err := primitive.ObjectIDFromHex("60fd54362b5226020a8c945b")
+	if err != nil {
+		t.Error(err)
+	}
+
+  if err = activity.ApproveP(res, []string{"20172229", "20172228"}); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestRejectP(t *testing.T) {
+	res, err := primitive.ObjectIDFromHex("60fd5ad1e26bd52bc5b0bf47")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if err = activity.RejectP(res, []string{"20172229", "20172228"}); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCancelP(t *testing.T) {
+	res, err := primitive.ObjectIDFromHex("60fd54362b5226020a8c945b")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if err = activity.CancelP(res, "20172229"); err != nil {
+		t.Error(err)
 	}
 }
