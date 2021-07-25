@@ -42,6 +42,8 @@ type Member struct {
 	UpdatedAt  int64  `json:"updated_at" bson:"updated_at"` // last updated - Unix timestamp
 }
 
+type Members []Member
+
 // New returns a new club member.
 func New(id string, name string, department string, grade string, phone string, email string, attendance int) *Member {
 	now := time.Now().Unix()
@@ -144,7 +146,7 @@ func (m Member) SignUp() error {
 //
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
-func SignUps() (members []Member, err error) {
+func SignUps() (members Members, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -206,7 +208,9 @@ func Approve(ids []string) error {
 		UpdateMany(
 			ctx,
 			filter,
-			bson.D{bson.E{Key: "approved", Value: true}}); err != nil {
+			bson.D{
+				bson.E{Key: "approved", Value: true},
+				bson.E{Key: "updated_at", Value: time.Now().Unix()}}); err != nil {
 		return err
 	}
 
@@ -267,7 +271,9 @@ func (m Member) Exit() error {
 		FindOneAndUpdate(
 			ctx,
 			bson.D{bson.E{Key: "id", Value: m.ID}},
-			bson.D{bson.E{Key: "on_delete", Value: true}}).
+			bson.D{
+				bson.E{Key: "on_delete", Value: true},
+				bson.E{Key: "updated_at", Value: time.Now().Unix()}}).
 		Decode(member); err != nil {
 		return err
 	}
@@ -287,7 +293,7 @@ func (m Member) Exit() error {
 //
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
-func Exits() (members []Member, err error) {
+func Exits() (members Members, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -344,7 +350,9 @@ func (m Member) CancelExit() error {
 		FindOneAndUpdate(
 			ctx,
 			bson.D{bson.E{Key: "id", Value: m.ID}},
-			bson.D{bson.E{Key: "on_delete", Value: false}}).
+			bson.D{
+				bson.E{Key: "on_delete", Value: false},
+				bson.E{Key: "updated_at", Value: time.Now().Unix()}}).
 		Decode(member); err != nil {
 		return err
 	}
@@ -358,13 +366,13 @@ func (m Member) CancelExit() error {
 	return nil
 }
 
-// Members returns the all club member state.
+// Search returns the search result filtered by filter.
 //
 // NOTE:
 //
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
-func Members() (members []Member, err error) {
+func Search(filter map[string]interface{}) (members Members, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -373,13 +381,15 @@ func Members() (members []Member, err error) {
 		return
 	}
 
+	filter["approved"] = true
+
 	cur, err := client.Database("club").
 		Collection("members").
-		Find(
-			ctx,
-			bson.D{bson.E{Key: "approved", Value: true}})
+		Find(ctx, filter)
 
-	if err != nil {
+	if err == mongo.ErrNoDocuments {
+		return members, client.Disconnect(ctx)
+	} else if err != nil {
 		return
 	}
 

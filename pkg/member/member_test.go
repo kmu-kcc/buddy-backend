@@ -34,6 +34,6 @@ func TestCancelExit(t *testing.T) {
 
 }
 
-func TestMembers(t *testing.T) {
+func TestSearch(t *testing.T) {
 
 }
