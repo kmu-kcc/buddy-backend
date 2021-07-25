@@ -44,6 +44,12 @@ func New(start, end int64, place, typ, description string, participants []string
 	}
 }
 
+// Search returns search results filtered by filter.
+//
+// NOTE:
+//
+// It is member-limited operation:
+//	Only the authenticated members can access to this operation.
 func Search(filter map[string]interface{}) (activities []Activity, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -69,28 +75,38 @@ func Search(filter map[string]interface{}) (activities []Activity, err error) {
 		}
 		activities = append(activities, *activity)
 	}
-
 	return activities, client.Disconnect(ctx)
 }
 
-func Update(update map[string]interface{}) error {
+// Update updates the contents to update.
+//
+// NOTE:
+//
+// It is privileged operation:
+//	Only the club managers can access to this operation.
+func Update(update map[string]interface{}) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
-		return err
+		return
 	}
 
 	if _, err = client.Database("club").
 		Collection("activities").
 		UpdateByID(ctx, update["_id"], bson.M{"$set": update}); err != nil {
-		return err
+		return
 	}
-
 	return client.Disconnect(ctx)
 }
 
+// Delete deletes a club activity using a unique activityID.
+//
+// NOTE:
+//
+// It is privileged operation:
+//	Only the club managers can access to this operation.
 func Delete(activityID primitive.ObjectID) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -109,6 +125,13 @@ func Delete(activityID primitive.ObjectID) (err error) {
 	return client.Disconnect(ctx)
 }
 
+// Participants accesses the members collection using a unique activityID
+// 	and returns a list of club activity participants including member information.
+//
+// Note:
+//
+// It is privileged operation:
+//	Only the club managers can access to this operation.
 func Participants(activityID primitive.ObjectID) (members []member.Member, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
