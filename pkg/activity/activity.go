@@ -101,7 +101,7 @@ func Update(update map[string]interface{}) (err error) {
 	return client.Disconnect(ctx)
 }
 
-// Delete deletes a club activity using a unique activityID.
+// Delete deletes a club activity using activityID.
 //
 // NOTE:
 //
@@ -125,8 +125,7 @@ func Delete(activityID primitive.ObjectID) (err error) {
 	return client.Disconnect(ctx)
 }
 
-// Participants accesses the members collection using a unique activityID
-// 	and returns a list of club activity participants including member information.
+// Participants returns the participants list of the activity of activityID.
 //
 // Note:
 //
@@ -164,7 +163,7 @@ func Participants(activityID primitive.ObjectID) (members []member.Member, err e
 		return bson.M{"id": bson.M{"$in": arr}}
 	}()
 
-	// transaction with db.members
+	// do transaction with members collection
 	cur, err := client.Database("club").
 		Collection("members").
 		Find(ctx, filter)
