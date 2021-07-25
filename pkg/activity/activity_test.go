@@ -5,30 +5,31 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kmu-kcc/buddy-backend/config"
 	"github.com/kmu-kcc/buddy-backend/pkg/activity"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func TestNew(t *testing.T) {
-	ns := make([]string, 10, 20)
-	a := activity.New(1, 2, "", "", "", ns, true)
+func TestInsertMany(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
-	ctx, cancle := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancle()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		t.Error(err)
 	}
 
 	collection := client.Database("club").Collection("activities")
 
-	if res, err := collection.InsertOne(
-		ctx,
-		a,
-	); err != nil {
+	if res, err := collection.InsertMany(ctx, []interface{}{
+		bson.D{bson.E{Key: "type", Value: "MT"}},
+		bson.D{bson.E{Key: "type", Value: "meet"}, {Key: "place", Value: "cafe"}},
+		bson.D{bson.E{Key: "place", Value: "home"}},
+		bson.D{bson.E{Key: "type", Value: "study"}, bson.E{Key: "description", Value: "ok"}},
+	}); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(res)
@@ -39,12 +40,84 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestSearch(t *testing.T) {
+	filters := []map[string]interface{}{
+		{
+			"type": "MT",
+		},
+		{
+			"place": "cafe",
+			"type":  "meet",
+		},
+		{
+			"place": "home",
+		},
+		{
+			"type":        "study",
+			"description": "ok",
+		},
+	}
+
+	for _, filter := range filters {
+		if activities, err := activity.Search(filter); err != nil {
+			t.Error(err)
+		} else {
+			t.Log(activities)
+		}
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	objectId, err := primitive.ObjectIDFromHex("60fcac8824c06103861b13f2")
+	if err != nil {
+		t.Error(err)
+	}
+
+  filters := []map[string]interface{}{
+		{
+			"_id":  objectId,
+			"type": "meet",
+		},
+	}
+
+	for _, filter := range filters {
+		if err := activity.Update(filter); err != nil {
+			t.Error(err)
+		}
+	}
+}
+
+func TestDelete(t *testing.T) {
+	objectId, err := primitive.ObjectIDFromHex("60fcac8824c06103861b13f2")
+	if err != nil {
+		t.Error(err)
+	}
+
+  if err := activity.Delete(objectId); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestParticipants(t *testing.T) {
+	objectId, err := primitive.ObjectIDFromHex("60fce3b6b7a36438a91f807d")
+	if err != nil {
+		t.Error(err)
+	}
+
+  if members, err := activity.Participants(objectId); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(members)
+	}
+}
+
 func TestApplyP(t *testing.T) {
 	res, err := primitive.ObjectIDFromHex("60fd5ad1e26bd52bc5b0bf47")
 	if err != nil {
 		t.Error(err)
 	}
-	if err = activity.ApplyP(res, "20172228"); err != nil {
+
+  if err = activity.ApplyP(res, "20172228"); err != nil {
 		t.Error(err)
 	}
 }
@@ -67,7 +140,8 @@ func TestApproveP(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if err = activity.ApproveP(res, []string{"20172229", "20172228"}); err != nil {
+
+  if err = activity.ApproveP(res, []string{"20172229", "20172228"}); err != nil {
 		t.Error(err)
 	}
 }

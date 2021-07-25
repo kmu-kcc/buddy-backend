@@ -1,4 +1,4 @@
-// Package member provides CRUD operations of the club member of the Buddy System.
+// Package member provides access to the club member of the Buddy System.
 package member
 
 import "time"
@@ -35,4 +35,3 @@ func New(id string, name string, department string, grade string, phone string, 
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}
-}

@@ -1,3 +1,4 @@
+// Package activity provides access to the club activity of the Buddy System.
 package activity
 
 import (
@@ -13,6 +14,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var (
+  ErrAlreadyParticipant = errors.New("already participating")
+  ErrAlreadyApplicant   = errors.New("already applied")
+)
+
+// Activity represents a club acitivity state.
 type Activity struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id"`
 	Start        int64              `json:"start,string" bson:"start"`
@@ -26,8 +33,9 @@ type Activity struct {
 	Private      bool               `json:"private" bson:"private"`
 }
 
-func New(start, end int64, place, typ, description string, participants []string, private bool) Activity {
-	return Activity{
+// New returns a new club activity.
+func New(start, end int64, place, typ, description string, participants []string, private bool) *Activity {
+	return &Activity{
 		ID:           primitive.NewObjectID(),
 		Start:        start,
 		End:          end,
@@ -39,6 +47,145 @@ func New(start, end int64, place, typ, description string, participants []string
 		Cancelers:    []string{},
 		Private:      private,
 	}
+}
+
+// Search returns search results filtered by filter.
+//
+// NOTE:
+//
+// It is member-limited operation:
+//	Only the authenticated members can access to this operation.
+func Search(filter map[string]interface{}) (activities []Activity, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return
+	}
+
+	collection := client.Database("club").Collection("activities")
+	activity := new(Activity)
+
+	cur, err := collection.Find(ctx, filter)
+	if err == mongo.ErrNoDocuments {
+		return activities, client.Disconnect(ctx)
+	} else if err != nil {
+		return
+	}
+
+	for cur.Next(ctx) {
+		if err = cur.Decode(activity); err != nil {
+			return
+		}
+		activities = append(activities, *activity)
+	}
+	return activities, client.Disconnect(ctx)
+}
+
+// Update updates the contents to update.
+//
+// NOTE:
+//
+// It is privileged operation:
+//	Only the club managers can access to this operation.
+func Update(update map[string]interface{}) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return
+	}
+
+	if _, err = client.Database("club").
+		Collection("activities").
+		UpdateByID(ctx, update["_id"], bson.M{"$set": update}); err != nil {
+		return
+	}
+	return client.Disconnect(ctx)
+}
+
+// Delete deletes a club activity using activityID.
+//
+// NOTE:
+//
+// It is privileged operation:
+//	Only the club managers can access to this operation.
+func Delete(activityID primitive.ObjectID) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return
+	}
+
+	if _, err = client.Database("club").
+		Collection("activities").
+		DeleteOne(ctx, bson.M{"_id": activityID}); err != nil {
+		return
+	}
+
+	return client.Disconnect(ctx)
+}
+
+// Participants returns the participants list of the activity of activityID.
+//
+// Note:
+//
+// It is privileged operation:
+//	Only the club managers can access to this operation.
+func Participants(activityID primitive.ObjectID) (members []member.Member, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return
+	}
+
+	activity := new(Activity)
+	member := new(member.Member)
+
+	if err = client.Database("club").
+		Collection("activities").
+		FindOne(ctx, bson.M{"_id": activityID}).
+		Decode(activity); err == mongo.ErrNoDocuments {
+		return
+	} else if err != nil {
+		return
+	}
+
+	filter := func() bson.M {
+		arr := func() bson.A {
+			arr := make(bson.A, len(activity.Participants))
+			for idx, p := range activity.Participants {
+				arr[idx] = p
+			}
+			return arr
+		}()
+		return bson.M{"id": bson.M{"$in": arr}}
+	}()
+
+	// do transaction with members collection
+	cur, err := client.Database("club").
+		Collection("members").
+		Find(ctx, filter)
+
+	if err == mongo.ErrNoDocuments {
+		return members, client.Disconnect(ctx)
+	} else if err != nil {
+		return
+	}
+
+	for cur.Next(ctx) {
+		if err = cur.Decode(member); err != nil {
+			return
+		}
+		members = append(members, *member)
+	}
+	return members, client.Disconnect(ctx)
 }
 
 // ApplyP applies for an activity of activityID.
@@ -74,7 +221,7 @@ func ApplyP(activityID primitive.ObjectID, memberID string) error {
 		if err = client.Disconnect(ctx); err != nil {
 			return err
 		}
-		return errors.New("already in participants")
+		return ErrAlreadyParticipant
 	}
 
 	if func() bool {
@@ -88,7 +235,7 @@ func ApplyP(activityID primitive.ObjectID, memberID string) error {
 		if err = client.Disconnect(ctx); err != nil {
 			return err
 		}
-		return errors.New("already in applicants")
+		return ErrAlreadyApplicant
 	}
 
 	if _, err = collection.UpdateByID(ctx, activityID, bson.M{"$push": bson.M{"applicants": memberID}}); err != nil {
@@ -111,10 +258,14 @@ func Papplies(activityID primitive.ObjectID) (members []member.Member, err error
 	if err != nil {
 		return
 	}
-	activity := new(Activity)
+
+  activity := new(Activity)
 	member := new(member.Member)
 
-	if err = client.Database("club").Collection("activities").FindOne(ctx, bson.M{"_id": activityID}).Decode(activity); err != nil {
+	if err = client.Database("club").
+    Collection("activities").
+    FindOne(ctx, bson.M{"_id": activityID}).
+    Decode(activity); err != nil {
 		return
 	}
 
@@ -219,7 +370,6 @@ func RejectP(activityID primitive.ObjectID, ids []string) error {
 		for idx, id := range ids {
 			arr[idx] = id
 		}
-
 		return bson.D{
 			bson.E{
 				Key: "$pull",
@@ -238,7 +388,9 @@ func RejectP(activityID primitive.ObjectID, ids []string) error {
 		}
 	}()
 
-	if _, err = client.Database("club").Collection("activities").UpdateByID(ctx, activityID, update); err != nil {
+	if _, err = client.Database("club").
+    Collection("activities").
+    UpdateByID(ctx, activityID, update); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)
