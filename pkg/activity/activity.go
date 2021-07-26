@@ -7,19 +7,13 @@ import (
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
-	"github.com/kmu-kcc/buddy-backend/pkg/member"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-  ErrAlreadyParticipant = errors.New("already participating")
-  ErrAlreadyApplicant   = errors.New("already applied")
-)
-
-// Activity represents a club acitivity state.
+// Activity represents a club activity.
 type Activity struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id"`
 	Start        int64              `json:"start,string" bson:"start"`
@@ -31,23 +25,14 @@ type Activity struct {
 	Applicants   []string           `json:"applicants" bson:"applicants"`
 	Cancelers    []string           `json:"cancelers" bson:"cancelers"`
 	Private      bool               `json:"private" bson:"private"`
+	// Pictures     []Picture `json:"pictures" bson:"pictures"`
 }
 
-// New returns a new club activity.
-func New(start, end int64, place, typ, description string, participants []string, private bool) *Activity {
-	return &Activity{
-		ID:           primitive.NewObjectID(),
-		Start:        start,
-		End:          end,
-		Place:        place,
-		Type:         typ,
-		Description:  description,
-		Participants: participants,
-		Applicants:   []string{},
-		Cancelers:    []string{},
-		Private:      private,
-	}
-}
+var (
+	ErrNoMember          = errors.New("no such member")
+	ErrBeingProcessed    = errors.New("already being processed")
+	ErrNotInParticipants = errors.New("not in participants")
+)
 
 // Search returns search results filtered by filter.
 //
@@ -259,13 +244,13 @@ func Papplies(activityID primitive.ObjectID) (members []member.Member, err error
 		return
 	}
 
-  activity := new(Activity)
+	activity := new(Activity)
 	member := new(member.Member)
 
 	if err = client.Database("club").
-    Collection("activities").
-    FindOne(ctx, bson.M{"_id": activityID}).
-    Decode(activity); err != nil {
+		Collection("activities").
+		FindOne(ctx, bson.M{"_id": activityID}).
+		Decode(activity); err != nil {
 		return
 	}
 
@@ -389,8 +374,8 @@ func RejectP(activityID primitive.ObjectID, ids []string) error {
 	}()
 
 	if _, err = client.Database("club").
-    Collection("activities").
-    UpdateByID(ctx, activityID, update); err != nil {
+		Collection("activities").
+		UpdateByID(ctx, activityID, update); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)
@@ -417,4 +402,292 @@ func CancelP(activityID primitive.ObjectID, memberID string) error {
 		return err
 	}
 	return client.Disconnect(ctx)
+}
+
+// New returns a new activity.
+func New(start, end int64, place, typ, description string, participants []string, private bool) Activity {
+	return Activity{
+		ID:           primitive.NewObjectID(),
+		Start:        start,
+		End:          end,
+		Place:        place,
+		Type:         typ,
+		Description:  description,
+		Participants: participants,
+		Applicants:   []string{},
+		Cancelers:    []string{},
+		Private:      private,
+	}
+}
+
+// ApplyC applies a cancelation of registration
+// for an activity of activityID of a member of memberID.
+//
+// NOTE:
+//
+// It is a member-limited operation:
+//	Only the authenticated members can access to this operation.
+func ApplyC(activityID primitive.ObjectID, memberID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database("club").Collection("activities")
+	targetActivity := new(Activity)
+
+	if err = collection.FindOne(
+		ctx,
+		bson.D{
+			bson.E{Key: "_id", Value: activityID},
+		},
+	).Decode(targetActivity); err != nil {
+		return err
+	}
+
+	if !func() bool {
+		for _, p := range targetActivity.Participants {
+			if memberID == p {
+				return true
+			}
+		}
+		return false
+	}() {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return ErrNotInParticipants
+	}
+
+	if func() bool {
+		for _, c := range targetActivity.Cancelers {
+			if memberID == c {
+				return true
+			}
+		}
+		return false
+	}() {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return ErrBeingProcessed
+	}
+
+	// if _, err = collection.UpdateByID(
+	// 	ctx,
+	// 	activityID,
+	// 	bson.M{"$push": bson.M{"cancelers": memberID}}); err != nil {
+	// 	return err
+	// }
+
+	if _, err = collection.UpdateByID(ctx, activityID, bson.D{
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{
+				Key:   "cancelers",
+				Value: memberID,
+			}}}}); err != nil {
+		return err
+	}
+
+	return client.Disconnect(ctx)
+}
+
+//CancelC deletes the member of memberID
+// from cancelers of the activity of activityID.
+//
+// NOTE:
+//
+// This is a member-limited operation:
+//	Only the authenticated members can access to this operation.
+func CancelC(activityID primitive.ObjectID, memberID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database("club").Collection("activities")
+	targetActivity := new(Activity)
+
+	if err = collection.FindOne(
+		ctx,
+		bson.D{
+			bson.E{Key: "_id", Value: activityID},
+		},
+	).Decode(targetActivity); err != nil {
+		return err
+	}
+
+	if !func() bool {
+		for _, p := range targetActivity.Cancelers {
+			if memberID == p {
+				return true
+			}
+		}
+		return false
+	}() {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return ErrNoMember
+	}
+
+	if _, err = collection.UpdateByID(ctx, activityID, bson.D{
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{
+				Key:   "cancelers",
+				Value: memberID,
+			}}}}); err != nil {
+		return err
+	}
+	return client.Disconnect(ctx)
+}
+
+// Capplies returns participants of an activity of activityID
+
+// NOTE:
+
+// This is a privileged operation:
+// 	Only the club managers can access to this operation.
+func Capplies(activityID primitive.ObjectID) ([]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return nil, err
+	}
+
+	collection := client.Database("club").Collection("activities")
+	targetActivity := new(Activity)
+
+	if err = collection.FindOne(
+		ctx,
+		bson.D{
+			bson.E{Key: "_id", Value: activityID},
+		},
+	).Decode(targetActivity); err != nil {
+		return nil, err
+	}
+
+	return targetActivity.Participants, err
+}
+
+// ApproveC approves the member of memberID to participate to the activity of activityID.
+// NOTE:
+
+// This is a privileged operation:
+// 	Only the club managers can access to this operation.
+func ApproveC(activityID primitive.ObjectID, memberID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database("club").Collection("activities")
+	targetActivity := new(Activity)
+
+	if err = collection.FindOne(
+		ctx,
+		bson.D{
+			bson.E{Key: "_id", Value: activityID},
+		},
+	).Decode(targetActivity); err != nil {
+		return err
+	}
+
+	if !func() bool {
+		for _, p := range targetActivity.Cancelers {
+			if memberID == p {
+				return true
+			}
+		}
+		return false
+	}() {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return ErrNoMember
+	}
+
+	if _, err = collection.UpdateByID(ctx, activityID, bson.D{
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{
+				Key:   "participants",
+				Value: memberID,
+			}}}}); err != nil {
+		return err
+	}
+
+	if _, err = collection.UpdateByID(ctx, activityID, bson.D{
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{
+				Key:   "cancelers",
+				Value: memberID,
+			}}}}); err != nil {
+		return err
+	}
+
+	return client.Disconnect(ctx)
+}
+
+// RejectC rejects the member of memberID to participate to the activity of activityID.
+// NOTE:
+
+// This is a privileged operation:
+// 	Only the club managers can access to this operation.
+func RejectC(activityID primitive.ObjectID, memberID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database("club").Collection("activities")
+	targetActivity := new(Activity)
+
+	if err = collection.FindOne(
+		ctx,
+		bson.D{
+			bson.E{Key: "_id", Value: activityID},
+		},
+	).Decode(targetActivity); err != nil {
+		return err
+	}
+
+	if !func() bool {
+		for _, p := range targetActivity.Cancelers {
+			if memberID == p {
+				return true
+			}
+		}
+		return false
+	}() {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return ErrNoMember
+	}
+
+	if _, err = collection.UpdateByID(ctx, activityID, bson.D{
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{
+				Key:   "cancelers",
+				Value: memberID,
+			}}}}); err != nil {
+		return err
+	}
+
+	return client.Disconnect(ctx)
+
 }
