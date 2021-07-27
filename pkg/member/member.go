@@ -3,6 +3,7 @@ package member
 
 import "time"
 
+// Member represents a club member state.
 type Member struct {
 	ID         string `json:"id" bson:"id"`                 // student ID
 	Password   string `json:"password" bson:"password"`     // password
@@ -17,6 +18,8 @@ type Member struct {
 	CreatedAt  int64  `json:"created_at" bson:"created_at"` // when created - Unix timestamp
 	UpdatedAt  int64  `json:"updated_at" bson:"updated_at"` // last updated - Unix timestamp
 }
+
+type Members []Member
 
 // New returns a new club member.
 func New(id string, name string, department string, grade string, phone string, email string, attendance int) *Member {
@@ -35,3 +38,4 @@ func New(id string, name string, department string, grade string, phone string, 
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}
+}

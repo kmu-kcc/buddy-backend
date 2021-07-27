@@ -7,13 +7,22 @@ import (
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
+	"github.com/kmu-kcc/buddy-backend/pkg/member"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Activity represents a club activity.
+var (
+	ErrAlreadyParticipant = errors.New("already participating")
+	ErrAlreadyApplicant   = errors.New("already applied")
+	ErrNotMember          = errors.New("no such member")
+	ErrBeingProcessed     = errors.New("already being processed")
+	ErrNotParticipant     = errors.New("not participating")
+)
+
+// Activity represents a club activity state.
 type Activity struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id"`
 	Start        int64              `json:"start,string" bson:"start"`
@@ -25,14 +34,26 @@ type Activity struct {
 	Applicants   []string           `json:"applicants" bson:"applicants"`
 	Cancelers    []string           `json:"cancelers" bson:"cancelers"`
 	Private      bool               `json:"private" bson:"private"`
-	// Pictures     []Picture `json:"pictures" bson:"pictures"`
+	// Pictures     []Picture          `json:"pictures" bson:"pictures"`
 }
 
-var (
-	ErrNoMember          = errors.New("no such member")
-	ErrBeingProcessed    = errors.New("already being processed")
-	ErrNotInParticipants = errors.New("not in participants")
-)
+type Activities []Activity
+
+// New returns a new activity.
+func New(start, end int64, place, typ, description string, participants []string, private bool) *Activity {
+	return &Activity{
+		ID:           primitive.NewObjectID(),
+		Start:        start,
+		End:          end,
+		Place:        place,
+		Type:         typ,
+		Description:  description,
+		Participants: participants,
+		Applicants:   []string{},
+		Cancelers:    []string{},
+		Private:      private,
+	}
+}
 
 // Search returns search results filtered by filter.
 //
@@ -40,7 +61,7 @@ var (
 //
 // It is member-limited operation:
 //	Only the authenticated members can access to this operation.
-func Search(filter map[string]interface{}) (activities []Activity, err error) {
+func Search(filter map[string]interface{}) (activities Activities, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -121,7 +142,7 @@ func Delete(activityID primitive.ObjectID) (err error) {
 //
 // It is privileged operation:
 //	Only the club managers can access to this operation.
-func Participants(activityID primitive.ObjectID) (members []member.Member, err error) {
+func Participants(activityID primitive.ObjectID) (members member.Members, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -235,7 +256,7 @@ func ApplyP(activityID primitive.ObjectID, memberID string) error {
 //
 // It is privileged operation:
 //	Only the club managers can access to this operation.
-func Papplies(activityID primitive.ObjectID) (members []member.Member, err error) {
+func Papplies(activityID primitive.ObjectID) (members member.Members, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -404,28 +425,12 @@ func CancelP(activityID primitive.ObjectID, memberID string) error {
 	return client.Disconnect(ctx)
 }
 
-// New returns a new activity.
-func New(start, end int64, place, typ, description string, participants []string, private bool) Activity {
-	return Activity{
-		ID:           primitive.NewObjectID(),
-		Start:        start,
-		End:          end,
-		Place:        place,
-		Type:         typ,
-		Description:  description,
-		Participants: participants,
-		Applicants:   []string{},
-		Cancelers:    []string{},
-		Private:      private,
-	}
-}
-
 // ApplyC applies a cancelation of registration
 // for an activity of activityID of a member of memberID.
 //
 // NOTE:
 //
-// It is a member-limited operation:
+// It is member-limited operation:
 //	Only the authenticated members can access to this operation.
 func ApplyC(activityID primitive.ObjectID, memberID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -459,7 +464,7 @@ func ApplyC(activityID primitive.ObjectID, memberID string) error {
 		if err = client.Disconnect(ctx); err != nil {
 			return err
 		}
-		return ErrNotInParticipants
+		return ErrNotParticipant
 	}
 
 	if func() bool {
@@ -476,13 +481,6 @@ func ApplyC(activityID primitive.ObjectID, memberID string) error {
 		return ErrBeingProcessed
 	}
 
-	// if _, err = collection.UpdateByID(
-	// 	ctx,
-	// 	activityID,
-	// 	bson.M{"$push": bson.M{"cancelers": memberID}}); err != nil {
-	// 	return err
-	// }
-
 	if _, err = collection.UpdateByID(ctx, activityID, bson.D{
 		bson.E{Key: "$push", Value: bson.D{
 			bson.E{
@@ -495,13 +493,13 @@ func ApplyC(activityID primitive.ObjectID, memberID string) error {
 	return client.Disconnect(ctx)
 }
 
-//CancelC deletes the member of memberID
+// CancelC deletes the member of memberID
 // from cancelers of the activity of activityID.
 //
 // NOTE:
 //
-// This is a member-limited operation:
-//	Only the authenticated members can access to this operation.
+// It is member-limited operation:
+// 	Only the authenticated members can access to this operation.
 func CancelC(activityID primitive.ObjectID, memberID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -534,7 +532,7 @@ func CancelC(activityID primitive.ObjectID, memberID string) error {
 		if err = client.Disconnect(ctx); err != nil {
 			return err
 		}
-		return ErrNoMember
+		return ErrNotMember
 	}
 
 	if _, err = collection.UpdateByID(ctx, activityID, bson.D{
@@ -549,10 +547,10 @@ func CancelC(activityID primitive.ObjectID, memberID string) error {
 }
 
 // Capplies returns participants of an activity of activityID
-
+//
 // NOTE:
-
-// This is a privileged operation:
+//
+// It is privileged operation:
 // 	Only the club managers can access to this operation.
 func Capplies(activityID primitive.ObjectID) ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -579,9 +577,10 @@ func Capplies(activityID primitive.ObjectID) ([]string, error) {
 }
 
 // ApproveC approves the member of memberID to participate to the activity of activityID.
+//
 // NOTE:
-
-// This is a privileged operation:
+//
+// It is privileged operation:
 // 	Only the club managers can access to this operation.
 func ApproveC(activityID primitive.ObjectID, memberID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -615,7 +614,7 @@ func ApproveC(activityID primitive.ObjectID, memberID string) error {
 		if err = client.Disconnect(ctx); err != nil {
 			return err
 		}
-		return ErrNoMember
+		return ErrNotMember
 	}
 
 	if _, err = collection.UpdateByID(ctx, activityID, bson.D{
@@ -640,9 +639,10 @@ func ApproveC(activityID primitive.ObjectID, memberID string) error {
 }
 
 // RejectC rejects the member of memberID to participate to the activity of activityID.
+//
 // NOTE:
-
-// This is a privileged operation:
+//
+// It is privileged operation:
 // 	Only the club managers can access to this operation.
 func RejectC(activityID primitive.ObjectID, memberID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -676,7 +676,7 @@ func RejectC(activityID primitive.ObjectID, memberID string) error {
 		if err = client.Disconnect(ctx); err != nil {
 			return err
 		}
-		return ErrNoMember
+		return ErrNotMember
 	}
 
 	if _, err = collection.UpdateByID(ctx, activityID, bson.D{

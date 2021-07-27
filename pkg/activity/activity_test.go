@@ -2,8 +2,6 @@ package activity_test
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"testing"
 	"time"
 
@@ -170,61 +168,56 @@ func TestCancelP(t *testing.T) {
 	}
 }
 
-// testcase 1. whether applyC works -> Done
-// testcase 2. ErrNotInParticipants -> Done
-// testcase 3. ErrBeingProcessed -> Done
 func TestApplyC(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
-		log.Fatalln(err)
+		t.Error(err)
 	}
 
 	testCollection := client.Database("club").Collection("activities")
 
-	// testcase 1
+	// testcase 1. whether applyC works -> Done
 	targetActivity := activity.New(1, 1, "Place", "MT", "Testing", []string{"ApplyC"}, false)
 
-	// testcase 2
-	// targetActivity := activity.New(1, 1, "Place", "MT", "Testing", []string{}, false)
+	// testcase 2. ErrNotParticipant -> Done
+	// testcase 3. ErrBeingProcessed -> Done
 
 	// Initialize Collection
 	if err := testCollection.Drop(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 
 	// insert test activity
 	if _, err := testCollection.InsertOne(ctx, targetActivity); err != nil {
-		log.Println("INSERT_ERR")
-		log.Fatal(err)
+		t.Log("INSERT_ERR")
+		t.Error(err)
 	}
 
 	if err = activity.ApplyC(targetActivity.ID, "ApplyC"); err != nil {
-		log.Println("APPLYC_ERR")
-		log.Fatalln(err)
+		t.Log("APPLYC_ERR")
+		t.Error(err)
 	}
 
 	// Reset Collection
 	if err := testCollection.Drop(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 
 	if err := client.Disconnect(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 }
 
-// testcase 1. whether CancelC works
-// testcase 2. ErrNoMember
 func TestCancelC(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
-		log.Fatalln(err)
+		t.Error(err)
 	}
 
 	testCollection := client.Database("club").Collection("activities")
@@ -232,28 +225,30 @@ func TestCancelC(t *testing.T) {
 
 	// insert test activity
 	if _, err := testCollection.InsertOne(ctx, targetActivity); err != nil {
-		log.Println("INSERT_ERR")
-		log.Fatal(err)
+		t.Log("INSERT_ERR")
+		t.Error(err)
 	}
 
 	if err = activity.ApplyC(targetActivity.ID, "ApplyC"); err != nil {
-		log.Println("APPLYC_ERR")
-		log.Println(targetActivity.ID)
-		log.Fatalln(err)
+		t.Log("APPLYC_ERR")
+		t.Log(targetActivity.ID)
+		t.Error(err)
 	}
 
+	// testcase 1. whether CancelC works
+	// testcase 2. ErrNotMember
 	if err = activity.CancelC(targetActivity.ID, "ApplyC"); err != nil {
-		log.Println("CANCELC_ERR")
-		log.Fatalln(err)
+		t.Log("CANCELC_ERR")
+		t.Error(err)
 	}
 
 	// Reset Collection
 	if err := testCollection.Drop(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 
 	if err := client.Disconnect(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 }
 
@@ -263,7 +258,7 @@ func TestCapplies(t *testing.T) {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
-		log.Fatalln(err)
+		t.Error(err)
 	}
 
 	testCollection := client.Database("club").Collection("activities")
@@ -271,22 +266,21 @@ func TestCapplies(t *testing.T) {
 
 	// insert test activity
 	if _, err := testCollection.InsertOne(ctx, targetActivity); err != nil {
-		log.Println("INSERT_ERR")
-		log.Fatal(err)
+		t.Log("INSERT_ERR")
+		t.Error(err)
 	}
 
-	res, err := activity.Capplies(targetActivity.ID)
-	if err != nil {
-		log.Fatal(err)
+	if _, err := activity.Capplies(targetActivity.ID); err != nil {
+		t.Error(err)
 	}
-	fmt.Println(res)
+
 	// Reset Collection
 	if err := testCollection.Drop(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 
 	if err := client.Disconnect(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 }
 
@@ -296,7 +290,7 @@ func TestApproveC(t *testing.T) {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
-		log.Fatalln(err)
+		t.Error(err)
 	}
 
 	testCollection := client.Database("club").Collection("activities")
@@ -304,27 +298,27 @@ func TestApproveC(t *testing.T) {
 
 	// insert test activity
 	if _, err := testCollection.InsertOne(ctx, targetActivity); err != nil {
-		log.Println("INSERT_ERR")
-		log.Fatal(err)
+		t.Log("INSERT_ERR")
+		t.Error(err)
 	}
 
 	// set cancelers
 	if err = activity.ApplyC(targetActivity.ID, "Succeed!"); err != nil {
-		log.Println("APPLYC_ERR")
-		log.Fatalln(err)
+		t.Log("APPLYC_ERR")
+		t.Error(err)
 	}
 
 	if err = activity.ApproveC(targetActivity.ID, "Succeed!"); err != nil {
-		log.Fatalln(err)
+		t.Error(err)
 	}
 
 	// Reset Collection
 	if err := testCollection.Drop(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 
 	if err := client.Disconnect(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 }
 
@@ -334,7 +328,7 @@ func TestRejectC(t *testing.T) {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
-		log.Fatalln(err)
+		t.Error(err)
 	}
 
 	testCollection := client.Database("club").Collection("activities")
@@ -342,27 +336,26 @@ func TestRejectC(t *testing.T) {
 
 	// insert test activity
 	if _, err := testCollection.InsertOne(ctx, targetActivity); err != nil {
-		log.Println("INSERT_ERR")
-		log.Fatal(err)
+		t.Log("INSERT_ERR")
+		t.Error(err)
 	}
 
 	// set cancelers
 	if err = activity.ApplyC(targetActivity.ID, "Succeed!"); err != nil {
-		log.Println("APPLYC_ERR")
-		log.Fatalln(err)
+		t.Log("APPLYC_ERR")
+		t.Error(err)
 	}
 
 	if err = activity.RejectC(targetActivity.ID, "Succeed!"); err != nil {
-		log.Fatalln(err)
+		t.Error(err)
 	}
 
 	// Reset Collection
 	if err := testCollection.Drop(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
 
 	if err := client.Disconnect(ctx); err != nil {
-		log.Fatal(err)
+		t.Error(err)
 	}
-
 }

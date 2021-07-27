@@ -1,5 +1,2 @@
-// Package middleware defines the router layer of the Buddy System.
-package middleware
-
-// TODO
-// Define the extension point of the API server
+// Package activity defines the router layer of the club activity of the Buddy System.
+package activity
