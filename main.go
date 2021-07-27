@@ -22,10 +22,20 @@ func main() {
 		log.Fatalln(parser.Usage(err))
 	}
 
-	// gin.SetMode(gin.ReleaseMode)
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(gin.ReleaseMode)
 
 	engine := gin.Default()
+
+	api := engine.Group("/api")
+	{
+		v1 := api.Group("/v1")
+		{
+			member := v1.Group("/member")
+			{
+				_ = member
+			}
+		}
+	}
 
 	log.Fatalln(engine.Run(fmt.Sprintf(":%d", *port)))
 }
