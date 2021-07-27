@@ -19,11 +19,12 @@ const (
 )
 
 var (
-	ErrWrongPassword = errors.New("wrong password")
-	ErrAlreadyMember = errors.New("already a member")
-	ErrUnderReview   = errors.New("under review")
-	ErrOnDelete      = errors.New("already on delete")
-	ErrNotOnDelete   = errors.New("not on delete")
+	ErrPasswordMismatch = errors.New("password mismatch")
+	ErrAlreadyMember    = errors.New("already a member")
+	ErrUnderReview      = errors.New("under review")
+	ErrOnDelete         = errors.New("already on delete")
+	ErrNotOnDelete      = errors.New("not on delete")
+	ErrGraduate         = errors.New("already graduate")
 )
 
 // Member represents a club member state.
@@ -100,7 +101,7 @@ func (m Member) SingIn() error {
 		return ErrUnderReview
 	}
 	if m.Password != member.Password {
-		return ErrWrongPassword
+		return ErrPasswordMismatch
 	}
 	return nil
 }
@@ -209,8 +210,9 @@ func Approve(ids []string) error {
 			ctx,
 			filter,
 			bson.D{
-				bson.E{Key: "approved", Value: true},
-				bson.E{Key: "updated_at", Value: time.Now().Unix()}}); err != nil {
+				bson.E{Key: "$set", Value: bson.D{
+					bson.E{Key: "approved", Value: true},
+					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}); err != nil {
 		return err
 	}
 
@@ -255,7 +257,7 @@ func Delete(ids []string) error {
 //
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
-func (m Member) Exit() error {
+func (m *Member) Exit() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -264,24 +266,23 @@ func (m Member) Exit() error {
 		return err
 	}
 
-	member := new(Member)
-
 	if err = client.Database("club").
 		Collection("members").
 		FindOneAndUpdate(
 			ctx,
 			bson.D{bson.E{Key: "id", Value: m.ID}},
 			bson.D{
-				bson.E{Key: "on_delete", Value: true},
-				bson.E{Key: "updated_at", Value: time.Now().Unix()}}).
-		Decode(member); err != nil {
+				bson.E{Key: "$set", Value: bson.D{
+					bson.E{Key: "on_delete", Value: true},
+					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}).
+		Decode(m); err != nil {
 		return err
 	}
 
 	if err = client.Disconnect(ctx); err != nil {
 		return err
 	}
-	if member.OnDelete {
+	if m.OnDelete {
 		return ErrOnDelete
 	}
 	return nil
@@ -334,7 +335,7 @@ func Exits() (members Members, err error) {
 //
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
-func (m Member) CancelExit() error {
+func (m *Member) CancelExit() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -343,24 +344,23 @@ func (m Member) CancelExit() error {
 		return err
 	}
 
-	member := new(Member)
-
 	if err = client.Database("club").
 		Collection("members").
 		FindOneAndUpdate(
 			ctx,
 			bson.D{bson.E{Key: "id", Value: m.ID}},
 			bson.D{
-				bson.E{Key: "on_delete", Value: false},
-				bson.E{Key: "updated_at", Value: time.Now().Unix()}}).
-		Decode(member); err != nil {
+				bson.E{Key: "$set", Value: bson.D{
+					bson.E{Key: "on_delete", Value: false},
+					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}).
+		Decode(m); err != nil {
 		return err
 	}
 
 	if err = client.Disconnect(ctx); err != nil {
 		return err
 	}
-	if !member.OnDelete {
+	if !m.OnDelete {
 		return ErrNotOnDelete
 	}
 	return nil
@@ -405,6 +405,66 @@ func Search(filter map[string]interface{}) (members Members, err error) {
 	if err = cur.Close(ctx); err != nil {
 		return
 	}
-
 	return members, client.Disconnect(ctx)
+}
+
+// Update updates the state of m to update.
+//
+// NOTE:
+//
+// It is a member-limited operation:
+//	Only the authenticated members can access to this operation.
+func (m Member) Update(update map[string]interface{}) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	update["updated_at"] = time.Now().Unix()
+
+	if _, err = client.Database("club").
+		Collection("members").
+		UpdateOne(
+			ctx,
+			bson.D{bson.E{Key: "id", Value: m.ID}},
+			bson.D{bson.E{Key: "$set", Value: update}}); err != nil {
+		return err
+	}
+	return client.Disconnect(ctx)
+}
+
+// Graduate updates m to be a graduate.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
+func (m *Member) Graduate() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	if err = client.Database("club").
+		Collection("members").
+		FindOneAndUpdate(
+			ctx,
+			bson.D{bson.E{Key: "id", Value: m.ID}},
+			bson.D{bson.E{Key: "$set", Value: bson.D{
+				bson.E{Key: "attendance", Value: Graduate},
+				bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}).
+		Decode(m); err != nil {
+		return err
+	}
+
+	if m.Attendance == Graduate {
+		return ErrGraduate
+	}
+	return client.Disconnect(ctx)
 }
