@@ -325,7 +325,6 @@ func Exits() (members Members, err error) {
 	if err = cur.Close(ctx); err != nil {
 		return
 	}
-
 	return members, client.Disconnect(ctx)
 }
 
