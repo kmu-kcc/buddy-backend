@@ -28,7 +28,10 @@ func TestApprove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testLog := fee.Newlog("20181681", "unapproved", 0, 0, 0)
+	// testLog := fee.Newlog("20181681", "unapproved", 0, 0, 0)
+	testLog := new(fee.Log)
+	testLog.MemberID = "20181681"
+	testLog.Type = "unapproved"
 
 	// insert test log
 	if _, err := collection.InsertOne(ctx, testLog); err != nil {
@@ -59,7 +62,10 @@ func TestReject(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testLog := fee.Newlog("20181681", "unapproved", 0, 0, 0)
+	// testLog := fee.Newlog("20181681", "unapproved", 0, 0, 0)
+	testLog := new(fee.Log)
+	testLog.MemberID = "20181681"
+	testLog.Type = "unapproved"
 
 	// insert test log
 	if _, err := collection.InsertOne(ctx, testLog); err != nil {

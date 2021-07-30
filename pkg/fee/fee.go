@@ -30,11 +30,11 @@ func New(year, semester, amount int, logs []primitive.ObjectID) Fee {
 	}
 }
 
-// Approve approves the requests of list & changes type from unapproved to approved
+// Approve approves the requests of ids & changes type from unapproved to approved
 // Note :
 // This is privileged operation:
 // 	Only the club managers can access to this operation
-func Approve(list []primitive.ObjectID) error {
+func Approve(ids []primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -46,15 +46,13 @@ func Approve(list []primitive.ObjectID) error {
 
 	// Update logs to approved & renew UpdatedAt with current time.
 	filter := func() bson.D {
-		arr := make(bson.A, len(list))
-		for idx, id := range list {
+		arr := make(bson.A, len(ids))
+		for idx, id := range ids {
 			arr[idx] = id
 		}
 		return bson.D{bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
 	}()
-	if err != nil {
-		return err
-	}
+
 	if _, err = client.Database("club").
 		Collection("fee").
 		UpdateMany(
@@ -70,11 +68,11 @@ func Approve(list []primitive.ObjectID) error {
 	return client.Disconnect(ctx)
 }
 
-// Reject rejects the requests of list & remove request of id from logs
+// Reject rejects the requests of ids & remove request of id from logs
 // Note :
 // This is privileged operation:
 // 	Only the club managers can access to this operation
-func Reject(list []primitive.ObjectID) error {
+func Reject(ids []primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -83,7 +81,7 @@ func Reject(list []primitive.ObjectID) error {
 		return err
 	}
 
-	for _, id := range list {
+	for _, id := range ids {
 		if _, err := client.Database("club").Collection("fee").UpdateByID(ctx, id, bson.M{"$pull": bson.M{"logs": id}}); err != nil {
 			return err
 		}
@@ -105,7 +103,13 @@ func Deposit(year, semester, amount int) error {
 		return err
 	}
 
-	deposit := Newlog("", "direct", amount, 100, 100)
+	// deposit := Log("", "direct", amount, 100, 100)
+	deposit := new(Log)
+	deposit.MemberID = ""
+	deposit.Type = "direct"
+	deposit.Amount = amount
+	deposit.CreatedAt = time.Now().Unix()
+	deposit.UpdatedAt = time.Now().Unix()
 
 	client.Database("club").Collection("fee").FindOneAndUpdate(ctx,
 		bson.D{
