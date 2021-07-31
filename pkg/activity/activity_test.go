@@ -185,11 +185,6 @@ func TestApplyC(t *testing.T) {
 	// testcase 2. ErrNotParticipant -> Done
 	// testcase 3. ErrBeingProcessed -> Done
 
-	// Initialize Collection
-	if err := testCollection.Drop(ctx); err != nil {
-		t.Error(err)
-	}
-
 	// insert test activity
 	if _, err := testCollection.InsertOne(ctx, targetActivity); err != nil {
 		t.Log("INSERT_ERR")
@@ -198,11 +193,6 @@ func TestApplyC(t *testing.T) {
 
 	if err = activity.ApplyC(targetActivity.ID, "ApplyC"); err != nil {
 		t.Log("APPLYC_ERR")
-		t.Error(err)
-	}
-
-	// Reset Collection
-	if err := testCollection.Drop(ctx); err != nil {
 		t.Error(err)
 	}
 
@@ -242,11 +232,6 @@ func TestCancelC(t *testing.T) {
 		t.Error(err)
 	}
 
-	// Reset Collection
-	if err := testCollection.Drop(ctx); err != nil {
-		t.Error(err)
-	}
-
 	if err := client.Disconnect(ctx); err != nil {
 		t.Error(err)
 	}
@@ -271,11 +256,6 @@ func TestCapplies(t *testing.T) {
 	}
 
 	if _, err := activity.Capplies(targetActivity.ID); err != nil {
-		t.Error(err)
-	}
-
-	// Reset Collection
-	if err := testCollection.Drop(ctx); err != nil {
 		t.Error(err)
 	}
 
@@ -312,11 +292,6 @@ func TestApproveC(t *testing.T) {
 		t.Error(err)
 	}
 
-	// Reset Collection
-	if err := testCollection.Drop(ctx); err != nil {
-		t.Error(err)
-	}
-
 	if err := client.Disconnect(ctx); err != nil {
 		t.Error(err)
 	}
@@ -347,11 +322,6 @@ func TestRejectC(t *testing.T) {
 	}
 
 	if err = activity.RejectC(targetActivity.ID, "Succeed!"); err != nil {
-		t.Error(err)
-	}
-
-	// Reset Collection
-	if err := testCollection.Drop(ctx); err != nil {
 		t.Error(err)
 	}
 
