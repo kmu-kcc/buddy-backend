@@ -15,8 +15,8 @@ import (
 )
 
 var (
-  ErrAlreadyParticipant = errors.New("already participating")
-  ErrAlreadyApplicant   = errors.New("already applied")
+	ErrAlreadyParticipant = errors.New("already participating")
+	ErrAlreadyApplicant   = errors.New("already applied")
 )
 
 // Activity represents a club acitivity state.
@@ -259,13 +259,13 @@ func Papplies(activityID primitive.ObjectID) (members []member.Member, err error
 		return
 	}
 
-  activity := new(Activity)
+	activity := new(Activity)
 	member := new(member.Member)
 
 	if err = client.Database("club").
-    Collection("activities").
-    FindOne(ctx, bson.M{"_id": activityID}).
-    Decode(activity); err != nil {
+		Collection("activities").
+		FindOne(ctx, bson.M{"_id": activityID}).
+		Decode(activity); err != nil {
 		return
 	}
 
@@ -298,7 +298,8 @@ func Papplies(activityID primitive.ObjectID) (members []member.Member, err error
 // It is privileged operation:
 //	Only the club managers can access to this operation.
 func ApproveP(activityID primitive.ObjectID, ids []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.
+		Second)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
@@ -389,8 +390,8 @@ func RejectP(activityID primitive.ObjectID, ids []string) error {
 	}()
 
 	if _, err = client.Database("club").
-    Collection("activities").
-    UpdateByID(ctx, activityID, update); err != nil {
+		Collection("activities").
+		UpdateByID(ctx, activityID, update); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)

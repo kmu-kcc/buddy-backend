@@ -73,7 +73,7 @@ func TestUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-  filters := []map[string]interface{}{
+	filters := []map[string]interface{}{
 		{
 			"_id":  objectId,
 			"type": "meet",
@@ -93,7 +93,7 @@ func TestDelete(t *testing.T) {
 		t.Error(err)
 	}
 
-  if err := activity.Delete(objectId); err != nil {
+	if err := activity.Delete(objectId); err != nil {
 		t.Error(err)
 	}
 }
@@ -104,7 +104,7 @@ func TestParticipants(t *testing.T) {
 		t.Error(err)
 	}
 
-  if members, err := activity.Participants(objectId); err != nil {
+	if members, err := activity.Participants(objectId); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(members)
@@ -112,12 +112,12 @@ func TestParticipants(t *testing.T) {
 }
 
 func TestApplyP(t *testing.T) {
-	res, err := primitive.ObjectIDFromHex("60fd5ad1e26bd52bc5b0bf47")
+	res, err := primitive.ObjectIDFromHex("60fd5ad1e26bd52bc5b0bf476")
 	if err != nil {
 		t.Error(err)
 	}
 
-  if err = activity.ApplyP(res, "20172228"); err != nil {
+	if err = activity.ApplyP(res, "20172228"); err != nil {
 		t.Error(err)
 	}
 }
@@ -141,7 +141,7 @@ func TestApproveP(t *testing.T) {
 		t.Error(err)
 	}
 
-  if err = activity.ApproveP(res, []string{"20172229", "20172228"}); err != nil {
+	if err = activity.ApproveP(res, []string{"20172229", "20172228"}); err != nil {
 		t.Error(err)
 	}
 }

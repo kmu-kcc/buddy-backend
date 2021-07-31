@@ -35,3 +35,4 @@ func New(id string, name string, department string, grade string, phone string, 
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}
+}
