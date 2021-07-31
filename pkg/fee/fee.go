@@ -127,7 +127,7 @@ func Deposit(year, semester, amount int) error {
 		},
 		bson.D{
 			bson.E{Key: "$push", Value: bson.D{
-				bson.E{Key: "logs", Value: deposit},
+				bson.E{Key: "logs", Value: deposit.ID},
 			}},
 		}); err != nil {
 		return err
