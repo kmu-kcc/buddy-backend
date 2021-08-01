@@ -247,6 +247,11 @@ func Dones(year, semester int) (members member.Members, err error) {
 // It is privileged operation:
 //	Only the club managers can access to this operation.
 func Yets(year, semester int) (members member.Members, err error) {
+	dones, err := Dones(year, semester)
+	if err != nil {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -255,55 +260,19 @@ func Yets(year, semester int) (members member.Members, err error) {
 		return
 	}
 
-	fee := new(Fee)
-	log := new(Log)
-	memb := new(member.Member)
-
-	if err = client.Database("club").
-		Collection("fees").
-		FindOne(ctx, bson.M{"year": year, "semester": semester}).Decode(fee); err != nil {
-		return
-	}
-
 	filter := func() bson.D {
-		arr := make(bson.A, len(fee.Logs))
-		for idx, logID := range fee.Logs {
-			arr[idx] = logID
+		ids := make(bson.A, len(dones))
+		for idx, memb := range dones {
+			ids[idx] = memb.ID
 		}
 		return bson.D{
-			bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: arr}}},
-			bson.E{Key: "type", Value: "approved"},
-		}
+			bson.E{Key: "id", Value: bson.D{
+				bson.E{Key: "$nin", Value: ids}}}}
 	}()
 
-	cur, err := client.Database("club").Collection("logs").Find(ctx, filter)
-	if err != nil {
-		return
-	}
+	memb := new(member.Member)
 
-	amounts := make(map[string]int)
-
-	for cur.Next(ctx) {
-		if err = cur.Decode(log); err != nil {
-			return
-		}
-		amounts[log.MemberID] += log.Amount
-	}
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-
-	filter = func() bson.D {
-		arr := bson.A{}
-		for membID, amount := range amounts {
-			if amount < fee.Amount {
-				arr = append(arr, membID)
-			}
-		}
-		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
-	}()
-
-	cur, err = client.Database("club").Collection("members").Find(ctx, filter)
+	cur, err := client.Database("club").Collection("members").Find(ctx, filter)
 	if err != nil {
 		return
 	}
