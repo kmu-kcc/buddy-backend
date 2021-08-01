@@ -25,7 +25,7 @@ func TestSubmit(t *testing.T) {
 }
 
 func TestAmount(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
@@ -64,5 +64,29 @@ func TestAmount(t *testing.T) {
 		t.Error(err)
 	} else {
 		t.Log(sum)
+	}
+}
+
+func TestDones(t *testing.T) {
+	if members, err := fee.Dones(2021, 1); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(members)
+	}
+}
+
+func TestYets(t *testing.T) {
+	if members, err := fee.Yets(2021, 1); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(members)
+	}
+}
+
+func TestAll(t *testing.T) {
+	if logs, err := fee.All(2021, 1); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(logs)
 	}
 }
