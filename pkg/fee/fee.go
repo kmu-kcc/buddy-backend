@@ -350,7 +350,7 @@ func All(year, semester int) (logs Logs, err error) {
 
 // Approve approves the submission request of ids.
 //
-// Note :
+// Note:
 //
 // This is privileged operation:
 // 	Only the club managers can access to this operation.
@@ -359,7 +359,6 @@ func Approve(ids []primitive.ObjectID) error {
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
-
 	if err != nil {
 		return err
 	}
@@ -391,11 +390,11 @@ func Approve(ids []primitive.ObjectID) error {
 
 // Reject rejects the submission request of ids.
 //
-// Note :
+// Note:
 //
 // This is privileged operation:
-// 	Only the club managers can access to this operation
-func Reject(year, semester int, ids []primitive.ObjectID) error {
+// 	Only the club managers can access to this operation.
+func Reject(ids []primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -404,32 +403,41 @@ func Reject(year, semester int, ids []primitive.ObjectID) error {
 		return err
 	}
 
-	for _, id := range ids {
-		if _, err := client.Database("club").Collection("fees").UpdateOne(ctx, bson.M{
-			"year":     year,
-			"semester": semester,
-		},
-			bson.D{
-				bson.E{Key: "$pull", Value: bson.D{
-					bson.E{Key: "logs", Value: id},
-				},
-				},
-			}); err != nil {
-			return err
-		}
-		if _, err := client.Database("club").Collection("logs").DeleteOne(ctx, bson.M{"_id": id}); err != nil {
-			return err
-		}
-	}
+	// FIXME
+	// This operation takes linear time disk access.
+	// for _, id := range ids {
+	// 	if _, err = client.Database("club").
+	// 		Collection("fees").
+	// 		UpdateOne(
+	// 			ctx,
+	// 			bson.M{
+	// 				"year":     year,
+	// 				"semester": semester,
+	// 			},
+	// 			bson.D{
+	// 				bson.E{Key: "$pull", Value: bson.D{
+	// 					bson.E{Key: "logs", Value: id},
+	// 				},
+	// 				},
+	// 			}); err != nil {
+	// 		return err
+	// 	}
+	//
+	// 	if _, err = client.Database("club").
+	// 		Collection("logs").
+	// 		DeleteOne(ctx, bson.M{"_id": id}); err != nil {
+	// 		return err
+	// 	}
+	// }
 	return client.Disconnect(ctx)
 }
 
-// Deposit makes a new log with amount and append it to fee with Year  of year, Semester of semester
+// Deposit saves a new deposit log.
 //
-// Note :
+// Note:
 //
 // This is privileged operation:
-// 	Only the club managers can access to this operation
+// 	Only the club managers can access to this operation.
 func Deposit(year, semester, amount int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -441,18 +449,26 @@ func Deposit(year, semester, amount int) error {
 
 	deposit := NewLog("", "direct", amount)
 
-	if _, err := client.Database("club").Collection("fees").UpdateOne(ctx,
-		bson.D{
-			bson.E{Key: "year", Value: year},
-			bson.E{Key: "semester", Value: semester},
-		},
-		bson.D{
-			bson.E{Key: "$push", Value: bson.D{
-				bson.E{Key: "logs", Value: deposit.ID},
-			}},
-		}); err != nil {
+	if _, err = client.Database("club").
+		Collection("logs").
+		InsertOne(ctx, deposit); err != nil {
 		return err
 	}
-	client.Database("club").Collection("logs").InsertOne(ctx, deposit)
+
+	if _, err = client.Database("club").
+		Collection("fees").
+		UpdateOne(
+			ctx,
+			bson.D{
+				bson.E{Key: "year", Value: year},
+				bson.E{Key: "semester", Value: semester},
+			},
+			bson.D{
+				bson.E{Key: "$push", Value: bson.D{
+					bson.E{Key: "logs", Value: deposit.ID},
+				}},
+			}); err != nil {
+		return err
+	}
 	return client.Disconnect(ctx)
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/akamensky/argparse"
 	"github.com/gin-gonic/gin"
+	"github.com/kmu-kcc/buddy-backend/web/api/v1/member"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 		log.Fatalln(parser.Usage(err))
 	}
 
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.DebugMode)
 
 	engine := gin.Default()
 
@@ -30,9 +31,17 @@ func main() {
 	{
 		v1 := api.Group("/v1")
 		{
-			member := v1.Group("/member")
+			mgroup := v1.Group("/member")
 			{
-				_ = member
+				mgroup.POST("/signup", member.SignUp())
+			}
+			agroup := v1.Group("/activity")
+			{
+				_ = agroup
+			}
+			fgroup := v1.Group("/fee")
+			{
+				_ = fgroup
 			}
 		}
 	}
