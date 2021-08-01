@@ -35,7 +35,7 @@ func New(year, semester, amount int) *Fee {
 	}
 }
 
-// Create creats a new fees history.
+// Create creates a new fees history.
 //
 // NOTE:
 //
@@ -63,7 +63,7 @@ func Create(year, semester, amount int) (err error) {
 		return ErrDuplicatedFee
 	}
 
-	if _, err = collection.InsertOne(ctx, *New(year, semester, amount)); err != nil {
+	if _, err = collection.InsertOne(ctx, New(year, semester, amount)); err != nil {
 		return
 	}
 
@@ -88,26 +88,24 @@ func Submit(memberID string, year, semester, amount int) (err error) {
 	feeCollection := client.Database("club").Collection("fees")
 	logCollection := client.Database("club").Collection("logs")
 
-	fee := new(Log)
 	log := NewLog(memberID, "unapproved", amount)
 
-	if _, err = logCollection.InsertOne(ctx, *log); err != nil {
+	if _, err = logCollection.InsertOne(ctx, log); err != nil {
 		return
 	}
 
-	if err = feeCollection.FindOneAndUpdate(
-		ctx,
+	if _, err = feeCollection.UpdateOne(ctx,
 		bson.D{
 			bson.E{Key: "year", Value: year},
 			bson.E{Key: "semester", Value: semester},
-		}, bson.D{
+		},
+		bson.D{
 			bson.E{Key: "$push", Value: bson.D{
 				bson.E{Key: "logs", Value: log.ID},
 			}},
-		}).Decode(fee); err != nil {
+		}); err != nil {
 		return
 	}
-
 	return client.Disconnect(ctx)
 }
 
@@ -118,7 +116,7 @@ func Submit(memberID string, year, semester, amount int) (err error) {
 // It is member-limited operation:
 //	Only the authenticated members can access to this operation.
 func Amount(year, semester int, memberID string) (sum int, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
@@ -153,6 +151,10 @@ func Amount(year, semester int, memberID string) (sum int, err error) {
 			return
 		}
 		sum += log.Amount
+	}
+
+	if err = cur.Close(ctx); err != nil {
+		return
 	}
 
 	return sum, client.Disconnect(ctx)
