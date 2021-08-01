@@ -29,7 +29,7 @@ func New(year, semester, amount int) *Fee {
 	}
 }
 
-// Dones returns the list of members who submitted the fee in specific year and semester
+// Dones returns the list of members who submitted the fee in specific year and semester.
 //
 // NOTE:
 //
@@ -109,7 +109,7 @@ func Dones(year, semester int) (members member.Members, err error) {
 	return members, client.Disconnect(ctx)
 }
 
-// Yets returns the list of members who have not yet submitted the fee in specific year and semester
+// Yets returns the list of members who have not yet submitted the fee in specific year and semester.
 //
 // NOTE:
 //
