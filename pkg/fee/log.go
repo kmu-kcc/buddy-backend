@@ -1,7 +1,13 @@
+// Package fee provides access to the club fee of the Buddy System.
 package fee
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+// Log represents a fee log.
 type Log struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id"`
 	MemberID  string             `json:"member_id" bson:"member_id"`
@@ -12,3 +18,16 @@ type Log struct {
 }
 
 type Logs []Log
+
+// NewLog returns a new fee log.
+func NewLog(memberID, typ string, amount int) *Log {
+	now := time.Now().Unix()
+	return &Log{
+		ID:        primitive.NewObjectID(),
+		MemberID:  memberID,
+		Amount:    amount,
+		Type:      typ,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+}
