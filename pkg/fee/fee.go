@@ -3,21 +3,19 @@ package fee
 
 import (
 	"context"
-  "sort"
-  "errors"
+	"errors"
+	"sort"
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
-  "github.com/kmu-kcc/buddy-backend/pkg/member"
+	"github.com/kmu-kcc/buddy-backend/pkg/member"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	ErrDuplicatedFee = errors.New("duplicated fee")
-)
+var ErrDuplicatedFee = errors.New("duplicated fee")
 
 // Fee represents a club fee state.
 type Fee struct {
@@ -379,4 +377,113 @@ func All(year, semester int) (logs Logs, err error) {
 	sort.Slice(logs, func(i, j int) bool { return logs[i].UpdatedAt < logs[j].UpdatedAt })
 
 	return logs, client.Disconnect(ctx)
+}
+
+// Approve approves the submission request of ids.
+//
+// Note :
+//
+// This is privileged operation:
+// 	Only the club managers can access to this operation.
+func Approve(ids []primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+
+	if err != nil {
+		return err
+	}
+
+	// update logs to be approved
+	filter := func() bson.D {
+		arr := make(bson.A, len(ids))
+		for idx, id := range ids {
+			arr[idx] = id
+
+		}
+		return bson.D{bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
+	}()
+
+	if _, err = client.Database("club").
+		Collection("logs").
+		UpdateMany(
+			ctx,
+			filter,
+			bson.D{
+				bson.E{Key: "$set", Value: bson.D{
+					bson.E{Key: "type", Value: "approved"},
+					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}); err != nil {
+		return err
+	}
+
+	return client.Disconnect(ctx)
+}
+
+// Reject rejects the submission request of ids.
+//
+// Note :
+//
+// This is privileged operation:
+// 	Only the club managers can access to this operation
+func Reject(year, semester int, ids []primitive.ObjectID) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	for _, id := range ids {
+		if _, err := client.Database("club").Collection("fees").UpdateOne(ctx, bson.M{
+			"year":     year,
+			"semester": semester,
+		},
+			bson.D{
+				bson.E{Key: "$pull", Value: bson.D{
+					bson.E{Key: "logs", Value: id},
+				},
+				},
+			}); err != nil {
+			return err
+		}
+		if _, err := client.Database("club").Collection("logs").DeleteOne(ctx, bson.M{"_id": id}); err != nil {
+			return err
+		}
+	}
+	return client.Disconnect(ctx)
+}
+
+// Deposit makes a new log with amount and append it to fee with Year  of year, Semester of semester
+//
+// Note :
+//
+// This is privileged operation:
+// 	Only the club managers can access to this operation
+func Deposit(year, semester, amount int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	deposit := NewLog("", "direct", amount)
+
+	if _, err := client.Database("club").Collection("fees").UpdateOne(ctx,
+		bson.D{
+			bson.E{Key: "year", Value: year},
+			bson.E{Key: "semester", Value: semester},
+		},
+		bson.D{
+			bson.E{Key: "$push", Value: bson.D{
+				bson.E{Key: "logs", Value: deposit.ID},
+			}},
+		}); err != nil {
+		return err
+	}
+	client.Database("club").Collection("logs").InsertOne(ctx, deposit)
+	return client.Disconnect(ctx)
 }

@@ -7,7 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Log represents a fee log.
+// Log represents a fees history.
 type Log struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id"`
 	MemberID  string             `json:"member_id" bson:"member_id"`
