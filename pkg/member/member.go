@@ -46,7 +46,7 @@ type Member struct {
 type Members []Member
 
 // New returns a new club member.
-func New(id string, name string, department string, grade string, phone string, email string, attendance int) *Member {
+func New(id, name, department, grade, phone, email string, attendance int) *Member {
 	now := time.Now().Unix()
 	return &Member{
 		ID:         id,
