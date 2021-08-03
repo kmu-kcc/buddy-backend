@@ -63,3 +63,32 @@ Content-Type: application/json
 {
   "id": "20210021"
 }
+
+###
+
+POST http://127.0.0.1:3000/api/v1/member/applygraduate HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "20210001"
+}
+
+###
+
+POST http://127.0.0.1:3000/api/v1/member/cancelgraduate HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "20210001"
+}
+
+###
+
+POST http://127.0.0.1:3000/api/v1/member/approvegraduate HTTP/1.1
+Content-Type: application/json
+
+{
+  "ids": [
+    "20210001"
+  ]
+}

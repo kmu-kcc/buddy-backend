@@ -43,7 +43,10 @@ func main() {
 				mgroup.POST("/cancelexit", member.CancelExit())
 				mgroup.POST("/search", member.Search())
 				mgroup.POST("/update", member.Update())
-				mgroup.POST("/graduate", member.Graduate())
+				mgroup.POST("/applygraduate", member.ApplyGraduate())
+				mgroup.POST("/cancelgraduate", member.CancelGraduate())
+				mgroup.GET("/graduateapplies", member.GraduateApplies())
+				mgroup.POST("/approvegraduate", member.ApproveGraduate())
 			}
 			agroup := v1.Group("/activity")
 			{
