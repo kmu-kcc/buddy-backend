@@ -8,10 +8,10 @@ import (
 
 func TestSignUp(t *testing.T) {
 	guests := []*member.Member{
-		member.New("20210001", "Test1", "Department1", "1", "010-2021-0001", "testmail1", member.Attending),
-		member.New("20190002", "Test2", "Department2", "2", "010-2019-0002", "testmail2", member.Absent),
-		member.New("20190003", "Test3", "Department3", "3", "010-2019-0003", "testmail3", member.Attending),
-		member.New("20160004", "Test4", "Department2", "4", "010-2016-0004", "testmail4", member.Graduate),
+		member.New("20210001", "Test1", "Department1", "010-2021-0001", "testmail1", 1, member.Attending),
+		member.New("20190002", "Test2", "Department2", "010-2019-0002", "testmail2", 2, member.Absent),
+		member.New("20190003", "Test3", "Department3", "010-2019-0003", "testmail3", 3, member.Attending),
+		member.New("20160004", "Test4", "Department2", "010-2016-0004", "testmail4", 4, member.Graduate),
 	}
 
 	for _, guest := range guests {
