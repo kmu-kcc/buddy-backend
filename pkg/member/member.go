@@ -24,6 +24,8 @@ var (
 	ErrUnderReview      = errors.New("under review")
 	ErrOnDelete         = errors.New("already on delete")
 	ErrNotOnDelete      = errors.New("not on delete")
+	ErrOnGraduate       = errors.New("already on graduate")
+	ErrNotOnGraduate    = errors.New("not on graduate")
 	ErrGraduate         = errors.New("already graduate")
 )
 
@@ -39,6 +41,7 @@ type Member struct {
 	Attendance int    `json:"attendance,string" bson:"attendance"` // attendance status (attending/absent/graduate)
 	Approved   bool   `json:"approved" bson:"approved"`            // approved or not
 	OnDelete   bool   `json:"on_delete" bson:"on_delete"`          // on exit process or not
+	OnGraduate bool   `json:"on_graduate" bson:"on_graduate"`      // on graduation process or not
 	CreatedAt  int64  `json:"created_at,string" bson:"created_at"` // when created - Unix timestamp
 	UpdatedAt  int64  `json:"updated_at,string" bson:"updated_at"` // last updated - Unix timestamp
 }
@@ -59,6 +62,7 @@ func New(id, name, department, phone, email string, grade, attendance int) *Memb
 		Attendance: attendance,
 		Approved:   false,
 		OnDelete:   false,
+		OnGraduate: false,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 	}
@@ -435,13 +439,59 @@ func (m Member) Update(update map[string]interface{}) error {
 	return client.Disconnect(ctx)
 }
 
-// Graduate updates m to be a graduate.
+// ApplyGraduate registers m to be a graduate.
 //
 // NOTE:
 //
-// It is a privileged operation:
-//	Only the club managers can access to this operation.
-func (m *Member) Graduate() error {
+// It is a member-limited operation:
+//	Only the authenticated members can access to this operation.
+func (m *Member) ApplyGraduate() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	collection := client.Database("club").Collection("members")
+
+	if err = collection.FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).
+		Decode(m); err != nil {
+		return err
+	}
+
+	if m.Attendance == Graduate {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return ErrGraduate
+	}
+	if m.OnGraduate {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return ErrOnGraduate
+	}
+
+	if _, err = collection.UpdateOne(
+		ctx,
+		bson.D{bson.E{Key: "id", Value: m.ID}},
+		bson.D{bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "on_graduate", Value: true},
+			bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}); err != nil {
+		return err
+	}
+	return client.Disconnect(ctx)
+}
+
+// CancelGraduate cancels the graduation request of m.
+//
+// NOTE:
+//
+// It is a member-limited operation:
+//	Only the authenticated members can access to this operation.
+func (m *Member) CancelGraduate() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -456,14 +506,94 @@ func (m *Member) Graduate() error {
 			ctx,
 			bson.D{bson.E{Key: "id", Value: m.ID}},
 			bson.D{bson.E{Key: "$set", Value: bson.D{
-				bson.E{Key: "attendance", Value: Graduate},
+				bson.E{Key: "on_graduate", Value: false},
 				bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}).
 		Decode(m); err != nil {
 		return err
 	}
 
+	if err = client.Disconnect(ctx); err != nil {
+		return err
+	}
 	if m.Attendance == Graduate {
 		return ErrGraduate
+	}
+	if !m.OnGraduate {
+		return ErrNotOnGraduate
+	}
+	return nil
+}
+
+// GraduateApplies returns the graduate request list.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
+func GraduateApplies() (members Members, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return
+	}
+
+	cur, err := client.Database("club").
+		Collection("members").
+		Find(ctx, bson.D{bson.E{Key: "on_graduate", Value: true}})
+	if err != nil {
+		return
+	}
+
+	memb := new(Member)
+
+	for cur.Next(ctx) {
+		if err = cur.Decode(memb); err != nil {
+			return
+		}
+		members = append(members, *memb)
+	}
+
+	if err = cur.Close(ctx); err != nil {
+		return
+	}
+	return members, client.Disconnect(ctx)
+}
+
+// ApproveGraduate updates m to be a graduate.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
+func ApproveGraduate(ids []string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	filter := func() bson.D {
+		arr := make(bson.A, len(ids))
+		for idx, id := range ids {
+			arr[idx] = id
+		}
+		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
+	}()
+
+	if _, err = client.Database("club").
+		Collection("members").
+		UpdateMany(
+			ctx,
+			filter,
+			bson.D{bson.E{Key: "$set", Value: bson.D{
+				bson.E{Key: "attendance", Value: Graduate},
+				bson.E{Key: "on_graduate", Value: false},
+				bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}); err != nil {
+		return err
 	}
 	return client.Disconnect(ctx)
 }

@@ -196,8 +196,8 @@ func Update() gin.HandlerFunc {
 	}
 }
 
-// Graduate handles the graduation request.
-func Graduate() gin.HandlerFunc {
+// ApplyGraduate handles the graduation request.
+func ApplyGraduate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
@@ -213,7 +213,68 @@ func Graduate() gin.HandlerFunc {
 			return
 		}
 
-		if err := body.Graduate(); err != nil {
+		if err := body.ApplyGraduate(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// CancelGraduate handles the graduation cancellation request.
+func CancelGraduate() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(member.Member)
+
+		resp := new(struct {
+			Error string `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := body.CancelGraduate(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// GraduateApplies handles the graduation list request.
+func GraduateApplies() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+	}
+}
+
+// ApproveGraduate handles the graduation approval request.
+func ApproveGraduate() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			IDs []string `json:"ids"`
+		})
+
+		resp := new(struct {
+			Error string `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := member.ApproveGraduate(body.IDs); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
