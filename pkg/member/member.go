@@ -29,33 +29,33 @@ var (
 
 // Member represents a club member state.
 type Member struct {
-	ID         string `json:"id" bson:"id"`                 // student ID
-	Password   string `json:"password" bson:"password"`     // password
-	Name       string `json:"name" bson:"name"`             // Name
-	Department string `json:"department" bson:"department"` // department
-	Grade      string `json:"grade" bson:"grade"`           // grade
-	Phone      string `json:"phone" bson:"phone"`           // phone number
-	Email      string `json:"email" bson:"email"`           // e-mail address
-	Attendance int    `json:"attendance" bson:"attendance"` // attendance status (attending/absent/graduate)
-	Approved   bool   `json:"approved" bson:"approved"`     // approved or not
-	OnDelete   bool   `json:"on_delete" bson:"on_delete"`   // on exit process or not
-	CreatedAt  int64  `json:"created_at" bson:"created_at"` // when created - Unix timestamp
-	UpdatedAt  int64  `json:"updated_at" bson:"updated_at"` // last updated - Unix timestamp
+	ID         string `json:"id" bson:"id"`                               // student ID
+	Password   string `json:"password" bson:"password"`                   // password
+	Name       string `json:"name" bson:"name"`                           // Name
+	Department string `json:"department" bson:"department"`               // department
+	Phone      string `json:"phone" bson:"phone"`                         // phone number
+	Email      string `json:"email" bson:"email"`                         // e-mail address
+	Grade      int    `json:"grade,string" bson:"grade,string"`           // grade
+	Attendance int    `json:"attendance,string" bson:"attendance,string"` // attendance status (attending/absent/graduate)
+	Approved   bool   `json:"approved" bson:"approved"`                   // approved or not
+	OnDelete   bool   `json:"on_delete" bson:"on_delete"`                 // on exit process or not
+	CreatedAt  int64  `json:"created_at,string" bson:"created_at"`        // when created - Unix timestamp
+	UpdatedAt  int64  `json:"updated_at,string" bson:"updated_at"`        // last updated - Unix timestamp
 }
 
 type Members []Member
 
 // New returns a new club member.
-func New(id, name, department, grade, phone, email string, attendance int) *Member {
+func New(id, name, department, phone, email string, grade, attendance int) *Member {
 	now := time.Now().Unix()
 	return &Member{
 		ID:         id,
 		Password:   id,
 		Name:       name,
 		Department: department,
-		Grade:      grade,
 		Phone:      phone,
 		Email:      email,
+		Grade:      grade,
 		Attendance: attendance,
 		Approved:   false,
 		OnDelete:   false,

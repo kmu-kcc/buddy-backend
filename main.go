@@ -33,7 +33,17 @@ func main() {
 		{
 			mgroup := v1.Group("/member")
 			{
+				mgroup.POST("/signin", member.SignIn())
 				mgroup.POST("/signup", member.SignUp())
+				mgroup.GET("/signups", member.SignUps())
+				mgroup.POST("/approve", member.Approve())
+				mgroup.POST("/delete", member.Delete())
+				mgroup.POST("/exit", member.Exit())
+				mgroup.GET("/exits", member.Exits())
+				mgroup.POST("/cancelexit", member.CancelExit())
+				mgroup.POST("/search", member.Search())
+				mgroup.POST("/update", member.Update())
+				mgroup.POST("/graduate", member.Graduate())
 			}
 			agroup := v1.Group("/activity")
 			{
