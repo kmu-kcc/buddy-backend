@@ -4,6 +4,7 @@ package member
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
@@ -37,8 +38,8 @@ type Member struct {
 	Department string `json:"department" bson:"department"`        // department
 	Phone      string `json:"phone" bson:"phone"`                  // phone number
 	Email      string `json:"email" bson:"email"`                  // e-mail address
-	Grade      int    `json:"grade,string" bson:"grade"`           // grade
-	Attendance int    `json:"attendance,string" bson:"attendance"` // attendance status (attending/absent/graduate)
+	Grade      int    `json:"grade" bson:"grade"`                  // grade
+	Attendance int    `json:"attendance" bson:"attendance"`        // attendance status (attending/absent/graduate)
 	Approved   bool   `json:"approved" bson:"approved"`            // approved or not
 	OnDelete   bool   `json:"on_delete" bson:"on_delete"`          // on exit process or not
 	OnGraduate bool   `json:"on_graduate" bson:"on_graduate"`      // on graduation process or not
@@ -596,4 +597,74 @@ func ApproveGraduate(ids []string) error {
 		return err
 	}
 	return client.Disconnect(ctx)
+}
+
+// Graduates returns all graduate members.
+//
+// NOTE:
+//
+// It is a member-limited operation:
+//	Only the authenticated members can access to this operation.
+func Graduates() (members Members, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return
+	}
+
+	cur, err := client.Database("club").
+		Collection("members").
+		Find(ctx, bson.D{bson.E{Key: "attendance", Value: Graduate}})
+	if err != nil {
+		return
+	}
+
+	memb := new(Member)
+
+	for cur.Next(ctx) {
+		if err = cur.Decode(memb); err != nil {
+			return
+		}
+		members = append(members, *memb)
+	}
+
+	if err = cur.Close(ctx); err != nil {
+		return
+	}
+	return members, client.Disconnect(ctx)
+}
+
+// String implements fmt.Stringer.
+func (m Member) String() string {
+	return fmt.Sprintf(
+		"Member {\n  %-12s%s\n  %-12s%s\n  %-12s%s\n  %-12s%s\n  %-12s%s\n  %-12s%s\n  %-12s%d\n  %-12s%d\n  %-12s%t\n  %-12s%t\n  %-12s%t\n  %-12s%d\n  %-12s%d\n}",
+		"ID:",
+		m.ID,
+		"Password:",
+		m.Password,
+		"Name:",
+		m.Name,
+		"Department:",
+		m.Department,
+		"Phone:",
+		m.Phone,
+		"Email:",
+		m.Email,
+		"Grade:",
+		m.Grade,
+		"Attendance:",
+		m.Attendance,
+		"Approved:",
+		m.Approved,
+		"OnDelete:",
+		m.OnDelete,
+		"OnGraduate:",
+		m.OnGraduate,
+		"CreatedAt:",
+		m.CreatedAt,
+		"UpdatedAt:",
+		m.UpdatedAt,
+	)
 }
