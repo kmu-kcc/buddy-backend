@@ -28,12 +28,14 @@ func Dones() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		if _, err := fee.Dones(body.Year, body.Semester); err != nil {
+		res, err := fee.Dones(body.Year, body.Semester)
+		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
+		} else {
+			c.JSON(http.StatusOK, res)
 		}
-		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -56,12 +58,14 @@ func Yets() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		if _, err := fee.Yets(body.Year, body.Semester); err != nil {
+		res, err := fee.Yets(body.Year, body.Semester)
+		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
+		} else {
+			c.JSON(http.StatusOK, res)
 		}
-		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -84,11 +88,13 @@ func All() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		if _, err := fee.All(body.Year, body.Semester); err != nil {
+		res, err := fee.All(body.Year, body.Semester)
+		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
+		} else {
+			c.JSON(http.StatusOK, res)
 		}
-		c.JSON(http.StatusOK, resp)
 	}
 }

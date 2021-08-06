@@ -39,12 +39,11 @@ func main() {
 			}
 			agroup := v1.Group("/activity")
 			{
-				agroup.POST("/applyp", activity.ApplyP())
+				agroup.PUT("/applyp", activity.ApplyP())
 				agroup.GET("/papplies", activity.Papplies())
-				agroup.POST("/approvep", activity.ApproveP())
-				agroup.POST("/rejectp", activity.RejectP())
-				agroup.POST("/cancelp", activity.CancelP())
-
+				agroup.PUT("/approvep", activity.ApproveP())
+				agroup.PUT("/rejectp", activity.RejectP())
+				agroup.PUT("/cancelp", activity.CancelP())
 			}
 			fgroup := v1.Group("/fee")
 			{
