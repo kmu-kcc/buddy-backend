@@ -176,3 +176,13 @@ func TestApproveGraduate(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestGraduates(t *testing.T) {
+	members, err := member.Graduates()
+	if err != nil {
+		t.Error(err)
+	}
+	for _, memb := range members {
+		t.Log(memb)
+	}
+}
