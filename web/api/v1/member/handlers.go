@@ -27,7 +27,7 @@ func SignIn() gin.HandlerFunc {
 
 		if err := body.SingIn(); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 		c.JSON(http.StatusOK, resp)
@@ -53,7 +53,7 @@ func SignUp() gin.HandlerFunc {
 		if err := member.New(body.ID, body.Name, body.Department, body.Phone, body.Email, body.Grade, body.Attendance).
 			SignUp(); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 		c.JSON(http.StatusOK, resp)
@@ -64,6 +64,20 @@ func SignUp() gin.HandlerFunc {
 func SignUps() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			SignUps member.Members `json:"signups"`
+			Error   string         `json:"error"`
+		})
+
+		guests, err := member.SignUps()
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.SignUps = guests
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -88,7 +102,7 @@ func Approve() gin.HandlerFunc {
 
 		if err := member.Approve(body.IDs); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 		c.JSON(http.StatusOK, resp)
@@ -116,7 +130,7 @@ func Delete() gin.HandlerFunc {
 
 		if err := member.Delete(body.IDs); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 		c.JSON(http.StatusOK, resp)
@@ -142,7 +156,7 @@ func Exit() gin.HandlerFunc {
 
 		if err := body.Exit(); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 		c.JSON(http.StatusOK, resp)
@@ -153,6 +167,20 @@ func Exit() gin.HandlerFunc {
 func Exits() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			Exits member.Members `json:"exits"`
+			Error string         `json:"error"`
+		})
+
+		members, err := member.Exits()
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Exits = members
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -175,7 +203,7 @@ func CancelExit() gin.HandlerFunc {
 
 		if err := body.CancelExit(); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 		c.JSON(http.StatusOK, resp)
@@ -186,6 +214,30 @@ func CancelExit() gin.HandlerFunc {
 func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
+
+		body := new(struct {
+			Filter map[string]interface{} `json:"filter"`
+		})
+
+		resp := new(struct {
+			Members member.Members `json:"members"`
+			Error   string         `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		members, err := member.Search(body.Filter)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Members = members
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -193,6 +245,28 @@ func Search() gin.HandlerFunc {
 func Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
+
+		body := new(struct {
+			member.Member
+			Update map[string]interface{} `json:"update"`
+		})
+
+		resp := new(struct {
+			Error string `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := body.Member.Update(body.Update); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -215,7 +289,7 @@ func ApplyGraduate() gin.HandlerFunc {
 
 		if err := body.ApplyGraduate(); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 		c.JSON(http.StatusOK, resp)
@@ -241,7 +315,7 @@ func CancelGraduate() gin.HandlerFunc {
 
 		if err := body.CancelGraduate(); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 		c.JSON(http.StatusOK, resp)
@@ -252,6 +326,20 @@ func CancelGraduate() gin.HandlerFunc {
 func GraduateApplies() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			Applies member.Members `json:"applies"`
+			Error   string         `json:"error"`
+		})
+
+		members, err := member.GraduateApplies()
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Applies = members
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -276,9 +364,30 @@ func ApproveGraduate() gin.HandlerFunc {
 
 		if err := member.ApproveGraduate(body.IDs); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Graduates handles the graduate list request.
+func Graduates() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			Graduates member.Members `json:"graduates"`
+			Error     string         `json:"error"`
+		})
+
+		graduates, err := member.Graduates()
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Graduates = graduates
 		c.JSON(http.StatusOK, resp)
 	}
 }
