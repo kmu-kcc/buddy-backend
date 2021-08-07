@@ -8,6 +8,8 @@ import (
 
 	"github.com/akamensky/argparse"
 	"github.com/gin-gonic/gin"
+	"github.com/kmu-kcc/buddy-backend/web/api/v1/activity"
+	"github.com/kmu-kcc/buddy-backend/web/api/v1/fee"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/member"
 )
 
@@ -51,11 +53,16 @@ func main() {
 			}
 			agroup := v1.Group("/activity")
 			{
-				_ = agroup
+				agroup.POST("/search", activity.Search())
+				agroup.POST("/update", activity.Update())
+				agroup.POST("/delete", activity.Delete())
+				agroup.POST("/participants", activity.Participants())
 			}
 			fgroup := v1.Group("/fee")
 			{
-				_ = fgroup
+				fgroup.POST("/create", fee.Create())
+				fgroup.POST("/submit", fee.Submit())
+				fgroup.POST("/amount", fee.Amount())
 			}
 		}
 	}

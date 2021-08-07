@@ -7,27 +7,48 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/activity"
+	"github.com/kmu-kcc/buddy-backend/pkg/member"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Search handles the activity search request.
 func Search() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-	}
-}
-
-func Update() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-	}
-}
-
-func Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
 		body := new(struct {
-			ActivityID primitive.ObjectID `json:"id"`
+			Filter map[string]interface{} `json:"filter"`
+		})
+
+		resp := new(struct {
+			Activitys activity.Activities `json:"activitys"`
+			Error     string              `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		activitys, err := activity.Search(body.Filter)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Activitys = activitys
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Update handles the activity update request.
+func Update() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			Update map[string]interface{} `json:"update"`
 		})
 
 		resp := new(struct {
@@ -40,7 +61,55 @@ func Delete() gin.HandlerFunc {
 			return
 		}
 
-		if err := activity.Delete(body.ActivityID); err != nil {
+		if id, exists := body.Update["_id"]; exists {
+			objectID, err := primitive.ObjectIDFromHex(id.(string))
+			if err != nil {
+				resp.Error = err.Error()
+				c.JSON(http.StatusBadRequest, resp)
+				return
+			}
+			body.Update["_id"] = objectID
+		} else {
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := activity.Update(body.Update); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Delete handles the activity delete request.
+func Delete() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			ActivityID string `json:"_id"`
+		})
+
+		resp := new(struct {
+			Error string `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		objectID, err := primitive.ObjectIDFromHex(body.ActivityID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := activity.Delete(objectID); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
@@ -49,16 +118,18 @@ func Delete() gin.HandlerFunc {
 	}
 }
 
+// Participants handles the participant list request.
 func Participants() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
 		body := new(struct {
-			ActivityID primitive.ObjectID `json:"id"`
+			ActivityID string `json:"_id"`
 		})
 
 		resp := new(struct {
-			Error string `json:"error"`
+			Members member.Members `json:"members"`
+			Error   string         `json:"error"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -67,11 +138,18 @@ func Participants() gin.HandlerFunc {
 			return
 		}
 
-		if err := activity.Delete(body.ActivityID); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+		activityID, err := primitive.ObjectIDFromHex(body.ActivityID)
+		if err != nil {
 			return
 		}
+
+		members, err := activity.Participants(activityID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Members = members
 		c.JSON(http.StatusOK, resp)
 	}
 }
