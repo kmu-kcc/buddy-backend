@@ -1,9 +1,10 @@
+
 PUT http://localhost:3000/api/v1/activity/applyp HTTP/1.1
 Content-Type: application/json
 
 {
   "_id": "610d4cfa567af2cc318e7f97",
-  "member_id": "20172229"
+  "member_id": "20172227"
   
 }
 
@@ -37,7 +38,7 @@ PUT  http://localhost:3000/api/v1/activity/rejectp HTTP/1.1
 Content-Type: application/json
 
 {
-  "_id": "60fcac8824c06103861b13f2",
+  "_id": "610d4cfa567af2cc318e7f97",
   "member_ids": [
     "20172228",
     "20171718"
@@ -51,8 +52,8 @@ PUT   http://localhost:3000/api/v1/activity/cancelp HTTP/1.1
 Content-Type: application/json
 
 {
-  "_id": "60fcac8824c06103861b13f2",
-  "member_id": "20172229"
+  "_id": "610d4cfa567af2cc318e7f97",
+  "member_id": "20172227"
 
 }
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/fee"
+	"github.com/kmu-kcc/buddy-backend/pkg/member"
 )
 
 //Dones handles the inquiry of done submitted personel
@@ -15,7 +16,8 @@ func Dones() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Error string `json:"error"`
+			Dones member.Members `json:"dones"`
+			Error string         `json:"error"`
 		})
 		body := new(
 			struct {
@@ -28,14 +30,15 @@ func Dones() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
+
 		res, err := fee.Dones(body.Year, body.Semester)
 		if err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
-		} else {
-			c.JSON(http.StatusOK, res)
 		}
+		resp.Dones = res
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -45,7 +48,8 @@ func Yets() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Error string `json:"error"`
+			Yets  member.Members `json:"yets"`
+			Error string         `json:"error"`
 		})
 		body := new(
 			struct {
@@ -61,11 +65,11 @@ func Yets() gin.HandlerFunc {
 		res, err := fee.Yets(body.Year, body.Semester)
 		if err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
-		} else {
-			c.JSON(http.StatusOK, res)
 		}
+		resp.Yets = res
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -75,26 +79,27 @@ func All() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Error string `json:"error"`
+			Logs  fee.Logs `json:"logs"`
+			Error string   `json:"error"`
 		})
-		body := new(
-			struct {
-				Year     int `json:"year"`
-				Semester int `json:"semester"`
-			})
+		body := new(struct {
+			Year     int `json:"year"`
+			Semester int `json:"semester"`
+		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
+
 		res, err := fee.All(body.Year, body.Semester)
 		if err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
-		} else {
-			c.JSON(http.StatusOK, res)
 		}
+		resp.Logs = res
+		c.JSON(http.StatusOK, resp)
 	}
 }

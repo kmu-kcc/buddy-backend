@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/activity"
+	"github.com/kmu-kcc/buddy-backend/pkg/member"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -20,8 +21,8 @@ func ApplyP() gin.HandlerFunc {
 		})
 		body := new(
 			struct {
-				ActivityID primitive.ObjectID `json:"_id"`
-				MemberID   string             `json:"member_id"`
+				ActivityID string `json:"_id"`
+				MemberID   string `json:"member_id"`
 			})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -29,11 +30,19 @@ func ApplyP() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		if err := activity.ApplyP(body.ActivityID, body.MemberID); err != nil {
+		activityID, err := primitive.ObjectIDFromHex(body.ActivityID)
+		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
+
+		if err := activity.ApplyP(activityID, body.MemberID); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -44,11 +53,12 @@ func Papplies() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Error string `json:"error"`
+			Papplies member.Members `json:"papplies"`
+			Error    string         `json:"error"`
 		})
 		body := new(
 			struct {
-				ID primitive.ObjectID `json:"_id"`
+				ActivityID string `json:"_id"`
 			})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -56,12 +66,21 @@ func Papplies() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		if _, err := activity.Papplies(body.ID); err != nil {
+		activityID, err := primitive.ObjectIDFromHex(body.ActivityID)
+		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
+		res, err := activity.Papplies(activityID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Papplies = res
 		c.JSON(http.StatusOK, resp)
+
 	}
 }
 
@@ -75,8 +94,8 @@ func ApproveP() gin.HandlerFunc {
 		})
 		body := new(
 			struct {
-				ID  primitive.ObjectID `json:"_id"`
-				IDs []string           `json:"member_ids"`
+				ActivityID string   `json:"_id"`
+				IDs        []string `json:"member_ids"`
 			})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -84,7 +103,13 @@ func ApproveP() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		if err := activity.ApproveP(body.ID, body.IDs); err != nil {
+		activityID, err := primitive.ObjectIDFromHex(body.ActivityID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+		if err := activity.ApproveP(activityID, body.IDs); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
@@ -103,8 +128,8 @@ func RejectP() gin.HandlerFunc {
 		})
 		body := new(
 			struct {
-				ID  primitive.ObjectID `json:"_id"`
-				IDs []string           `json:"member_ids"`
+				ActivityID string   `json:"_id"`
+				IDs        []string `json:"member_ids"`
 			})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -112,7 +137,13 @@ func RejectP() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		if err := activity.RejectP(body.ID, body.IDs); err != nil {
+		activityID, err := primitive.ObjectIDFromHex(body.ActivityID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+		if err := activity.RejectP(activityID, body.IDs); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
@@ -130,8 +161,8 @@ func CancelP() gin.HandlerFunc {
 		})
 		body := new(
 			struct {
-				ActivityID primitive.ObjectID `json:"_id"`
-				MemberID   string             `json:"member_id"`
+				ActivityID string `json:"_id"`
+				MemberID   string `json:"member_id"`
 			})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -139,7 +170,13 @@ func CancelP() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		if err := activity.CancelP(body.ActivityID, body.MemberID); err != nil {
+		activityID, err := primitive.ObjectIDFromHex(body.ActivityID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+		if err := activity.CancelP(activityID, body.MemberID); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
