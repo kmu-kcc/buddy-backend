@@ -21,8 +21,8 @@ func Search() gin.HandlerFunc {
 		})
 
 		resp := new(struct {
-			Activitys activity.Activities `json:"activitys"`
-			Error     string              `json:"error"`
+			Activities activity.Activities `json:"activities"`
+			Error      string              `json:"error"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -31,13 +31,13 @@ func Search() gin.HandlerFunc {
 			return
 		}
 
-		activitys, err := activity.Search(body.Filter)
+		activities, err := activity.Search(body.Filter)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Activitys = activitys
+		resp.Activities = activities
 		c.JSON(http.StatusOK, resp)
 	}
 }
