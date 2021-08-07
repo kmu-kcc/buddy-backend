@@ -247,11 +247,6 @@ func Dones(year, semester int) (members member.Members, err error) {
 // It is privileged operation:
 //	Only the club managers can access to this operation.
 func Yets(year, semester int) (members member.Members, err error) {
-	dones, err := Dones(year, semester)
-	if err != nil {
-		return
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -260,19 +255,55 @@ func Yets(year, semester int) (members member.Members, err error) {
 		return
 	}
 
-	filter := func() bson.D {
-		ids := make(bson.A, len(dones))
-		for idx, memb := range dones {
-			ids[idx] = memb.ID
-		}
-		return bson.D{
-			bson.E{Key: "id", Value: bson.D{
-				bson.E{Key: "$nin", Value: ids}}}}
-	}()
-
+	fee := new(Fee)
+	log := new(Log)
 	memb := new(member.Member)
 
-	cur, err := client.Database("club").Collection("members").Find(ctx, filter)
+	if err = client.Database("club").
+		Collection("fees").
+		FindOne(ctx, bson.M{"year": year, "semester": semester}).Decode(fee); err != nil {
+		return
+	}
+
+	filter := func() bson.D {
+		arr := make(bson.A, len(fee.Logs))
+		for idx, logID := range fee.Logs {
+			arr[idx] = logID
+		}
+		return bson.D{
+			bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: arr}}},
+			bson.E{Key: "type", Value: "approved"},
+		}
+	}()
+
+	cur, err := client.Database("club").Collection("logs").Find(ctx, filter)
+	if err != nil {
+		return
+	}
+
+	amounts := make(map[string]int)
+
+	for cur.Next(ctx) {
+		if err = cur.Decode(log); err != nil {
+			return
+		}
+		amounts[log.MemberID] += log.Amount
+	}
+	if err = cur.Close(ctx); err != nil {
+		return
+	}
+
+	filter = func() bson.D {
+		arr := bson.A{}
+		for membID, amount := range amounts {
+			if amount < fee.Amount {
+				arr = append(arr, membID)
+			}
+		}
+		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
+	}()
+
+	cur, err = client.Database("club").Collection("members").Find(ctx, filter)
 	if err != nil {
 		return
 	}
@@ -395,7 +426,7 @@ func Approve(ids []primitive.ObjectID) error {
 //
 // This is privileged operation:
 // 	Only the club managers can access to this operation
-func Reject(year, semester int, ids []primitive.ObjectID) error {
+func Reject(ids []primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -404,23 +435,55 @@ func Reject(year, semester int, ids []primitive.ObjectID) error {
 		return err
 	}
 
+	// DeleteMany Returns Count
+
+	filter := func() bson.D {
+		arr := make(bson.A, len(ids))
+		for idx, id := range ids {
+			arr[idx] = id
+		}
+		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
+	}()
+
+	if _, err := client.Database("club").Collection("fees").DeleteMany(ctx, filter); err != nil {
+		return err
+	}
+
+	var D primitive.ObjectID
+
 	for _, id := range ids {
-		if _, err := client.Database("club").Collection("fees").UpdateOne(ctx, bson.M{
-			"year":     year,
-			"semester": semester,
-		},
+		if err = client.Database("club").Collection("fees").FindOneAndUpdate(ctx,
+			bson.D{
+				bson.E{Key: "$in", Value: bson.D{
+					bson.E{Key: "logs", Value: id}}},
+			},
 			bson.D{
 				bson.E{Key: "$pull", Value: bson.D{
 					bson.E{Key: "logs", Value: id},
 				},
 				},
-			}); err != nil {
-			return err
-		}
-		if _, err := client.Database("club").Collection("logs").DeleteOne(ctx, bson.M{"_id": id}); err != nil {
+			}).Decode(D); err != nil {
 			return err
 		}
 	}
+
+	// for _, id := range ids {
+	// 	if _, err := client.Database("club").Collection("fees").UpdateOne(ctx, bson.M{
+	// 		"year":     year,
+	// 		"semester": semester,
+	// 	},
+	// 		bson.D{
+	// 			bson.E{Key: "$pull", Value: bson.D{
+	// 				bson.E{Key: "logs", Value: id},
+	// 			},
+	// 			},
+	// 		}); err != nil {
+	// 		return err
+	// 	}
+	// 	if _, err := client.Database("club").Collection("logs").DeleteOne(ctx, bson.M{"_id": id}); err != nil {
+	// 		return err
+	// 	}
+	// }
 	return client.Disconnect(ctx)
 }
 
@@ -453,6 +516,8 @@ func Deposit(year, semester, amount int) error {
 		}); err != nil {
 		return err
 	}
-	client.Database("club").Collection("logs").InsertOne(ctx, deposit)
+	if _, err := client.Database("club").Collection("logs").InsertOne(ctx, deposit); err != nil {
+		return err
+	}
 	return client.Disconnect(ctx)
 }
