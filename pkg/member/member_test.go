@@ -8,10 +8,10 @@ import (
 
 func TestSignUp(t *testing.T) {
 	guests := []*member.Member{
-		member.New("20210001", "Test1", "Department1", "1", "010-2021-0001", "testmail1", member.Attending),
-		member.New("20190002", "Test2", "Department2", "2", "010-2019-0002", "testmail2", member.Absent),
-		member.New("20190003", "Test3", "Department3", "3", "010-2019-0003", "testmail3", member.Attending),
-		member.New("20160004", "Test4", "Department2", "4", "010-2016-0004", "testmail4", member.Graduate),
+		member.New("20210001", "Test1", "Department1", "010-2021-0001", "testmail1", 1, member.Attending),
+		member.New("20190002", "Test2", "Department2", "010-2019-0002", "testmail2", 2, member.Absent),
+		member.New("20190003", "Test3", "Department3", "010-2019-0003", "testmail3", 3, member.Attending),
+		member.New("20160004", "Test4", "Department2", "010-2016-0004", "testmail4", 4, member.Graduate),
 	}
 
 	for _, guest := range guests {
@@ -124,17 +124,65 @@ func TestSearch(t *testing.T) {
 	}
 }
 
-func TestGraduate(t *testing.T) {
+func TestApplyGraduate(t *testing.T) {
 	memb := member.Member{ID: "20210001"}
-	if err := memb.Graduate(); err != nil {
+	if err := memb.ApplyGraduate(); err != nil {
 		t.Error(err)
 	}
 
-	if membs, err := member.Search(map[string]interface{}{"attendance": member.Graduate}); err != nil {
+	memb.ID = "20190002"
+	if err := memb.ApplyGraduate(); err != nil {
+		t.Error(err)
+	}
+
+	if membs, err := member.Search(map[string]interface{}{"on_graduate": true}); err != nil {
 		t.Error(err)
 	} else {
-		for _, memb := range membs {
+		for _, memb = range membs {
 			t.Log(memb)
 		}
+	}
+}
+
+func TestCancelGraduate(t *testing.T) {
+	memb := member.Member{ID: "20210001"}
+	if err := memb.CancelGraduate(); err != nil {
+		t.Error(err)
+	}
+
+	if membs, err := member.Search(map[string]interface{}{"on_graduate": true}); err != nil {
+		t.Error(err)
+	} else {
+		for _, memb = range membs {
+			t.Log(memb)
+		}
+	}
+}
+
+func TestGraduateApplies(t *testing.T) {
+	membs, err := member.GraduateApplies()
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, memb := range membs {
+		t.Log(memb)
+	}
+}
+
+func TestApproveGraduate(t *testing.T) {
+	ids := []string{"20190002"}
+	if err := member.ApproveGraduate(ids); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestGraduates(t *testing.T) {
+	members, err := member.Graduates()
+	if err != nil {
+		t.Error(err)
+	}
+	for _, memb := range members {
+		t.Log(memb)
 	}
 }

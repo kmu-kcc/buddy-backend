@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/activity"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/fee"
+	"github.com/kmu-kcc/buddy-backend/web/api/v1/member"
 )
 
 func main() {
@@ -24,7 +25,7 @@ func main() {
 		log.Fatalln(parser.Usage(err))
 	}
 
-	gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.DebugMode)
 
 	engine := gin.Default()
 
@@ -34,25 +35,51 @@ func main() {
 		{
 			mgroup := v1.Group("/member")
 			{
-				_ = mgroup
+				mgroup.POST("/signin", member.SignIn())
+				mgroup.POST("/signup", member.SignUp())
+				mgroup.GET("/signups", member.SignUps())
+				mgroup.POST("/approve", member.Approve())
+				mgroup.POST("/delete", member.Delete())
+				mgroup.POST("/exit", member.Exit())
+				mgroup.GET("/exits", member.Exits())
+				mgroup.POST("/cancelexit", member.CancelExit())
+				mgroup.POST("/search", member.Search())
+				mgroup.POST("/update", member.Update())
+				mgroup.POST("/applygraduate", member.ApplyGraduate())
+				mgroup.POST("/cancelgraduate", member.CancelGraduate())
+				mgroup.GET("/graduateapplies", member.GraduateApplies())
+				mgroup.POST("/approvegraduate", member.ApproveGraduate())
+				mgroup.GET("/graduates", member.Graduates())
 			}
-
 			agroup := v1.Group("/activity")
 			{
-				agroup.POST("/applyc", activity.ApplyC())
+        agroup.PUT("/applyp", activity.ApplyP())
+				agroup.GET("/papplies", activity.Papplies())
+				agroup.PUT("/approvep", activity.ApproveP())
+				agroup.PUT("/rejectp", activity.RejectP())
+				agroup.PUT("/cancelp", activity.CancelP())
+				agroup.POST("/search", activity.Search())
+				agroup.POST("/update", activity.Update())
+				agroup.POST("/delete", activity.Delete())
+				agroup.POST("/participants", activity.Participants())
+        agroup.POST("/applyc", activity.ApplyC())
 				agroup.POST("/cancelc", activity.CancelC())
 				agroup.GET("/capplies", activity.Capplies())
 				agroup.POST("/approvec", activity.ApproveC())
 				agroup.POST("/rejectc", activity.RejectC())
 			}
-
 			fgroup := v1.Group("/fee")
 			{
-				fgroup.POST("/approve", fee.Approve())
+        fgroup.POST("/create", fee.Create())
+				fgroup.POST("/submit", fee.Submit())
+				fgroup.POST("/amount", fee.Amount())
+        fgroup.GET("/dones", fee.Dones())
+				fgroup.GET("/yets", fee.Yets())
+				fgroup.GET("/all", fee.All())
+        fgroup.POST("/approve", fee.Approve())
 				fgroup.POST("/reject", fee.Reject())
 				fgroup.POST("/deposit", fee.Deposit())
 			}
-
 		}
 	}
 

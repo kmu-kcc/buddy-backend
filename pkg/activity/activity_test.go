@@ -27,7 +27,7 @@ func TestInsertMany(t *testing.T) {
 	if res, err := collection.InsertMany(ctx, []interface{}{
 		bson.D{bson.E{Key: "participants", Value: []string{"20181681"}}},
 		bson.D{bson.E{Key: "type", Value: "MT"}},
-		bson.D{bson.E{Key: "type", Value: "meet"}, {Key: "place", Value: "cafe"}},
+		bson.D{bson.E{Key: "type", Value: "meet"}, bson.E{Key: "place", Value: "cafe"}},
 		bson.D{bson.E{Key: "place", Value: "home"}},
 		bson.D{bson.E{Key: "type", Value: "study"}, bson.E{Key: "description", Value: "ok"}},
 	}); err != nil {
@@ -74,15 +74,15 @@ func TestUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	filters := []map[string]interface{}{
+	updates := []map[string]interface{}{
 		{
 			"_id":  objectId,
 			"type": "meet",
 		},
 	}
 
-	for _, filter := range filters {
-		if err := activity.Update(filter); err != nil {
+	for _, update := range updates {
+		if err := activity.Update(update); err != nil {
 			t.Error(err)
 		}
 	}

@@ -381,7 +381,7 @@ func All(year, semester int) (logs Logs, err error) {
 
 // Approve approves the submission request of ids.
 //
-// Note :
+// Note:
 //
 // This is privileged operation:
 // 	Only the club managers can access to this operation.
@@ -390,7 +390,6 @@ func Approve(ids []primitive.ObjectID) error {
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
-
 	if err != nil {
 		return err
 	}
@@ -504,19 +503,24 @@ func Deposit(year, semester, amount int) error {
 
 	deposit := NewLog("", "direct", amount)
 
-	if _, err := client.Database("club").Collection("fees").UpdateOne(ctx,
-		bson.D{
-			bson.E{Key: "year", Value: year},
-			bson.E{Key: "semester", Value: semester},
-		},
-		bson.D{
-			bson.E{Key: "$push", Value: bson.D{
-				bson.E{Key: "logs", Value: deposit.ID},
-			}},
+	if _, err = client.Database("club").
+    Collection("fees").
+    UpdateOne(ctx,
+		  bson.D{
+			  bson.E{Key: "year", Value: year},
+			  bson.E{Key: "semester", Value: semester},
+		  },
+		  bson.D{
+			  bson.E{Key: "$push", Value: bson.D{
+				  bson.E{Key: "logs", Value: deposit.ID},
+		  }},
 		}); err != nil {
 		return err
 	}
-	if _, err := client.Database("club").Collection("logs").InsertOne(ctx, deposit); err != nil {
+
+  if _, err = client.Database("club").
+  Collection("logs").
+  InsertOne(ctx, deposit); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)
