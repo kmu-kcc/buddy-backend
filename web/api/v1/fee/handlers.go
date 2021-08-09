@@ -4,12 +4,12 @@ package fee
 import (
 	"encoding/json"
 	"net/http"
-  "strconv"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/fee"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
-  "go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Create handles the fee creation request.
@@ -209,7 +209,7 @@ func Approve() gin.HandlerFunc {
 		})
 
 		body := new(struct {
-			IDs []string `json:ids`
+			IDs []string `json:"ids"`
 		})
 
 		err := json.NewDecoder(c.Request.Body).Decode(body)
@@ -247,7 +247,7 @@ func Reject() gin.HandlerFunc {
 		})
 
 		body := new(struct {
-			IDs []primitive.ObjectID `json:ids`
+			IDs []primitive.ObjectID `json:"ids"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -273,9 +273,9 @@ func Deposit() gin.HandlerFunc {
 		})
 
 		body := new(struct {
-			Year     string `json: "year, string"`
-			Semester string `json: "semester, string"`
-			Amount   string `json: "amount, string"`
+			Year     string `json:"year"`
+			Semester string `json:"semester"`
+			Amount   string `json:"amount"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
