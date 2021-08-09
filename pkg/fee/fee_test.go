@@ -153,7 +153,7 @@ func TestReject(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := fee.Reject(2021, 4, []primitive.ObjectID{testLog.ID}); err != nil {
+	if err := fee.Reject([]primitive.ObjectID{testLog.ID}); err != nil {
 		t.Fatal(err)
 	}
 	if err = client.Disconnect(ctx); err != nil {

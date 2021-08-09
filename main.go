@@ -35,19 +35,40 @@ func main() {
 		{
 			mgroup := v1.Group("/member")
 			{
+				mgroup.POST("/signin", member.SignIn())
 				mgroup.POST("/signup", member.SignUp())
+				mgroup.GET("/signups", member.SignUps())
+				mgroup.POST("/approve", member.Approve())
+				mgroup.POST("/delete", member.Delete())
+				mgroup.POST("/exit", member.Exit())
+				mgroup.GET("/exits", member.Exits())
+				mgroup.POST("/cancelexit", member.CancelExit())
+				mgroup.POST("/search", member.Search())
+				mgroup.POST("/update", member.Update())
+				mgroup.POST("/applygraduate", member.ApplyGraduate())
+				mgroup.POST("/cancelgraduate", member.CancelGraduate())
+				mgroup.GET("/graduateapplies", member.GraduateApplies())
+				mgroup.POST("/approvegraduate", member.ApproveGraduate())
+				mgroup.GET("/graduates", member.Graduates())
 			}
 			agroup := v1.Group("/activity")
 			{
-				agroup.PUT("/applyp", activity.ApplyP())
+        agroup.PUT("/applyp", activity.ApplyP())
 				agroup.GET("/papplies", activity.Papplies())
 				agroup.PUT("/approvep", activity.ApproveP())
 				agroup.PUT("/rejectp", activity.RejectP())
 				agroup.PUT("/cancelp", activity.CancelP())
+				agroup.POST("/search", activity.Search())
+				agroup.POST("/update", activity.Update())
+				agroup.POST("/delete", activity.Delete())
+				agroup.POST("/participants", activity.Participants())
 			}
 			fgroup := v1.Group("/fee")
 			{
-				fgroup.GET("/dones", fee.Dones())
+				fgroup.POST("/create", fee.Create())
+				fgroup.POST("/submit", fee.Submit())
+				fgroup.POST("/amount", fee.Amount())
+        fgroup.GET("/dones", fee.Dones())
 				fgroup.GET("/yets", fee.Yets())
 				fgroup.GET("/all", fee.All())
 			}

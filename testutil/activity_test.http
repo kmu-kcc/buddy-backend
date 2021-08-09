@@ -1,3 +1,42 @@
+POST http://127.0.0.1:3000/api/v1/activity/search HTTP/1.1
+Content-Type: application/json
+
+{
+  "filter": {
+    "type": "study"
+  }
+}
+
+###
+
+POST http://127.0.0.1:3000/api/v1/activity/update HTTP/1.1
+Content-Type: application/json
+
+{
+  "update": {
+    "_id": "610d458b79e122ea1d150cd6",
+    "description": "Good"
+  }
+}
+
+###
+
+POST http://127.0.0.1:3000/api/v1/activity/delete HTTP/1.1
+Content-Type: application/json
+
+{
+  "_id": "610d458b79e122ea1d150cd4"
+
+}
+
+###
+
+POST http://127.0.0.1:3000/api/v1/activity/participants HTTP/1.1
+Content-Type: application/json
+
+{
+  "_id": "610d458b79e122ea1d150cd3"
+}
 
 PUT http://localhost:3000/api/v1/activity/applyp HTTP/1.1
 Content-Type: application/json
@@ -56,5 +95,3 @@ Content-Type: application/json
   "member_id": "20172227"
 
 }
-
-###

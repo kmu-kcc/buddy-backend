@@ -73,15 +73,15 @@ func TestUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	filters := []map[string]interface{}{
+	updates := []map[string]interface{}{
 		{
 			"_id":  objectId,
 			"type": "meet",
 		},
 	}
 
-	for _, filter := range filters {
-		if err := activity.Update(filter); err != nil {
+	for _, update := range updates {
+		if err := activity.Update(update); err != nil {
 			t.Error(err)
 		}
 	}

@@ -11,7 +11,150 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-//ApplyP handles the activity apply request
+// Search handles the activity search request.
+func Search() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			Filter map[string]interface{} `json:"filter"`
+		})
+
+		resp := new(struct {
+			Activities activity.Activities `json:"activities"`
+			Error      string              `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		activities, err := activity.Search(body.Filter)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Activities = activities
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Update handles the activity update request.
+func Update() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			Update map[string]interface{} `json:"update"`
+		})
+
+		resp := new(struct {
+			Error string `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if id, exists := body.Update["_id"]; exists {
+			objectID, err := primitive.ObjectIDFromHex(id.(string))
+			if err != nil {
+				resp.Error = err.Error()
+				c.JSON(http.StatusBadRequest, resp)
+				return
+			}
+			body.Update["_id"] = objectID
+		} else {
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := activity.Update(body.Update); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Delete handles the activity deletion request.
+func Delete() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			ActivityID string `json:"_id"`
+		})
+
+		resp := new(struct {
+			Error string `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		objectID, err := primitive.ObjectIDFromHex(body.ActivityID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := activity.Delete(objectID); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Participants handles the participant list request.
+func Participants() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			ActivityID string `json:"_id"`
+		})
+
+		resp := new(struct {
+			Members member.Members `json:"members"`
+			Error   string         `json:"error"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		activityID, err := primitive.ObjectIDFromHex(body.ActivityID)
+		if err != nil {
+			return
+		}
+
+		members, err := activity.Participants(activityID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Members = members
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// ApplyP handles the activity apply request.
 func ApplyP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -47,7 +190,7 @@ func ApplyP() gin.HandlerFunc {
 	}
 }
 
-//Papplies handles the inquire of applicants list
+// Papplies handles the activity applicant list request.
 func Papplies() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -84,7 +227,7 @@ func Papplies() gin.HandlerFunc {
 	}
 }
 
-//ApplyP handles the activity apply request
+// ApplyP handles the activity apply approval request.
 func ApproveP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -118,7 +261,7 @@ func ApproveP() gin.HandlerFunc {
 	}
 }
 
-//ApplyP handles the activity apply request
+// RejectP handles the activity apply rejection request.
 func RejectP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -152,6 +295,7 @@ func RejectP() gin.HandlerFunc {
 	}
 }
 
+// CancelP handles the activity apply cancellation request.
 func CancelP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
