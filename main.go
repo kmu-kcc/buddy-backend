@@ -53,6 +53,11 @@ func main() {
 			}
 			agroup := v1.Group("/activity")
 			{
+        agroup.PUT("/applyp", activity.ApplyP())
+				agroup.GET("/papplies", activity.Papplies())
+				agroup.PUT("/approvep", activity.ApproveP())
+				agroup.PUT("/rejectp", activity.RejectP())
+				agroup.PUT("/cancelp", activity.CancelP())
 				agroup.POST("/search", activity.Search())
 				agroup.POST("/update", activity.Update())
 				agroup.POST("/delete", activity.Delete())
@@ -63,6 +68,9 @@ func main() {
 				fgroup.POST("/create", fee.Create())
 				fgroup.POST("/submit", fee.Submit())
 				fgroup.POST("/amount", fee.Amount())
+        fgroup.GET("/dones", fee.Dones())
+				fgroup.GET("/yets", fee.Yets())
+				fgroup.GET("/all", fee.All())
 			}
 		}
 	}

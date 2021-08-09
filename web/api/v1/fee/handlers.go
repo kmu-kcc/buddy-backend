@@ -7,9 +7,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/fee"
+	"github.com/kmu-kcc/buddy-backend/pkg/member"
 )
 
-// Create handles the fee create request.
+// Create handles the fee creation request.
 func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -39,7 +40,7 @@ func Create() gin.HandlerFunc {
 	}
 }
 
-// Submit handles the fee submit request.
+// Submit handles the fee submission request.
 func Submit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -70,7 +71,7 @@ func Submit() gin.HandlerFunc {
 	}
 }
 
-// Amount handles the amount of fees submitted request.
+// Amount handles the submission amount request.
 func Amount() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -99,6 +100,100 @@ func Amount() gin.HandlerFunc {
 			return
 		}
 		resp.Sum = sum
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Dones handles the fee submittee list request.
+func Dones() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			Dones member.Members `json:"dones"`
+			Error string         `json:"error"`
+		})
+		body := new(
+			struct {
+				Year     int `json:"year"`
+				Semester int `json:"semester"`
+			})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		res, err := fee.Dones(body.Year, body.Semester)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Dones = res
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Yets handles the unsubmittee list request.
+func Yets() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			Yets  member.Members `json:"yets"`
+			Error string         `json:"error"`
+		})
+		body := new(
+			struct {
+				Year     int `json:"year"`
+				Semester int `json:"semester"`
+			})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+		res, err := fee.Yets(body.Year, body.Semester)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Yets = res
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// All handles the fee log list request.
+func All() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			Logs  fee.Logs `json:"logs"`
+			Error string   `json:"error"`
+		})
+		body := new(struct {
+			Year     int `json:"year"`
+			Semester int `json:"semester"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		res, err := fee.All(body.Year, body.Semester)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		resp.Logs = res
 		c.JSON(http.StatusOK, resp)
 	}
 }
