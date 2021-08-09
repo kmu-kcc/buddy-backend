@@ -489,7 +489,6 @@ func ApplyC(activityID primitive.ObjectID, memberID string) error {
 			}}}}); err != nil {
 		return err
 	}
-
 	return client.Disconnect(ctx)
 }
 
@@ -687,7 +686,5 @@ func RejectC(activityID primitive.ObjectID, memberID string) error {
 			}}}}); err != nil {
 		return err
 	}
-
 	return client.Disconnect(ctx)
-
 }

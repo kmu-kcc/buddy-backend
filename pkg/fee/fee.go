@@ -504,23 +504,23 @@ func Deposit(year, semester, amount int) error {
 	deposit := NewLog("", "direct", amount)
 
 	if _, err = client.Database("club").
-    Collection("fees").
-    UpdateOne(ctx,
-		  bson.D{
-			  bson.E{Key: "year", Value: year},
-			  bson.E{Key: "semester", Value: semester},
-		  },
-		  bson.D{
-			  bson.E{Key: "$push", Value: bson.D{
-				  bson.E{Key: "logs", Value: deposit.ID},
-		  }},
-		}); err != nil {
+		Collection("fees").
+		UpdateOne(ctx,
+			bson.D{
+				bson.E{Key: "year", Value: year},
+				bson.E{Key: "semester", Value: semester},
+			},
+			bson.D{
+				bson.E{Key: "$push", Value: bson.D{
+					bson.E{Key: "logs", Value: deposit.ID},
+				}},
+			}); err != nil {
 		return err
 	}
 
-  if _, err = client.Database("club").
-  Collection("logs").
-  InsertOne(ctx, deposit); err != nil {
+	if _, err = client.Database("club").
+		Collection("logs").
+		InsertOne(ctx, deposit); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)
