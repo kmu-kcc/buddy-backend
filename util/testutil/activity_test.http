@@ -1,0 +1,47 @@
+POST http://localhost:3000/api/v1/activity/applyc HTTP/1.1
+Content-Type: application/json
+
+{
+  "activity_id":"610e442b9a1be415c1ba04d5",
+  "member_id":"20181681"
+
+}
+
+###
+
+POST http://localhost:3000/api/v1/activity/cancelc HTTP/1.1
+Content-Type: application/json
+
+{
+  "activity_id":"610e442b9a1be415c1ba04d5",
+  "member_id":"20181681"
+}
+
+###
+
+GET  http://localhost:3000/api/v1/activity/capplies HTTP/1.1
+Content-Type: application/json
+
+{
+  "activity_id":"610e442b9a1be415c1ba04d5"
+}
+
+###
+
+POST http://localhost:3000/api/v1/activity/approvec HTTP/1.1
+Content-Type: application/json
+
+{
+  "activity_id":"610e442b9a1be415c1ba04d5",
+  "member_id" : "20181681"
+}
+
+###
+
+POST http://localhost:3000/api/v1/activity/rejectc HTTP/1.1
+Content-Type: application/json
+
+{
+  "activity_id":"610e442b9a1be415c1ba04d5",
+  "member_id" : "20181681"
+}

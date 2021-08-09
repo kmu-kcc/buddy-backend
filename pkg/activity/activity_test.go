@@ -25,6 +25,7 @@ func TestInsertMany(t *testing.T) {
 	collection := client.Database("club").Collection("activities")
 
 	if res, err := collection.InsertMany(ctx, []interface{}{
+		bson.D{bson.E{Key: "participants", Value: []string{"20181681"}}},
 		bson.D{bson.E{Key: "type", Value: "MT"}},
 		bson.D{bson.E{Key: "type", Value: "meet"}, bson.E{Key: "place", Value: "cafe"}},
 		bson.D{bson.E{Key: "place", Value: "home"}},

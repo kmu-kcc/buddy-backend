@@ -62,15 +62,23 @@ func main() {
 				agroup.POST("/update", activity.Update())
 				agroup.POST("/delete", activity.Delete())
 				agroup.POST("/participants", activity.Participants())
+        agroup.POST("/applyc", activity.ApplyC())
+				agroup.POST("/cancelc", activity.CancelC())
+				agroup.GET("/capplies", activity.Capplies())
+				agroup.POST("/approvec", activity.ApproveC())
+				agroup.POST("/rejectc", activity.RejectC())
 			}
 			fgroup := v1.Group("/fee")
 			{
-				fgroup.POST("/create", fee.Create())
+        fgroup.POST("/create", fee.Create())
 				fgroup.POST("/submit", fee.Submit())
 				fgroup.POST("/amount", fee.Amount())
         fgroup.GET("/dones", fee.Dones())
 				fgroup.GET("/yets", fee.Yets())
 				fgroup.GET("/all", fee.All())
+        fgroup.POST("/approve", fee.Approve())
+				fgroup.POST("/reject", fee.Reject())
+				fgroup.POST("/deposit", fee.Deposit())
 			}
 		}
 	}
