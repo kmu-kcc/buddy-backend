@@ -237,6 +237,8 @@ func Reject() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
+			Data struct {
+			} `json:"data"`
 			Error string `json:"error"`
 		})
 
