@@ -17,12 +17,7 @@ func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		body := new(struct {
-			Year     int `json:"year"`
-			Semester int `json:"semester"`
-			Amount   int `json:"amount"`
-		})
-
+		body := new(fee.Fee)
 		resp := new(struct {
 			Error string `json:"error"`
 		})
@@ -33,7 +28,7 @@ func Create() gin.HandlerFunc {
 			return
 		}
 
-		if err := fee.Create(body.Year, body.Semester, body.Amount); err != nil {
+		if err := fee.New(body.Year, body.Semester, body.Amount).Create(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
@@ -48,10 +43,8 @@ func Submit() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		body := new(struct {
+			fee.Fee
 			MemberID string `json:"member_id"`
-			Year     int    `json:"year"`
-			Semester int    `json:"semester"`
-			Amount   int    `json:"amount"`
 		})
 
 		resp := new(struct {
@@ -64,7 +57,7 @@ func Submit() gin.HandlerFunc {
 			return
 		}
 
-		if err := fee.Submit(body.MemberID, body.Year, body.Semester, body.Amount); err != nil {
+		if err := body.Submit(body.MemberID); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return

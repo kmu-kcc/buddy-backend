@@ -41,7 +41,7 @@ func New(year, semester, amount int) *Fee {
 //
 // It is privileged operation:
 //	Only the club managers can access to this operation.
-func Create(year, semester, amount int) (err error) {
+func (f Fee) Create() (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -54,8 +54,8 @@ func Create(year, semester, amount int) (err error) {
 	fee := new(Fee)
 
 	if err = collection.FindOne(ctx, bson.D{
-		bson.E{Key: "year", Value: year},
-		bson.E{Key: "semester", Value: semester},
+		bson.E{Key: "year", Value: f.Year},
+		bson.E{Key: "semester", Value: f.Semester},
 	}).Decode(fee); err != mongo.ErrNoDocuments {
 		if err = client.Disconnect(ctx); err != nil {
 			return
@@ -63,7 +63,7 @@ func Create(year, semester, amount int) (err error) {
 		return ErrDuplicatedFee
 	}
 
-	if _, err = collection.InsertOne(ctx, New(year, semester, amount)); err != nil {
+	if _, err = collection.InsertOne(ctx, f); err != nil {
 		return
 	}
 
@@ -76,7 +76,7 @@ func Create(year, semester, amount int) (err error) {
 //
 // It is member-limited operation:
 //	Only the authenticated members can access to this operation.
-func Submit(memberID string, year, semester, amount int) (err error) {
+func (f Fee) Submit(memberID string) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -88,7 +88,7 @@ func Submit(memberID string, year, semester, amount int) (err error) {
 	feeCollection := client.Database("club").Collection("fees")
 	logCollection := client.Database("club").Collection("logs")
 
-	log := NewLog(memberID, "unapproved", amount)
+	log := NewLog(memberID, "unapproved", f.Amount)
 
 	if _, err = logCollection.InsertOne(ctx, log); err != nil {
 		return
@@ -96,8 +96,8 @@ func Submit(memberID string, year, semester, amount int) (err error) {
 
 	if _, err = feeCollection.UpdateOne(ctx,
 		bson.D{
-			bson.E{Key: "year", Value: year},
-			bson.E{Key: "semester", Value: semester},
+			bson.E{Key: "year", Value: f.Year},
+			bson.E{Key: "semester", Value: f.Semester},
 		},
 		bson.D{
 			bson.E{Key: "$push", Value: bson.D{

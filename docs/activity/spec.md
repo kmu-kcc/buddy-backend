@@ -6,26 +6,58 @@
 
 <br>
 
-1. Search - 활동 검색
+1. Create - 활동 생성
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/activity/search | member |
+    | POST | /api/v1/activity/create | manager |
 
     - Request
-        - filter: (JSON) 검색하고자 하는 활동 정보 (시작일, 종료일, 장소, 종류, 설명, 참여자 중 0개 이상 택)
+        - start: (number) 시작일
+        - end: (number) 종료일
+        - place: (string) 장소
+        - type: (string) 종류
+        - description: (string) 설명
+        - participants: (Array&lt;string&gt;) 참여자 목록
+        - private: (bool) public/private
 
     - Request Body example
         ```json
         {
-            "filter": {
-                "start": "1628249722",
-                "end": "1628249722",
-                "place": "cafe",
-                "type": "study",
-                "description": "Study",
-                "participants": "홍길동"
-            }
+            "start": 1,
+            "end": 1,
+            "place": "cafe",
+            "type": "study",
+            "description": "good",
+            "participants" : [],
+            "private": true
+        }
+        ```
+
+    - Response
+        - error: (string) 에러 메시지 (활동 생성 성공 시 "")
+
+    - Response Body example
+        ```json
+        {
+            "error": ""
+        }
+        ```
+
+
+2. Search - 활동 검색
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | POST | /api/v1/activity/search | manager |
+
+    - Request
+        - query: (string) 검색어
+
+    - Request Body example
+        ```json
+        {
+            "query": "st"
         }
         ```
 
@@ -43,14 +75,17 @@
                     "place": "cafe",
                     "type": "study",
                     "description": "Study start!",
-                    "participants": "홍길동, 김철수"
+                    "participants": [
+                        "20192019",
+                        "20182018"
+                    ]
                 }
             ],
             "error": ""
         }
         ```
         
-2. Update - 활동 정보 갱신
+3. Update - 활동 정보 갱신
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -69,7 +104,7 @@
                 "place": "cafe",
                 "type": "study",
                 "description": "Study End!",
-                "participants": "홍길동"
+                "participants": "20192019"
             }
         }
         ```
@@ -84,7 +119,7 @@
         }
         ```
         
-3. Delete - 활동 삭제 처리
+4. Delete - 활동 삭제 처리
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -110,7 +145,7 @@
         }
         ```
         
-4. Participants - 활동 참여자 목록 조회
+5. Participants - 활동 참여자 목록 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -157,7 +192,7 @@
         }
         ```
 
-5. ApplyP - 활동 지원
+6. ApplyP - 활동 지원
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -184,7 +219,7 @@
         }
         ```
 
-6. Papplies - 활동 지원자 목록 조회
+7. Papplies - 활동 지원자 목록 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -232,7 +267,7 @@
         }
         ```
 
-7. ApproveP - 활동 참여 승인
+8. ApproveP - 활동 참여 승인
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -262,7 +297,7 @@
         }
         ```
 
-8. RejectP - 활동 참여 거절
+9. RejectP - 활동 참여 거절
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -292,7 +327,7 @@
         }
         ```
 
-9. CancelP - 활동 참여 신청 취소
+10. CancelP - 활동 참여 신청 취소
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -319,7 +354,7 @@
         }
         ```
 
-10. ApplyC - 활동 참여 취소 신청
+11. ApplyC - 활동 참여 취소 신청
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -347,7 +382,7 @@
         }
         ```
 
-11. CancelC - 활동 참여 취소 신청 취소
+12. CancelC - 활동 참여 취소 신청 취소
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -375,7 +410,7 @@
         }
         ```
 
-12. Capplies - 취소 신청자 리스트 조회
+13. Capplies - 취소 신청자 리스트 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -406,7 +441,7 @@
         }
         ```    
 
-13. ApproveC - 참여 취소 신청 승인
+14. ApproveC - 참여 취소 신청 승인
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -434,7 +469,7 @@
         }
         ```
 
-14. RejectC - 참여 취소 신청 거부
+15. RejectC - 참여 취소 신청 거부
 
     | method | route | priviledge |
     | :---: | :---: | :---: |

@@ -55,13 +55,36 @@ func New(start, end int64, place, typ, description string, participants []string
 	}
 }
 
+// Create creates a new activity.
+//
+// NOTE:
+//
+// It is privileged operation:
+//	Only the club managers can access to this operation.
+func (a Activity) Create() (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return
+	}
+
+	if _, err = client.Database("club").
+		Collection("activities").
+		InsertOne(ctx, a); err != nil {
+		return
+	}
+	return client.Disconnect(ctx)
+}
+
 // Search returns search results filtered by filter.
 //
 // NOTE:
 //
-// It is member-limited operation:
-//	Only the authenticated members can access to this operation.
-func Search(filter map[string]interface{}) (activities Activities, err error) {
+// It is privileged operation:
+//	Only the club managers can access to this operation.
+func Search(query string) (activities Activities, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -73,7 +96,15 @@ func Search(filter map[string]interface{}) (activities Activities, err error) {
 	collection := client.Database("club").Collection("activities")
 	activity := new(Activity)
 
-	cur, err := collection.Find(ctx, filter)
+	cur, err := collection.Find(ctx,
+		bson.M{"$or": []bson.M{
+			// {"start": bson.M{"$regex": query}},
+			// {"end": bosn.M{"$regex": query}},
+			{"place": bson.M{"$regex": query}},
+			{"type": bson.M{"$regex": query}},
+			{"description": bson.M{"$regex": query}},
+		}})
+
 	if err == mongo.ErrNoDocuments {
 		return activities, client.Disconnect(ctx)
 	} else if err != nil {
@@ -86,6 +117,11 @@ func Search(filter map[string]interface{}) (activities Activities, err error) {
 		}
 		activities = append(activities, *activity)
 	}
+
+	if err = cur.Close(ctx); err != nil {
+		return
+	}
+
 	return activities, client.Disconnect(ctx)
 }
 
@@ -95,7 +131,7 @@ func Search(filter map[string]interface{}) (activities Activities, err error) {
 //
 // It is privileged operation:
 //	Only the club managers can access to this operation.
-func Update(update map[string]interface{}) (err error) {
+func (a Activity) Update(update map[string]interface{}) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -164,13 +200,10 @@ func Participants(activityID primitive.ObjectID) (members member.Members, err er
 	}
 
 	filter := func() bson.M {
-		arr := func() bson.A {
-			arr := make(bson.A, len(activity.Participants))
-			for idx, p := range activity.Participants {
-				arr[idx] = p
-			}
-			return arr
-		}()
+		arr := make(bson.A, len(activity.Participants))
+		for idx, p := range activity.Participants {
+			arr[idx] = p
+		}
 		return bson.M{"id": bson.M{"$in": arr}}
 	}()
 
@@ -191,6 +224,11 @@ func Participants(activityID primitive.ObjectID) (members member.Members, err er
 		}
 		members = append(members, *member)
 	}
+
+	if err = cur.Close(ctx); err != nil {
+		return
+	}
+
 	return members, client.Disconnect(ctx)
 }
 
