@@ -68,19 +68,21 @@
     - Response Body example
         ```json
         {
-            "activities": [
-                {
-                    "start": "1628249722",
-                    "end": "1628249722",
-                    "place": "cafe",
-                    "type": "study",
-                    "description": "Study start!",
-                    "participants": [
-                        "20192019",
-                        "20182018"
-                    ]
-                }
-            ],
+            "data": {
+                "activities": [
+                    {
+                        "start": "1628249722",
+                        "end": "1628249722",
+                        "place": "cafe",
+                        "type": "study",
+                        "description": "Study start!",
+                        "participants": [
+                            "20192019",
+                            "20182018"
+                        ]
+                    }
+                ]
+            },
             "error": ""
         }
         ```
@@ -104,7 +106,10 @@
                 "place": "cafe",
                 "type": "study",
                 "description": "Study End!",
-                "participants": "20192019"
+                "participants": [
+                        "20192019",
+                        "20182018"
+                    ]
             }
         }
         ```
@@ -168,26 +173,28 @@
     - Response Body example
         ```json
         {
-            "members": [
-                {
-                    "id": "20180000",
-                    "name": "홍길동",
-                    "department": "스포츠레저학과",
-                    "phone": "010-1234-5678",
-                    "email": "gildong@gmail.com",
-                    "grade": 4,
-                    "attendance": 0
-                },
-                {
-                    "id": "20190000",
-                    "name": "김철수",
-                    "department": "국어국문학과",
-                    "phone": "010-5678-1234",
-                    "email": "chulsoo@gmail.com",
-                    "grade": 3,
-                    "attendance": 0
-                }
-            ],
+            "data": {
+                "members": [
+                    {
+                        "id": "20180000",
+                        "name": "홍길동",
+                        "department": "스포츠레저학과",
+                        "phone": "010-1234-5678",
+                        "email": "gildong@gmail.com",
+                        "grade": 4,
+                        "attendance": 0
+                    },
+                    {
+                        "id": "20190000",
+                        "name": "김철수",
+                        "department": "국어국문학과",
+                        "phone": "010-5678-1234",
+                        "email": "chulsoo@gmail.com",
+                        "grade": 3,
+                        "attendance": 0
+                    }
+                ]
+            },
             "error": ""
         }
         ```
