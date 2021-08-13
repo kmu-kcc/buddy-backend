@@ -13,13 +13,21 @@ import (
 )
 
 func TestCreate(t *testing.T) {
-	if err := fee.Create(2021, 2, 40000); err != nil {
-		t.Error(err)
+	fees := []*fee.Fee{
+		fee.New(2022, 1, 30000),
+		fee.New(2022, 2, 40000),
+	}
+
+	for _, fee := range fees {
+		if err := fee.Create(); err != nil {
+			t.Error(err)
+		}
 	}
 }
 
 func TestSubmit(t *testing.T) {
-	if err := fee.Submit("abc", 2021, 2, 20000); err != nil {
+	f := fee.Fee{Year: 2021, Semester: 2, Amount: 20000}
+	if err := f.Submit("abc"); err != nil {
 		t.Error(err)
 	}
 }

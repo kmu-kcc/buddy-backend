@@ -58,6 +58,7 @@ func main() {
 				agroup.PUT("/approvep", activity.ApproveP())
 				agroup.PUT("/rejectp", activity.RejectP())
 				agroup.PUT("/cancelp", activity.CancelP())
+				agroup.POST("/create", activity.Create())
 				agroup.POST("/search", activity.Search())
 				agroup.POST("/update", activity.Update())
 				agroup.POST("/delete", activity.Delete())
