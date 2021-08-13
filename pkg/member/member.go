@@ -69,6 +69,22 @@ func New(id, name, department, phone, email string, grade, attendance int) *Memb
 	}
 }
 
+// Memfilter returns limited information of member.
+func (ms Members) Memfilter() (res []map[string]interface{}) {
+	for _, members := range ms {
+		res = append(res, map[string]interface{}{
+			"id":         members.ID,
+			"name":       members.Name,
+			"department": members.Department,
+			"phone":      members.Phone,
+			"email":      members.Email,
+			"grade":      members.Grade,
+			"attendance": members.Attendance,
+		})
+	}
+	return
+}
+
 // SingIn checks whether m is a club member.
 //
 // NOTE:

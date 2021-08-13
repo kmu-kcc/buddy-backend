@@ -48,8 +48,8 @@ func Search() gin.HandlerFunc {
 		})
 
 		resp := new(struct {
-			Activities activity.Activities `json:"activities"`
-			Error      string              `json:"error"`
+			Activities []map[string]interface{} `json:"activities"`
+			Error      string                   `json:"error"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -64,7 +64,7 @@ func Search() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Activities = activities
+		resp.Activities = activities.Actfilter()
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -157,8 +157,8 @@ func Participants() gin.HandlerFunc {
 		})
 
 		resp := new(struct {
-			Members member.Members `json:"members"`
-			Error   string         `json:"error"`
+			Members []map[string]interface{} `json:"members"`
+			Error   string                   `json:"error"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -178,7 +178,7 @@ func Participants() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Members = members
+		resp.Members = members.Memfilter()
 		c.JSON(http.StatusOK, resp)
 	}
 }

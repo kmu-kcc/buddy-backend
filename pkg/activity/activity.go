@@ -55,6 +55,21 @@ func New(start, end int64, place, typ, description string, participants []string
 	}
 }
 
+// Actfilter returns limited information of activity.
+func (as Activities) Actfilter() (res []map[string]interface{}) {
+	for _, activities := range as {
+		res = append(res, map[string]interface{}{
+			"start":        activities.Start,
+			"end":          activities.End,
+			"place":        activities.Place,
+			"type":         activities.Type,
+			"description":  activities.Description,
+			"participants": activities.Participants,
+		})
+	}
+	return
+}
+
 // Create creates a new activity.
 //
 // NOTE:
