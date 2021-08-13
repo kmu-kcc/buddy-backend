@@ -20,9 +20,9 @@
     - Request Body example
         ```json
         {
-            "year": 2021,
-            "semester": 2,
-            "amount": 40000
+            "year": "2021",
+            "semester": "2",
+            "amount": "40000"
         }
         ```
 
@@ -52,9 +52,9 @@
         ```json
         {   
             "member_id": "20190000",
-            "year": 2021,
-            "semester": 2,
-            "amount": 20000
+            "year": "2021",
+            "semester": "2",
+            "amount": "20000"
         }
         ```
 
@@ -95,7 +95,9 @@
     - Response Body example
         ```json
         {
-            "sum": 20000,
+            "data": {
+                "sum": 20000,
+            },
             "error": ""
         }
         ```

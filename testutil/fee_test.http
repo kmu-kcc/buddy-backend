@@ -14,9 +14,9 @@ Content-Type: application/json
 
 {
   "member_id": "20212021",
-  "year": 2021,
-  "semester": 2,
-  "amount": 20000
+  "year": "2021",
+  "semester": "2",
+  "amount": "20000"
 }
 
 ###

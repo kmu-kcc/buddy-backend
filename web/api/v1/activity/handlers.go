@@ -43,13 +43,19 @@ func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		type search struct {
+			Activities []map[string]interface{} `json:"activities"`
+		}
+
+		srch := new(search)
+
 		body := new(struct {
 			Query string `json:"query"`
 		})
 
 		resp := new(struct {
-			Activities []map[string]interface{} `json:"activities"`
-			Error      string                   `json:"error"`
+			Data  search `json:"data"`
+			Error string `json:"error"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -64,7 +70,9 @@ func Search() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Activities = activities.Actfilter()
+
+		srch.Activities = activities.Actfilter()
+		resp.Data = *srch
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -152,13 +160,19 @@ func Participants() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		type participants struct {
+			Members []map[string]interface{} `json:"members"`
+		}
+
+		parts := new(participants)
+
 		body := new(struct {
 			ActivityID string `json:"_id"`
 		})
 
 		resp := new(struct {
-			Members []map[string]interface{} `json:"members"`
-			Error   string                   `json:"error"`
+			Data  participants `json:"data"`
+			Error string       `json:"error"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -178,7 +192,9 @@ func Participants() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Members = members.Memfilter()
+
+		parts.Members = members.Memfilter()
+		resp.Data = *parts
 		c.JSON(http.StatusOK, resp)
 	}
 }

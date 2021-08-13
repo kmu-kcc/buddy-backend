@@ -114,7 +114,7 @@ func Search(query string) (activities Activities, err error) {
 	cur, err := collection.Find(ctx,
 		bson.M{"$or": []bson.M{
 			// {"start": bson.M{"$regex": query}},
-			// {"end": bosn.M{"$regex": query}},
+			// {"end": bson.M{"$regex": query}},
 			{"place": bson.M{"$regex": query}},
 			{"type": bson.M{"$regex": query}},
 			{"description": bson.M{"$regex": query}},

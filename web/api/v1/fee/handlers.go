@@ -71,6 +71,11 @@ func Amount() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		type amount struct {
+			Sum int `json:"sum"`
+		}
+		amt := new(amount)
+
 		body := new(struct {
 			MemberID string `json:"member_id"`
 			Year     int    `json:"year"`
@@ -78,7 +83,7 @@ func Amount() gin.HandlerFunc {
 		})
 
 		resp := new(struct {
-			Sum   int    `json:"sum"`
+			Data  amount `json:"data"`
 			Error string `json:"error"`
 		})
 
@@ -94,7 +99,9 @@ func Amount() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Sum = sum
+
+		amt.Sum = sum
+		resp.Data = *amt
 		c.JSON(http.StatusOK, resp)
 	}
 }
