@@ -339,6 +339,8 @@ func ApplyC() gin.HandlerFunc {
 		})
 
 		resp := new(struct {
+			Data struct {
+			} `json:"data"`
 			Error string `json:"error"`
 		})
 
@@ -369,6 +371,8 @@ func CancelC() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
+			Data struct {
+			} `json:"data"`
 			Error string `json:"error"`
 		})
 
@@ -396,8 +400,10 @@ func Capplies() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Participants []string `json:"participants"`
-			Error        string   `json:"error"`
+			Data struct {
+				Participants []string `json:"participants"`
+			} `json:"data"`
+			Error string `json:"error"`
 		})
 
 		// body := new(struct {
@@ -417,7 +423,7 @@ func Capplies() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		resp.Participants = res
+		resp.Data.Participants = res
 		c.JSON(http.StatusOK, res)
 	}
 }
@@ -427,6 +433,8 @@ func ApproveC() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
+			Data struct {
+			} `json:"data"`
 			Error string `json:"error"`
 		})
 
@@ -454,6 +462,8 @@ func RejectC() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
+			Data struct {
+			} `json:"data"`
 			Error string `json:"error"`
 		})
 
