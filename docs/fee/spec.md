@@ -268,15 +268,20 @@
         ```
     
     - Response
+        - data : (string) 반환 정보 (반환이 없을 경우 "")
         - error: (string) 에러 메시지 (정상 처리 시 "")
     
     - Response Body example
         ```json
         {
+            "data" : [
+                {
+                    "Response": "Contents"
+                }
+            ],
             "error": "mongo: no such documents"
         }
-        ```    
-
+        ```
 12. Reject - 회비 납부 처리 (거부)
 
     | method | route | priviledge |
@@ -297,14 +302,20 @@
         ```
     
     - Response
+        - data : (string) 반환 정보 (반환이 없을 경우 "")
         - error: (string) 에러 메시지 (정상 처리 시 "")
     
     - Response Body example
         ```json
         {
+            "data" : [
+                {
+                    "Response": "Contents"
+                }
+            ],
             "error": "mongo: no such documents"
         }
-        ```    
+        ```   
 
 13. Deposit - 입금/지출 처리
 
@@ -327,11 +338,17 @@
         ```
     
     - Response
+        - data : (string) 반환 정보 (반환이 없을 경우 "")
         - error: (string) 에러 메시지 (정상 처리 시 "")
     
     - Response Body example
         ```json
         {
+            "data" : [
+                {
+                    "Response": "Contents"
+                }
+            ],
             "error": "mongo: no such documents"
         }
         ```

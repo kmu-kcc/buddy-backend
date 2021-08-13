@@ -380,11 +380,17 @@
         ```
     
     - Response
+        - data : (string) 반환 정보 (반환이 없을 경우 "")
         - error: (string) 에러 메시지 (정상 처리 시 "")
     
     - Response Body example
         ```json
         {
+            "data" : [
+                {
+                    "Response": "Contents"
+                }
+            ],
             "error": "mongo: no such documents"
         }
         ```
@@ -407,12 +413,18 @@
         }
         ```
     
-    - Response
+   - Response
+        - data : (string) 반환 정보 (반환이 없을 경우 "")
         - error: (string) 에러 메시지 (정상 처리 시 "")
     
     - Response Body example
         ```json
         {
+            "data" : [
+                {
+                    "Response": "Contents"
+                }
+            ],
             "error": "mongo: no such documents"
         }
         ```
@@ -429,19 +441,20 @@
     - Request Body example
     
     - Response
-        - participants: (Array&lt;string&gt;) 참가자 리스트
+        - data : (string) 반환 정보 (반환이 없을 경우 "")
         - error: (string) 에러 메시지 (정상 처리 시 "")
     
     - Response Body example
         ```json
         {
-            "participants" : [
-                "20000808"
-                "19990803"
+            "data" : [
+                {
+                    "Response": "Contents"
+                }
             ],
             "error": "mongo: no such documents"
         }
-        ```    
+        ```   
 
 14. ApproveC - 참여 취소 신청 승인
 
@@ -461,12 +474,18 @@
         }
         ```
     
-    - Response
+   - Response
+        - data : (string) 반환 정보 (반환이 없을 경우 "")
         - error: (string) 에러 메시지 (정상 처리 시 "")
     
     - Response Body example
         ```json
         {
+            "data" : [
+                {
+                    "Response": "Contents"
+                }
+            ],
             "error": "mongo: no such documents"
         }
         ```
@@ -490,11 +509,17 @@
         ```
     
     - Response
+        - data : (string) 반환 정보 (반환이 없을 경우 "")
         - error: (string) 에러 메시지 (정상 처리 시 "")
     
     - Response Body example
         ```json
         {
+            "data" : [
+                {
+                    "Response": "Contents"
+                }
+            ],
             "error": "mongo: no such documents"
         }
         ```
