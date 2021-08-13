@@ -191,7 +191,6 @@ func TestCancelC(t *testing.T) {
 
 	if err = activity.ApplyC(targetActivity.ID, "ApplyC"); err != nil {
 		t.Log("APPLYC_ERR")
-		t.Log(targetActivity.ID)
 		t.Error(err)
 	}
 
@@ -230,7 +229,7 @@ func TestCapplies(t *testing.T) {
 		t.Error(err)
 	}
 
-	if _, err := activity.Capplies(targetActivity.ID); err != nil {
+	if _, err := targetActivity.Capplies(); err != nil {
 		t.Error(err)
 	}
 
@@ -263,7 +262,7 @@ func TestApproveC(t *testing.T) {
 	}
 
 	// set cancelers
-	if err = activity.ApplyC(targetActivity.ID, "Succeed!"); err != nil {
+	if err = activity.ApplyC(targetActivity.ID, "ApplyC"); err != nil {
 		t.Log("APPLYC_ERR")
 		t.Error(err)
 	}
@@ -301,7 +300,7 @@ func TestRejectC(t *testing.T) {
 	}
 
 	// set cancelers
-	if err = activity.ApplyC(targetActivity.ID, "Succeed!"); err != nil {
+	if err = activity.ApplyC(targetActivity.ID, "ApplyC"); err != nil {
 		t.Log("APPLYC_ERR")
 		t.Error(err)
 	}

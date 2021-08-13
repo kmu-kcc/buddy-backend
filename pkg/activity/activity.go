@@ -607,7 +607,7 @@ func CancelC(activityID primitive.ObjectID, memberID string) error {
 //
 // It is privileged operation:
 // 	Only the club managers can access to this operation.
-func Capplies(activityID primitive.ObjectID) ([]string, error) {
+func (a Activity) Capplies() ([]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -622,7 +622,7 @@ func Capplies(activityID primitive.ObjectID) ([]string, error) {
 	if err = collection.FindOne(
 		ctx,
 		bson.D{
-			bson.E{Key: "_id", Value: activityID},
+			bson.E{Key: "_id", Value: a.ID},
 		},
 	).Decode(targetActivity); err != nil {
 		return nil, err

@@ -431,12 +431,14 @@ func Capplies() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Error string `json:"error"`
+			Participants []string `json:"participants"`
+			Error        string   `json:"error"`
 		})
 
-		body := new(struct {
-			ActivityID primitive.ObjectID `json:"activity_id"`
-		})
+		// body := new(struct {
+		// 	ActivityID primitive.ObjectID `json:"activity_id"`
+		// })
+		body := new(activity.Activity)
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
@@ -444,12 +446,13 @@ func Capplies() gin.HandlerFunc {
 			return
 		}
 
-		res, err := activity.Capplies(body.ActivityID)
+		res, err := body.Capplies()
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
+		resp.Participants = res
 		c.JSON(http.StatusOK, res)
 	}
 }

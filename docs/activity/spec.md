@@ -424,14 +424,9 @@
     | POST | /api/v1/activity/capplies | manager |
 
     - Request
-        - activity_id: (string) 활동 ID
+        -
     
     - Request Body example
-        ```json
-        {
-            "activity_id": "610bf6b09a38451598148a25",
-        }
-        ```
     
     - Response
         - participants: (Array&lt;string&gt;) 참가자 리스트
@@ -440,7 +435,7 @@
     - Response Body example
         ```json
         {
-            [
+            "participants" : [
                 "20000808"
                 "19990803"
             ],
