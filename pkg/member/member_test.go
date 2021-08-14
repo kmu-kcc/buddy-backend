@@ -73,18 +73,6 @@ func TestExit(t *testing.T) {
 	}
 }
 
-func TestCancelExit(t *testing.T) {
-	memb := member.Member{ID: "20210001"}
-	if err := memb.CancelExit(); err != nil {
-		t.Error(err)
-	}
-	if err := memb.CancelExit(); err == member.ErrNotOnDelete {
-		t.Log(err)
-	} else if err != nil {
-		t.Error(err)
-	}
-}
-
 func TestExits(t *testing.T) {
 	if membs, err := member.Exits(); err != nil {
 		t.Error(err)
@@ -121,59 +109,6 @@ func TestSearch(t *testing.T) {
 		for _, memb := range membs {
 			t.Log(memb)
 		}
-	}
-}
-
-func TestApplyGraduate(t *testing.T) {
-	memb := member.Member{ID: "20210001"}
-	if err := memb.ApplyGraduate(); err != nil {
-		t.Error(err)
-	}
-
-	memb.ID = "20190002"
-	if err := memb.ApplyGraduate(); err != nil {
-		t.Error(err)
-	}
-
-	if membs, err := member.Search(map[string]interface{}{"on_graduate": true}); err != nil {
-		t.Error(err)
-	} else {
-		for _, memb = range membs {
-			t.Log(memb)
-		}
-	}
-}
-
-func TestCancelGraduate(t *testing.T) {
-	memb := member.Member{ID: "20210001"}
-	if err := memb.CancelGraduate(); err != nil {
-		t.Error(err)
-	}
-
-	if membs, err := member.Search(map[string]interface{}{"on_graduate": true}); err != nil {
-		t.Error(err)
-	} else {
-		for _, memb = range membs {
-			t.Log(memb)
-		}
-	}
-}
-
-func TestGraduateApplies(t *testing.T) {
-	membs, err := member.GraduateApplies()
-	if err != nil {
-		t.Error(err)
-	}
-
-	for _, memb := range membs {
-		t.Log(memb)
-	}
-}
-
-func TestApproveGraduate(t *testing.T) {
-	ids := []string{"20190002"}
-	if err := member.ApproveGraduate(ids); err != nil {
-		t.Error(err)
 	}
 }
 

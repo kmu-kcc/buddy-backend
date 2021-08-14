@@ -70,45 +70,6 @@ func (f Fee) Create() (err error) {
 	return client.Disconnect(ctx)
 }
 
-// Submit creates fees payment application log.
-//
-// NOTE:
-//
-// It is member-limited operation:
-//	Only the authenticated members can access to this operation.
-func (f Fee) Submit(memberID string) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
-	if err != nil {
-		return
-	}
-
-	feeCollection := client.Database("club").Collection("fees")
-	logCollection := client.Database("club").Collection("logs")
-
-	log := NewLog(memberID, "unapproved", f.Amount)
-
-	if _, err = logCollection.InsertOne(ctx, log); err != nil {
-		return
-	}
-
-	if _, err = feeCollection.UpdateOne(ctx,
-		bson.D{
-			bson.E{Key: "year", Value: f.Year},
-			bson.E{Key: "semester", Value: f.Semester},
-		},
-		bson.D{
-			bson.E{Key: "$push", Value: bson.D{
-				bson.E{Key: "logs", Value: log.ID},
-			}},
-		}); err != nil {
-		return
-	}
-	return client.Disconnect(ctx)
-}
-
 // Amount finds log by year and semester, and returns the sum of all amounts using memberID and type.
 //
 // NOTE:
@@ -369,73 +330,6 @@ func Approve(ids []primitive.ObjectID) error {
 		return err
 	}
 
-	return client.Disconnect(ctx)
-}
-
-// Reject rejects the submission request of ids.
-//
-// Note :
-//
-// This is privileged operation:
-// 	Only the club managers can access to this operation
-func Reject(ids []primitive.ObjectID) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
-	if err != nil {
-		return err
-	}
-
-	// DeleteMany Returns Count
-
-	filter := func() bson.D {
-		arr := make(bson.A, len(ids))
-		for idx, id := range ids {
-			arr[idx] = id
-		}
-		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
-	}()
-
-	if _, err := client.Database("club").Collection("fees").DeleteMany(ctx, filter); err != nil {
-		return err
-	}
-
-	var D primitive.ObjectID
-
-	for _, id := range ids {
-		if err = client.Database("club").Collection("fees").FindOneAndUpdate(ctx,
-			bson.D{
-				bson.E{Key: "$in", Value: bson.D{
-					bson.E{Key: "logs", Value: id}}},
-			},
-			bson.D{
-				bson.E{Key: "$pull", Value: bson.D{
-					bson.E{Key: "logs", Value: id},
-				},
-				},
-			}).Decode(D); err != nil {
-			return err
-		}
-	}
-
-	// for _, id := range ids {
-	// 	if _, err := client.Database("club").Collection("fees").UpdateOne(ctx, bson.M{
-	// 		"year":     year,
-	// 		"semester": semester,
-	// 	},
-	// 		bson.D{
-	// 			bson.E{Key: "$pull", Value: bson.D{
-	// 				bson.E{Key: "logs", Value: id},
-	// 			},
-	// 			},
-	// 		}); err != nil {
-	// 		return err
-	// 	}
-	// 	if _, err := client.Database("club").Collection("logs").DeleteOne(ctx, bson.M{"_id": id}); err != nil {
-	// 		return err
-	// 	}
-	// }
 	return client.Disconnect(ctx)
 }
 
