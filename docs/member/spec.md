@@ -108,8 +108,8 @@
                         "attendance": 0,
                         "approved": false,
                         "on_delete": false,
-                        "created_at": 1628974315,
-                        "updated_at": 1628974315
+                        "created_at": "1628974315",
+                        "updated_at": "1628974315"
                     },
                     {
                         "id": "20200299",
@@ -122,8 +122,8 @@
                         "attendance": 1,
                         "approved": false,
                         "on_delete": false,
-                        "created_at": 1629060720,
-                        "updated_at": 1629060720
+                        "created_at": "1629060720",
+                        "updated_at": "1629060720"
                     }
                 ]
             },
@@ -228,8 +228,8 @@
                         "attendance": 0,
                         "approved": true,
                         "on_delete": true,
-                        "created_at": 1629060720,
-                        "updated_at": 1629060930
+                        "created_at": "1629060720",
+                        "updated_at": "1629060930"
                     },
                     {
                         "id": "20200299",
@@ -242,8 +242,8 @@
                         "attendance": 1,
                         "approved": true,
                         "on_delete": true,
-                        "created_at": 1629080720,
-                        "updated_at": 1629081720
+                        "created_at": "1629080720",
+                        "updated_at": "1629081720"
                     }
                 ]
             },
@@ -368,7 +368,23 @@
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 시스템 오류
 
-10. Graduates - 졸업자 목록 조회 (추후 졸업자 일괄 메일 발송 시 사용)
+10. Activate - 회원 가입 신청 활성화
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | PUT | /api/v1/member/activate | manager |
+
+    - 미구현 상태
+
+11. Deactivate - 회원 가입 신청 비활성화
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | PUT | /api/v1/member/deactivate | manager |
+
+    - 미구현 상태
+
+12. Graduates - 졸업자 목록 조회 (추후 졸업자 일괄 메일 발송 시 사용)
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -394,8 +410,8 @@
                         "attendance": 2,
                         "approved": true,
                         "on_delete": false,
-                        "created_at": 1629000020,
-                        "updated_at": 1629002720
+                        "created_at": "1629000020",
+                        "updated_at": "1629002720"
                     },
                     {
                         "id": "20200299",
@@ -408,8 +424,8 @@
                         "attendance": 2,
                         "approved": true,
                         "on_delete": false,
-                        "created_at": 1619060720,
-                        "updated_at": 1619061720
+                        "created_at": "1619060720",
+                        "updated_at": "1619061720"
                     }
                 ]
             },
