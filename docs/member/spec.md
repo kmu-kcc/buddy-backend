@@ -2,7 +2,7 @@
 
 0. Server Domain:Port
 
-    localhost:3000 (추후 변경 예정)
+    http://localhost:3000 (추후 변경 예정)
 
 <br>
 
@@ -25,7 +25,7 @@
         ```
 
     - Response
-        - error: (string) 에러 메시지 (로그인 성공 시 "")
+        - error: (string) 에러 메시지 (로그인 성공 시 empty)
 
     - Response Body example
         ```json
@@ -33,6 +33,11 @@
             "error": "password mismatch"
         }
         ```
+
+    - Status Code
+        - 200 OK: 로그인 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: ID/PW 오류, 가입 미승인 상태, 시스템 오류 등
 
 2. SignUp - 회원 가입 신청
 
@@ -43,7 +48,7 @@
     - Request
         - id: (string) 학번
         - name: (string) 이름
-        - department: (string) 소속 학부
+        - department: (string) 소속 대학/학부
         - phone: (string) 전화번호
         - email: (string) 메일 주소
         - grade: (number) 학년 (1 이상의 정수)
@@ -54,7 +59,7 @@
         {
             "id": "20210000",
             "name": "홍길동",
-            "department": "시각디자인학과",
+            "department": "조형대학 시각디자인학과",
             "phone": "010-1234-5678",
             "email": "gildong@gmail.com",
             "grade": 1,
@@ -63,7 +68,7 @@
         ```
 
     - Response
-        - error: (string) 에러 메시지 (회원 가입 신청 성공 시 "")
+        - error: (string) 에러 메시지 (회원 가입 신청 성공 시 empty)
 
     - Response Body example
         ```json
@@ -72,6 +77,11 @@
         }
         ```
 
+    - Status Code
+        - 200 OK: 회원 가입 신청 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 이미 회원인 경우, 가입 신청 처리 중인 경우, 시스템 오류 등
+
 3. SignUps - 회원 가입 신청 목록 조회
 
     | method | route | priviledge |
@@ -79,41 +89,58 @@
     | GET | /api/v1/member/signups | manager |
 
     - Response
-        - signups: (Array&lt;JSON&gt;) 회원 가입 신청자 목록
-        - error: (string) 에러 메시지 (쿼리 성공 시 "")
+        - data.signups: (Array&lt;JSON&gt;) 회원 가입 신청자 목록
+        - error: (string) 에러 메시지 (쿼리 성공 시 empty)
 
     - Response Body example
         ```json
         {
-            "signups": [
-                {
-                    "id": "20190000",
-                    "name": "김희동",
-                    "department": "스포츠레저학과",
-                    "phone": "010-1234-5678",
-                    "email": "heedong@gmail.com",
-                    "grade": 3,
-                    "attendance": 0
-                },
-                {
-                    "id": "20200299",
-                    "name": "이기철",
-                    "department": "물리학과",
-                    "phone": "010-9876-5432",
-                    "email": "lee@naver.com",
-                    "grade": 2,
-                    "attendance": 1
-                }
-            ],
-            "error": ""
+            "data": {
+                "signups": [
+                    {
+                        "id": "20190000",
+                        "password": "20190000",
+                        "name": "김희동",
+                        "department": "와플대학 팥빙수학과",
+                        "phone": "010-1234-5678",
+                        "email": "heedong@gmail.com",
+                        "grade": 3,
+                        "attendance": 0,
+                        "approved": false,
+                        "on_delete": false,
+                        "created_at": 1628974315,
+                        "updated_at": 1628974315
+                    },
+                    {
+                        "id": "20200299",
+                        "password": "20200299",
+                        "name": "이기철",
+                        "department": "자연과학대학 물리학과",
+                        "phone": "010-9876-5432",
+                        "email": "lee@naver.com",
+                        "grade": 2,
+                        "attendance": 1,
+                        "approved": false,
+                        "on_delete": false,
+                        "created_at": 1629060720,
+                        "updated_at": 1629060720
+                    }
+                ]
+            },
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
         }
         ```
+
+    - Status Code
+        - 200 OK: 쿼리 성공
+        - 400 Bad Request: 요청 포맷/응답 오류
+        - 500 Internal Server Error: 시스템 오류
 
 4. Approve - 회원 가입 승인
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/member/approve | manager |
+    | PUT | /api/v1/member/approve | manager |
 
     - Request
         - ids: (Array&lt;string&gt;) 회원 가입을 승인할 신청자들의 학번 List
@@ -130,20 +157,25 @@
         ```
 
     - Response
-        - error: (string) 에러 메시지 (회원 가입 승인 성공 시 "")
+        - error: (string) 에러 메시지 (회원 가입 승인 성공 시 empty)
 
     - Response Body example
         ```json
         {
-            "error": ""
+            "error": "this MongoDB deployment does not support retryable writes. Please add retryWrites=false to your connection string"
         }
         ```
+
+    - Status Code
+        - 200 OK: 회원 가입 승인 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 시스템 오류
 
 5. Exit - 회원 탈퇴 신청
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/member/exit | member |
+    | PUT | /api/v1/member/exit | member |
 
     - Request
         - id: (string) 탈퇴 신청하는 회원의 학번
@@ -156,7 +188,7 @@
         ```
 
     - Response
-        - error: (string) 에러 메시지 (탈퇴 신청 성공 시 "")
+        - error: (string) 에러 메시지 (탈퇴 신청 성공 시 empty)
 
     - Response Body example
         ```json
@@ -165,48 +197,69 @@
         }
         ```
 
-6. Exits - 회원 탈퇴 신청 목록
+    - Status Code
+        - 200 OK: 탈퇴 신청 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 삭제 요청 처리 중인 경우, 시스템 오류
+
+6. Exits - 회원 탈퇴 신청 목록 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
     | GET | /api/v1/member/exits | manager |
 
     - Response
-        - exits: (Array&lt;JSON&gt;) 회원 탈퇴 신청자 목록
-        - error: (string) 에러 메시지 (쿼리 성공 시 "")
+        - data.exits: (Array&lt;JSON&gt;) 회원 탈퇴 신청자 목록
+        - error: (string) 에러 메시지 (쿼리 성공 시 empty)
 
     - Response Body example
         ```json
         {
-            "exits": [
-                {
-                    "id": "20190000",
-                    "name": "김희동",
-                    "department": "스포츠레저학과",
-                    "phone": "010-1234-5678",
-                    "email": "heedong@gmail.com",
-                    "grade": 3,
-                    "attendance": 0
-                },
-                {
-                    "id": "20200299",
-                    "name": "이기철",
-                    "department": "물리학과",
-                    "phone": "010-9876-5432",
-                    "email": "lee@naver.com",
-                    "grade": 2,
-                    "attendance": 1
-                }
-            ],
-            "error": ""
+            "data": {
+                "exits": [
+                    {
+                        "id": "20190000",
+                        "password": "asdf1234",
+                        "name": "김희동",
+                        "department": "경상대학 스포츠레저학과",
+                        "phone": "010-1234-5678",
+                        "email": "heedong@gmail.com",
+                        "grade": 3,
+                        "attendance": 0,
+                        "approved": true,
+                        "on_delete": true,
+                        "created_at": 1629060720,
+                        "updated_at": 1629060930
+                    },
+                    {
+                        "id": "20200299",
+                        "password": "abcdefg9",
+                        "name": "이기철",
+                        "department": "자연과학대학 물리학과",
+                        "phone": "010-9876-5432",
+                        "email": "lee@naver.com",
+                        "grade": 2,
+                        "attendance": 1,
+                        "approved": true,
+                        "on_delete": true,
+                        "created_at": 1629080720,
+                        "updated_at": 1629081720
+                    }
+                ]
+            },
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
         }
         ```
 
-7. Delete - 회원 가입 승인 거부 및 회원 탈퇴 처리
+    - Status Code
+        - 200 OK: 쿼리 성공
+        - 500 Internal Server Error: 시스템 오류
+
+7. Delete - 회원 가입 거부 및 회원 탈퇴 처리
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/member/delete | manager |
+    | DELETE | /api/v1/member/delete | manager |
 
     - Request
         - ids: (Array&lt;string&gt;) 회원 가입 승인 거부/탈퇴 처리하는 신청자/회원들의 학번 List
@@ -223,153 +276,147 @@
         ```
 
     - Response
-        - error: (string) 에러 메시지 (회원 가입 승인 거부/탈퇴 처리 성공 시 "")
+        - error: (string) 에러 메시지 (회원 가입 거부/탈퇴 처리 성공 시 empty)
 
     - Response Body example
         ```json
         {
-            "error": ""
+            "error": "this MongoDB deployment does not support retryable writes. Please add retryWrites=false to your connection string"
         }
         ```
+
+    - Status Code
+        - 200 OK: 회원 가입 거부/탈퇴 처리 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 시스템 오류
 
 8. Search - 회원 검색
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/member/search | member |
+    | GET | /api/v1/member/search | member |
 
-    - Request
-        - filter: (JSON) 검색하고자 하는 회원 정보 (학번, 이름, 소속 학부, 학년 중 0개 이상 택)
+    - Query Parameter
+        - query: (string) 검색어
 
-    - Request Body example
-        ```json
-        {
-            "filter": {
-                "id": "20210000",
-                "name": "홍길동",
-                "department": "소프트웨어학부",
-                "grade": 1
-            }
-        }
+    - Query Parameter example
+        ```
+        http://localhost:3000/api/v1/member/search?query=20190302
         ```
 
     - Response
-        - members: (Array&lt;JSON&gt;) 회원 검색 결과
-        - error: (string) 에러 메시지 (회원 검색 성공 시 "")
+        - data.members: (Array&lt;JSON&gt;) 회원 검색 결과
+        - error: (string) 에러 메시지 (회원 검색 성공 시 empty)
 
     - Response Body example
         ```json
         {
-            "members": [
-                {
-                    "id": "20210000",
-                    "name": "홍길동",
-                    "department": "소프트웨어학부",
-                    "email": "gildong@gmail.com",
-                    "grade": 1
-                }
-            ],
-            "error": ""
+            "data": {
+                "members": [
+                    {
+                        "id": "20210000",
+                        "name": "홍길동",
+                        "department": "소프트웨어융합대학 소프트웨어학부",
+                        "email": "gildong@kookmin.ac.kr",
+                        "grade": 1
+                    }
+                ]
+            },
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
         }
         ```
+
+    - Status Code
+        - 200 OK: 회원 검색 성공
+        - 500 Internal Server Error: 시스템 오류
 
 9. Update - 회원 정보 갱신
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/member/update | member |
+    | PUT | /api/v1/member/update | member |
 
     - Request
-        - update: (JSON) 갱신하고자 하는 회원 정보 (비밀번호, 이름, 소속 학부, 전화번호, 이메일, 학년, 재학 여부 중 0개 이상 택)
+        - update: (JSON) 갱신하고자 하는 회원 정보 (비밀번호, 소속 대학/학부, 전화번호, 이메일, 학년, 재학 여부 중 0개 이상 택)
 
     - Request Body example
         ```json
         {
             "update": {
                 "password": "asdf1234",
-                "name": "홍길동",
-                "department": "소프트웨어학부",
+                "department": "소프트웨어융합대학 소프트웨어학부",
                 "phone": "010-1234-5678",
                 "email": "gildong@yahoo.com",
-                "grade": 1,
-                "attendance": 1
+                "grade": 2,
+                "attendance": 0
             }
         }
         ```
 
     - Response
-        - error: (string) 에러 메시지 (회원 정보 갱신 성공 시 "")
+        - error: (string) 에러 메시지 (회원 정보 갱신 성공 시 empty)
 
     - Response Body example
         ```json
         {
-            "error": ""
+            "error": "this MongoDB deployment does not support retryable writes. Please add retryWrites=false to your connection string"
         }
         ```
 
-10. ApproveGraduate - 졸업 처리
+    - Status Code
+        - 200 OK: 회원 정보 갱신 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 시스템 오류
+
+10. Graduates - 졸업자 목록 조회 (추후 졸업자 일괄 메일 발송 시 사용)
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/member/approvegraduate | manager |
-
-    - Request
-        - ids: (Array&lt;string&gt;) 졸업 처리하는 회원들의 학번 List
-
-    - Request Body example
-        ```json
-        {
-            "ids": [
-                "20210000",
-                "20180020",
-                "20170011"
-            ]
-        }
-        ```
+    | GET | /api/v1/member/graduates | manager |
 
     - Response
-        - error: (string) 에러 메시지 (졸업 처리 성공 시 "")
+        - data.graduates: (Array&lt;JSON&gt;) 졸업자 목록
+        - error: (string) 에러 메시지 (쿼리 성공 시 empty)
 
     - Response Body example
         ```json
         {
-            "error": ""
+            "data": {
+                "graduates": [
+                    {
+                        "id": "20190000",
+                        "password": "asdf1234",
+                        "name": "김희동",
+                        "department": "예술대학 도자기학과",
+                        "phone": "010-1234-5678",
+                        "email": "heedong@gmail.com",
+                        "grade": 4,
+                        "attendance": 2,
+                        "approved": true,
+                        "on_delete": false,
+                        "created_at": 1629000020,
+                        "updated_at": 1629002720
+                    },
+                    {
+                        "id": "20200299",
+                        "password": "asfjsk23242",
+                        "name": "이기철",
+                        "department": "공과대학 전자공학부",
+                        "phone": "010-9876-5432",
+                        "email": "lee@naver.com",
+                        "grade": 4,
+                        "attendance": 2,
+                        "approved": true,
+                        "on_delete": false,
+                        "created_at": 1619060720,
+                        "updated_at": 1619061720
+                    }
+                ]
+            },
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
         }
         ```
 
-11. Graduates - 졸업자 목록 조회
-
-    | method | route | priviledge |
-    | :---: | :---: | :---: |
-    | GET | /api/v1/member/graduateapplies | manager |
-
-    - Response
-        - graduates: (Array&lt;JSON&gt;) 졸업자 목록
-        - error: (string) 에러 메시지 (쿼리 성공 시 "")
-
-    - Response Body example
-        ```json
-        {
-            "graduates": [
-                {
-                    "id": "20190000",
-                    "name": "김희동",
-                    "department": "스포츠레저학과",
-                    "phone": "010-1234-5678",
-                    "email": "heedong@gmail.com",
-                    "grade": 4,
-                    "attendance": 2
-                },
-                {
-                    "id": "20200299",
-                    "name": "이기철",
-                    "department": "물리학과",
-                    "phone": "010-9876-5432",
-                    "email": "lee@naver.com",
-                    "grade": 4,
-                    "attendance": 2
-                }
-            ],
-            "error": ""
-        }
-        ```
+    - Status Code
+        - 200 OK: 쿼리 성공
+        - 500 Internal Server Error: 시스템 오류
