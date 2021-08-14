@@ -38,8 +38,8 @@ type Member struct {
 	Department string `json:"department" bson:"department"`        // department
 	Phone      string `json:"phone" bson:"phone"`                  // phone number
 	Email      string `json:"email" bson:"email"`                  // e-mail address
-	Grade      int    `json:"grade" bson:"grade"`                  // grade
-	Attendance int    `json:"attendance" bson:"attendance"`        // attendance status (attending/absent/graduate)
+	Grade      int    `json:"grade,string" bson:"grade"`           // grade
+	Attendance int    `json:"attendance,string" bson:"attendance"` // attendance status (attending/absent/graduate)
 	Approved   bool   `json:"approved" bson:"approved"`            // approved or not
 	OnDelete   bool   `json:"on_delete" bson:"on_delete"`          // on exit process or not
 	OnGraduate bool   `json:"on_graduate" bson:"on_graduate"`      // on graduation process or not

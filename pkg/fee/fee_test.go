@@ -76,7 +76,8 @@ func TestAmount(t *testing.T) {
 }
 
 func TestDones(t *testing.T) {
-	if members, err := fee.Dones(2021, 1); err != nil {
+	f := fee.Fee{Year: 2021, Semester: 1}
+	if members, err := f.Dones(); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(members)
@@ -84,7 +85,8 @@ func TestDones(t *testing.T) {
 }
 
 func TestYets(t *testing.T) {
-	if members, err := fee.Yets(2021, 1); err != nil {
+	f := fee.Fee{Year: 2021, Semester: 1}
+	if members, err := f.Yets(); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(members)
@@ -92,7 +94,7 @@ func TestYets(t *testing.T) {
 }
 
 func TestAll(t *testing.T) {
-	if logs, err := fee.All(2021, 1); err != nil {
+	if logs, err := fee.All(1627794157, 1627794157); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(logs)
