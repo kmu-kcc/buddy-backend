@@ -36,35 +36,6 @@ func Create() gin.HandlerFunc {
 	}
 }
 
-// Submit handles the fee submission request.
-func Submit() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		body := new(struct {
-			fee.Fee
-			MemberID string `json:"member_id"`
-		})
-
-		resp := new(struct {
-			Error string `json:"error"`
-		})
-
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-
-		if err := body.Submit(body.MemberID); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusInternalServerError, resp)
-			return
-		}
-		c.JSON(http.StatusOK, resp)
-	}
-}
-
 // Amount handles the submission amount request.
 func Amount() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -225,34 +196,6 @@ func Approve() gin.HandlerFunc {
 		}
 
 		if err := fee.Approve(ids); err != nil {
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-		c.JSON(http.StatusOK, resp)
-	}
-}
-
-func Reject() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		resp := new(struct {
-			Data struct {
-			} `json:"data"`
-			Error string `json:"error"`
-		})
-
-		body := new(struct {
-			IDs []primitive.ObjectID `json:"ids"`
-		})
-
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-
-		if err := fee.Reject(body.IDs); err != nil {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}

@@ -25,13 +25,6 @@ func TestCreate(t *testing.T) {
 	}
 }
 
-func TestSubmit(t *testing.T) {
-	f := fee.Fee{Year: 2021, Semester: 2, Amount: 20000}
-	if err := f.Submit("abc"); err != nil {
-		t.Error(err)
-	}
-}
-
 func TestAmount(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -130,42 +123,6 @@ func TestApprove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = client.Disconnect(ctx); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestReject(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
-	if err != nil {
-		t.Fatal(err)
-	}
-	collection := client.Database("club").Collection("fees")
-	collectionLogs := client.Database("club").Collection("logs")
-
-	testLog := fee.NewLog("20181681", "unapproved", 0)
-	testLog2 := fee.NewLog("20177777", "unapproved", 0)
-	testFee := fee.New(2021, 4, 0)
-
-	testFee.Logs = append(testFee.Logs, testLog.ID, testLog2.ID)
-
-	// insert test log
-	if _, err := collection.InsertOne(ctx, testFee); err != nil {
-		t.Fatal()
-	}
-	if _, err := collectionLogs.InsertOne(ctx, testLog); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := collectionLogs.InsertOne(ctx, testLog2); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := fee.Reject([]primitive.ObjectID{testLog.ID}); err != nil {
-		t.Fatal(err)
-	}
 	if err = client.Disconnect(ctx); err != nil {
 		t.Fatal(err)
 	}
