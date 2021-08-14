@@ -1,4 +1,4 @@
-# Buddy Backend Member API Specification
+# Buddy Back-end Member API Specification
 
 0. Server Domain:Port
 
@@ -232,33 +232,7 @@
         }
         ```
 
-8. CancelExit - 회원 탈퇴 신청 취소
-
-    | method | route | priviledge |
-    | :---: | :---: | :---: |
-    | POST | /api/v1/member/cancelexit | member |
-
-    - Request
-        - id: (string) 탈퇴 신청을 취소하는 회원의 학번
-
-    - Request Body example
-        ```json
-        {
-            "id": "20210000"
-        }
-        ```
-
-    - Response
-        - error: (string) 에러 메시지 (탈퇴 신청 취소 성공 시 "")
-
-    - Response Body example
-        ```json
-        {
-            "error": "not on delete"
-        }
-        ```
-
-9. Search - 회원 검색
+8. Search - 회원 검색
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -299,7 +273,7 @@
         }
         ```
 
-10. Update - 회원 정보 갱신
+9. Update - 회원 정보 갱신
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -333,96 +307,7 @@
         }
         ```
 
-11. ApplyGraduate - 졸업 신청
-
-    | method | route | priviledge |
-    | :---: | :---: | :---: |
-    | POST | /api/v1/member/applygraduate | member |
-
-    - Request
-        - id: (string) 졸업 신청는 회원의 학번
-
-    - Request Body example
-        ```json
-        {
-            "id": "20210000"
-        }
-        ```
-
-    - Response
-        - error: (string) 에러 메시지 (졸업 신청 성공 시 "")
-
-    - Response Body example
-        ```json
-        {
-            "error": "already on graduate"
-        }
-        ```
-
-12. GraduateApplies - 졸업 신청자 조회
-
-    | method | route | priviledge |
-    | :---: | :---: | :---: |
-    | GET | /api/v1/member/graduateapplies | manager |
-
-    - Response
-        - applies: (Array&lt;JSON&gt;) 졸업 신청자 목록
-        - error: (string) 에러 메시지 (쿼리 성공 시 "")
-
-    - Response Body example
-        ```json
-        {
-            "applies": [
-                {
-                    "id": "20190000",
-                    "name": "김희동",
-                    "department": "스포츠레저학과",
-                    "phone": "010-1234-5678",
-                    "email": "heedong@gmail.com",
-                    "grade": 4,
-                    "attendance": 0
-                },
-                {
-                    "id": "20200299",
-                    "name": "이기철",
-                    "department": "물리학과",
-                    "phone": "010-9876-5432",
-                    "email": "lee@naver.com",
-                    "grade": 4,
-                    "attendance": 0
-                }
-            ],
-            "error": ""
-        }
-        ```
-
-13. CancelGraduate - 졸업 신청 취소
-
-    | method | route | priviledge |
-    | :---: | :---: | :---: |
-    | POST | /api/v1/member/cancelgraduate | member |
-
-    - Request
-        - id: (string) 졸업 신청을 취소하는 회원의 학번
-
-    - Request Body example
-        ```json
-        {
-            "id": "20210000"
-        }
-        ```
-
-    - Response
-        - error: (string) 에러 메시지 (졸업 신청 취소 성공 시 "")
-
-    - Response Body example
-        ```json
-        {
-            "error": "not on graduate"
-        }
-        ```
-
-14. ApproveGraduate - 졸업 처리
+10. ApproveGraduate - 졸업 처리
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -452,7 +337,7 @@
         }
         ```
 
-15. Graduates - 졸업자 목록 조회
+11. Graduates - 졸업자 목록 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |

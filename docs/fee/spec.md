@@ -1,4 +1,4 @@
-# Buddy Backend Fee API Specification
+# Buddy Back-end Fee API Specification
 
 0. Server Domain:Port
 
@@ -6,7 +6,7 @@
 
 <br>
 
-1. Create - 회비 내역 생성
+1. Create - 회비 내역 초기화
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -15,7 +15,7 @@
     - Request
         - year: (number) 연도
         - semester: (number) 학기
-        - amount: (number) 금액
+        - amount: (number) 해당 학기에 1인당 납부해야할 금액
 
     - Request Body example
         ```json
@@ -35,40 +35,8 @@
             "error": ""
         }
         ```
-        
-2. Submit - 회비 납부 신청
 
-    | method | route | priviledge |
-    | :---: | :---: | :---: |
-    | POST | /api/v1/fee/submit | member |
-
-    - Request
-        - member_id: (string) 학번
-        - year: (number) 연도
-        - semester: (number) 학기
-        - amount: (number) 금액
-
-    - Request Body example
-        ```json
-        {   
-            "member_id": "20190000",
-            "year": "2021",
-            "semester": "2",
-            "amount": "20000"
-        }
-        ```
-
-    - Response
-        - error: (string) 에러 메시지 (회비 납부 신청 성공 시 "")
-
-    - Response Body example
-        ```json
-        {
-            "error": ""
-        }
-        ```
-        
-3. Amount - 회비 납부 조회
+2. Amount - 회비 납부 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -102,7 +70,7 @@
         }
         ```
 
-6. Dones - 회비 납부자 명단 조회
+3. Dones - 회비 납부자 명단 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -153,7 +121,7 @@
         }
         ```
 
-7. Yets - 회비 미납자 명단 조회
+4. Yets - 회비 미납자 명단 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -202,7 +170,8 @@
             "error": ""
         }
         ```
-10. All - 회비 내역 조회
+
+5. All - 회비 내역 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -248,7 +217,7 @@
         }
         ```
 
-11. Approve - 회비 납부 요청 승인
+6. Approve - 회비 납부 처리
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -282,42 +251,8 @@
             "error": "mongo: no such documents"
         }
         ```
-12. Reject - 회비 납부 처리 (거부)
 
-    | method | route | priviledge |
-    | :---: | :---: | :---: |
-    | POST | /api/v1/fee/reject | manager |
-
-    - Request
-        - ids : (&lt;Array&gt;string) 납부 요청 목록
-    
-    - Request Body example
-        ```json
-        {
-            "ids": [
-                "610bf6b09a38451598148a25",
-                "610bf6b09a38451598148a55"
-            ]
-        }
-        ```
-    
-    - Response
-        - data : (string) 반환 정보 (반환이 없을 경우 "")
-        - error: (string) 에러 메시지 (정상 처리 시 "")
-    
-    - Response Body example
-        ```json
-        {
-            "data" : [
-                {
-                    "Response": "Contents"
-                }
-            ],
-            "error": "mongo: no such documents"
-        }
-        ```   
-
-13. Deposit - 입금/지출 처리
+7. Deposit - 입금/지출 처리
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
