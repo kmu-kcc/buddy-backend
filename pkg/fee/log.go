@@ -31,3 +31,17 @@ func NewLog(memberID, typ string, amount int) *Log {
 		UpdatedAt: now,
 	}
 }
+
+// Memfilter returns limited information of member.
+func (ls Logs) Logfilter() (res []map[string]interface{}) {
+	for _, log := range ls {
+		res = append(res, map[string]interface{}{
+			"id":         log.ID,
+			"member_id":  log.MemberID,
+			"amount":     log.Amount,
+			"type":       log.Type,
+			"updated_at": log.UpdatedAt,
+		})
+	}
+	return
+}

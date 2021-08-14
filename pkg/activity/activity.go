@@ -244,7 +244,7 @@ func ApplyP(activityID primitive.ObjectID, memberID string) error {
 		return ErrAlreadyApplicant
 	}
 
-	if _, err = collection.UpdateByID(ctx, activityID, bson.M{"$push": bson.M{"applicants": memberID}}); err != nil {
+	if _, err = collection.UpdateByID(ctx, activity.ID, bson.M{"$push": bson.M{"applicants": memberID}}); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)
@@ -293,6 +293,9 @@ func Papplies(activityID primitive.ObjectID) (members member.Members, err error)
 			return
 		}
 		members = append(members, *member)
+	}
+	if err = cur.Close(ctx); err != nil {
+		return
 	}
 	return members, client.Disconnect(ctx)
 }

@@ -154,7 +154,7 @@ func Participants() gin.HandlerFunc {
 	}
 }
 
-// ApplyP handles the activity apply request.
+//ApplyP handles the activity apply request
 func ApplyP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -165,7 +165,7 @@ func ApplyP() gin.HandlerFunc {
 		body := new(
 			struct {
 				ActivityID string `json:"_id"`
-				MemberID   string `json:"member_id"`
+				ID         string `json:"member_id"`
 			})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -179,8 +179,7 @@ func ApplyP() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-
-		if err := activity.ApplyP(activityID, body.MemberID); err != nil {
+		if err := activity.ApplyP(activityID, body.ID); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
@@ -190,14 +189,16 @@ func ApplyP() gin.HandlerFunc {
 	}
 }
 
-// Papplies handles the activity applicant list request.
+//Papplies handles the inquire of applicants list
 func Papplies() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Papplies member.Members `json:"papplies"`
-			Error    string         `json:"error"`
+			Data struct {
+				Papplies []map[string]interface{} `json:"papplies"`
+			} `json:"data"`
+			Error string `json:"error"`
 		})
 		body := new(
 			struct {
@@ -215,19 +216,18 @@ func Papplies() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		res, err := activity.Papplies(activityID)
+		members, err := activity.Papplies(activityID)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Papplies = res
+		resp.Data.Papplies = members.Memfilter()
 		c.JSON(http.StatusOK, resp)
-
 	}
 }
 
-// ApplyP handles the activity apply approval request.
+//ApplyP handles the activity apply request
 func ApproveP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -235,6 +235,7 @@ func ApproveP() gin.HandlerFunc {
 		resp := new(struct {
 			Error string `json:"error"`
 		})
+
 		body := new(
 			struct {
 				ActivityID string   `json:"_id"`
@@ -261,7 +262,7 @@ func ApproveP() gin.HandlerFunc {
 	}
 }
 
-// RejectP handles the activity apply rejection request.
+//ApplyP handles the activity apply request
 func RejectP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -295,7 +296,6 @@ func RejectP() gin.HandlerFunc {
 	}
 }
 
-// CancelP handles the activity apply cancellation request.
 func CancelP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -306,7 +306,7 @@ func CancelP() gin.HandlerFunc {
 		body := new(
 			struct {
 				ActivityID string `json:"_id"`
-				MemberID   string `json:"member_id"`
+				ID         string `json:"member_id"`
 			})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -320,7 +320,7 @@ func CancelP() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		if err := activity.CancelP(activityID, body.MemberID); err != nil {
+		if err := activity.CancelP(activityID, body.ID); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return

@@ -113,9 +113,10 @@
     - Request Body example
         ```json
         {
-            "year": 2021,
-            "semester": 1
+            "year": "2021",
+            "semester": "1"
         }
+
 
     - Response
         - dones: (Array&lt;JSON&gt;) 회비 납부자 목록
@@ -163,8 +164,8 @@
     - Request Body example
         ```json
         {
-            "year": 2021,
-            "semester": 1
+            "year": "2021",
+            "semester": "1"
         }
 
     - Response
@@ -206,14 +207,14 @@
     | GET | /api/v1/fee/all | member |
     
     - Request
-        - year: (number) 회비 내역을 조회할 연도
-        - semester: (number) 회비 내역을 조회할 학기
+        - startdate: (number) 회비 내역을 조회할 시작 기준 날짜
+        - enddate: (number) 회비 내역을 조회할 끝 기준 날짜
         
     - Request Body example
         ```json
         {
-            "year": 2021,
-            "semester": 1
+            "startdate": 1627794157,
+            "enddate": 1627794157
         }
 
     - Response
