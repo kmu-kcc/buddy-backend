@@ -4,7 +4,8 @@ package fee
 import (
 	"context"
 	"errors"
-	"sort"
+
+	// "sort"
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
@@ -296,18 +297,19 @@ func All(startdate, enddate int) (logs Logs, err error) {
 		return
 	}
 
-	sort.Slice(logs, func(i, j int) bool { return logs[i].UpdatedAt < logs[j].UpdatedAt })
+	// sort.Slice(logs, func(i, j int) bool { return logs[i].UpdatedAt < logs[j].UpdatedAt })
 
 	return logs, client.Disconnect(ctx)
 }
 
-// Approve approves the submission request of ids.
+// Pay makes payment
 //
 // Note:
 //
 // This is privileged operation:
 // 	Only the club managers can access to this operation.
-func Approve(ids []primitive.ObjectID) error {
+
+func Pay(year, sem int, ids []string, amounts []int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -315,29 +317,41 @@ func Approve(ids []primitive.ObjectID) error {
 	if err != nil {
 		return err
 	}
-
-	// update logs to be approved
-	filter := func() bson.D {
-		arr := make(bson.A, len(ids))
-		for idx, id := range ids {
-			arr[idx] = id
-
+	// bson.D for insertMany
+	insertDoc := func() []interface{} {
+		ans := make([]interface{}, len(amounts))
+		for i := 0; i < len(amounts) && i < len(ids); i++ {
+			tmp := bson.D{
+				bson.E{Key: "member_id", Value: ids[i]},
+				bson.E{Key: "amount", Value: amounts[i]},
+			}
+			ans[i] = tmp
 		}
-		return bson.D{bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
+		return ans
 	}()
 
-	if _, err = client.Database("club").
-		Collection("logs").
-		UpdateMany(
-			ctx,
-			filter,
-			bson.D{
-				bson.E{Key: "$set", Value: bson.D{
-					bson.E{Key: "type", Value: "approved"},
-					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}); err != nil {
+	// fmt.Print(insertDoc)
+	// logs insertMany
+	if _, err := client.Database("club").Collection("logs").InsertMany(ctx, insertDoc); err != nil {
+		// fmt.Print("Log Insertion")
 		return err
 	}
 
+	targetID := make(bson.A, len(ids))
+	for idx, id := range ids {
+		targetID[idx] = id
+	}
+	// Fee of year,sem .logs +
+	// fmt.Print("feee Insertion")
+	if _, err = client.Database("club").Collection("fees").UpdateMany(ctx, bson.M{"year": year, "semester": sem},
+		bson.D{
+			bson.E{Key: "$push", Value: bson.D{
+				bson.E{Key: "logs", Value: bson.D{
+					bson.E{Key: "_id", Value: bson.D{
+						bson.E{Key: "$in", Value: bson.D{
+							bson.E{Key: "member_id", Value: targetID}}}}}}}}}}); err != nil {
+		return err
+	}
 	return client.Disconnect(ctx)
 }
 
@@ -356,7 +370,7 @@ func Deposit(year, semester, amount int) error {
 		return err
 	}
 
-	deposit := NewLog("", "direct", amount)
+	depo := NewLog("", amount, 1)
 
 	if _, err = client.Database("club").
 		Collection("fees").
@@ -367,7 +381,7 @@ func Deposit(year, semester, amount int) error {
 			},
 			bson.D{
 				bson.E{Key: "$push", Value: bson.D{
-					bson.E{Key: "logs", Value: deposit.ID},
+					bson.E{Key: "logs", Value: depo.ID},
 				}},
 			}); err != nil {
 		return err
@@ -375,7 +389,7 @@ func Deposit(year, semester, amount int) error {
 
 	if _, err = client.Database("club").
 		Collection("logs").
-		InsertOne(ctx, deposit); err != nil {
+		InsertOne(ctx, depo); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)
