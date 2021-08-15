@@ -12,17 +12,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	foundingEvent = iota
+	study
+	etc
+)
+
 // Activity represents a club activity state.
 type Activity struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id"`
 	Start        int64              `json:"start,string" bson:"start"`
 	End          int64              `json:"end,string" bson:"end"`
 	Place        string             `json:"place" bson:"place"`
-	Type         string             `json:"type" bson:"type"`
+	Type         int                `json:"type" bson:"type"`
 	Description  string             `json:"description" bson:"description"`
 	Participants []string           `json:"participants" bson:"participants"`
-	Applicants   []string           `json:"applicants" bson:"applicants"`
-	Cancelers    []string           `json:"cancelers" bson:"cancelers"`
 	Private      bool               `json:"private" bson:"private"`
 	// Pictures     []Picture          `json:"pictures" bson:"pictures"`
 }
@@ -30,7 +34,7 @@ type Activity struct {
 type Activities []Activity
 
 // New returns a new activity.
-func New(start, end int64, place, typ, description string, participants []string, private bool) *Activity {
+func New(start, end int64, place, description string, typ int, participants []string, private bool) *Activity {
 	return &Activity{
 		ID:           primitive.NewObjectID(),
 		Start:        start,
@@ -39,8 +43,6 @@ func New(start, end int64, place, typ, description string, participants []string
 		Type:         typ,
 		Description:  description,
 		Participants: participants,
-		Applicants:   []string{},
-		Cancelers:    []string{},
 		Private:      private,
 	}
 }

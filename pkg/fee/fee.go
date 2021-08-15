@@ -15,6 +15,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	payment = iota
+	deposit
+	exemption
+)
+
 var ErrDuplicatedFee = errors.New("duplicated fee")
 
 // Fee represents a club fee state.
