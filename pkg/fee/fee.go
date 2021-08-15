@@ -25,19 +25,21 @@ var ErrDuplicatedFee = errors.New("duplicated fee")
 
 // Fee represents a club fee state.
 type Fee struct {
-	Year     int                  `json:"year,string" bson:"year"`
-	Semester int                  `json:"semester,string" bson:"semester"`
-	Amount   int                  `json:"amount,string" bson:"amount"`
-	Logs     []primitive.ObjectID `json:"logs" bson:"logs"`
+	Year      int                  `json:"year" bson:"year"`
+	Semester  int                  `json:"semester" bson:"semester"`
+	CarryOver int                  `json:"carry_over" bson:"carry_over"`
+	Amount    int                  `json:"amount" bson:"amount"`
+	Logs      []primitive.ObjectID `json:"logs" bson:"logs"`
 }
 
 // New returns a new club fee.
-func New(year, semester, amount int) *Fee {
+func New(year, semester, carryOver, amount int) *Fee {
 	return &Fee{
-		Year:     year,
-		Semester: semester,
-		Amount:   amount,
-		Logs:     []primitive.ObjectID{},
+		Year:      year,
+		Semester:  semester,
+		CarryOver: carryOver,
+		Amount:    amount,
+		Logs:      []primitive.ObjectID{},
 	}
 }
 

@@ -267,11 +267,15 @@
     | POST | /api/v1/fee/pay | manager |
 
     - Request
+        - year: (number) 납부 처리할 연도
+        - semester: (number) 납부 처리할 학기
         - payments : (Array&lt;JSON&gt;) 납부 처리 목록
 
     - Request Body example
         ```json
         {
+            "year": 2021,
+            "semester": 2,
             "payments": [
                 {
                     "id": "20189879",

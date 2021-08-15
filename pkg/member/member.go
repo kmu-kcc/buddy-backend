@@ -63,20 +63,20 @@ func New(id, name, department, phone, email string, grade, attendance int) *Memb
 	}
 }
 
-// Memfilter returns limited information of member.
-func (ms Members) Memfilter() (res []map[string]interface{}) {
-	for _, members := range ms {
-		res = append(res, map[string]interface{}{
-			"id":         members.ID,
-			"name":       members.Name,
-			"department": members.Department,
-			"phone":      members.Phone,
-			"email":      members.Email,
-			"grade":      members.Grade,
-			"attendance": members.Attendance,
-		})
+// Public returns the limited informations of ms.
+func (ms Members) Public() []map[string]interface{} {
+	pubs := make([]map[string]interface{}, len(ms))
+
+	for idx, m := range ms {
+		pubs[idx] = make(map[string]interface{})
+		pubs[idx]["id"] = m.ID
+		pubs[idx]["name"] = m.Name
+		pubs[idx]["department"] = m.Department
+		pubs[idx]["email"] = m.Email
+		pubs[idx]["grade"] = m.Grade
 	}
-	return
+
+	return pubs
 }
 
 // SingIn checks whether m is a club member.
@@ -430,7 +430,7 @@ func Graduates() (members Members, err error) {
 
 	cur, err := client.Database("club").
 		Collection("members").
-		Find(ctx, bson.D{bson.E{Key: "attendance", Value: Graduate}})
+		Find(ctx, bson.D{bson.E{Key: "attendance", Value: graduate}})
 	if err != nil {
 		return
 	}
