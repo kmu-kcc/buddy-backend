@@ -256,3 +256,11 @@
         - 200 OK: 활동 삭제 성공
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 잘못된 ID, 시스템 오류 등
+
+6. ? - 사진 추가
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | POST | /api/v1/activity/? | manager |
+
+    - 미구현 상태
