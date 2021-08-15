@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	Attending = iota
-	Absent
-	Graduate
+	attending = iota
+	absent
+	graduate
 )
 
 var (
