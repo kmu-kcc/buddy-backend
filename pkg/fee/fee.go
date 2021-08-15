@@ -308,7 +308,6 @@ func All(startdate, enddate int) (logs Logs, err error) {
 //
 // This is privileged operation:
 // 	Only the club managers can access to this operation.
-
 func Pay(year, sem int, ids []string, amounts []int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -317,7 +316,7 @@ func Pay(year, sem int, ids []string, amounts []int) error {
 	if err != nil {
 		return err
 	}
-	// bson.D for insertMany
+
 	insertDoc := func() []interface{} {
 		ans := make([]interface{}, len(amounts))
 		for i := 0; i < len(amounts) && i < len(ids); i++ {
@@ -330,10 +329,7 @@ func Pay(year, sem int, ids []string, amounts []int) error {
 		return ans
 	}()
 
-	// fmt.Print(insertDoc)
-	// logs insertMany
 	if _, err := client.Database("club").Collection("logs").InsertMany(ctx, insertDoc); err != nil {
-		// fmt.Print("Log Insertion")
 		return err
 	}
 
@@ -343,6 +339,16 @@ func Pay(year, sem int, ids []string, amounts []int) error {
 	}
 	// Fee of year,sem .logs +
 	// fmt.Print("feee Insertion")
+	// if _, err = client.Database("club").Collection("fees").UpdateMany(ctx, bson.M{"year": year, "semester": sem},
+	// 	bson.D{
+	// 		bson.E{Key: "$push", Value: bson.D{
+	// 			bson.E{Key: "logs", Value: bson.D{
+	// 				bson.E{Key: "_id", Value: bson.D{
+	// 					bson.E{Key: "$in", Value: bson.D{
+	// 						bson.E{Key: "member_id", Value: targetID}}}}}}}}}}); err != nil {
+	// 	return err
+	// }
+
 	if _, err = client.Database("club").Collection("fees").UpdateMany(ctx, bson.M{"year": year, "semester": sem},
 		bson.D{
 			bson.E{Key: "$push", Value: bson.D{
