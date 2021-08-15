@@ -47,19 +47,21 @@ func New(start, end int64, place, description string, typ int, participants []st
 	}
 }
 
-// Actfilter returns limited information of activity.
-func (as Activities) Actfilter() (res []map[string]interface{}) {
-	for _, activities := range as {
-		res = append(res, map[string]interface{}{
-			"start":        activities.Start,
-			"end":          activities.End,
-			"place":        activities.Place,
-			"type":         activities.Type,
-			"description":  activities.Description,
-			"participants": activities.Participants,
-		})
+// Public returns the limited informations of as.
+func (as Activities) Public() []map[string]interface{} {
+	pubs := make([]map[string]interface{}, len(as))
+
+	for idx, a := range as {
+		pubs[idx] = make(map[string]interface{})
+		pubs[idx]["start"] = a.Start
+		pubs[idx]["end"] = a.End
+		pubs[idx]["place"] = a.Place
+		pubs[idx]["type"] = a.Type
+		pubs[idx]["description"] = a.Description
+		pubs[idx]["participants"] = a.Participants
+		// pubs[idx]["pictures"] = a.Pictures
 	}
-	return
+	return pubs
 }
 
 // Create creates a new activity.
