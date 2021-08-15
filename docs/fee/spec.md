@@ -2,7 +2,7 @@
 
 0. Server Domain:Port
 
-    localhost:3000 (추후 변경 예정)
+    http://localhost:3000 (추후 변경 예정)
 
 <br>
 
@@ -20,237 +20,289 @@
     - Request Body example
         ```json
         {
-            "year": "2021",
-            "semester": "2",
-            "amount": "40000"
+            "year": 2021,
+            "semester": 2,
+            "amount": 15000
         }
         ```
 
     - Response
-        - error: (string) 에러 메시지 (회비 내역 생성 성공 시 "")
+        - error: (string) 에러 메시지 (회비 내역 초기화 성공 시 empty)
 
     - Response Body example
         ```json
         {
-            "error": ""
+            "error": "duplicated fee"
         }
         ```
 
-2. Amount - 회비 납부 조회
+    - Status code
+        - 200 OK: 회비 내역 초기화 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 회비 내역 중복, 시스템 오류 등
+
+2. Amount - 회비 납부액 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/fee/create | manager |
+    | POST | /api/v1/fee/amount | member |
 
     - Request
-        - member_id: (string) 학번
+        - id: (string) 학번
         - year: (number) 연도
         - semester: (number) 학기
 
     - Request Body example
         ```json
         {
-            "member_id": "20190000",
+            "id": "20190000",
             "year": 2021,
             "semester": 2,
         }
         ```
 
     - Response
-        - sum: (number) 총 납부한 회비 금액
-        - error: (string) 에러 메시지 (쿼리 성공 시 "")
+        - data.amount: (number) 해당 학기에 납부한 총 회비 금액
+        - error: (string) 에러 메시지 (쿼리 성공 시 empty)
 
     - Response Body example
         ```json
         {
             "data": {
-                "sum": 20000,
+                "amount": 20000,
             },
-            "error": ""
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
         }
         ```
 
-3. Dones - 회비 납부자 명단 조회
+    - Status Code
+        - 200 OK: 쿼리 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 시스템 오류
+
+3. Payers - 회비 납부자 목록 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | GET | /api/v1/fee/dones | manager|
+    | POST | /api/v1/fee/payers | manager |
     
     - Request
-        - year: (number) 납부자를 조회할 연도
-        - semester: (number) 납부자를 조회할 학기
+        - year: (number) 조회할 연도
+        - semester: (number) 조회할 학기
 
     - Request Body example
         ```json
         {
-            "year": "2021",
-            "semester": "1"
+            "year": 2021,
+            "semester": 1
         }
 
-
     - Response
-        - dones: (Array&lt;JSON&gt;) 회비 납부자 목록
-        - error: (string) 에러 메시지 (쿼리 성공 시 "")
+        - data.payers: (Array&lt;JSON&gt;) 회비 납부자 목록
+        - error: (string) 에러 메시지 (쿼리 성공 시 empty)
 
     - Response Body example
         ```json
         {
             "data": {
-                "dones": [
+                "payers": [
                     {
                         "id": "20172229",
+                        "password": "asdf2322",
                         "name": "홍길동",
-                        "department": "나노전자물리학과",
-                        "grade": "1",
+                        "department": "공과대학 나노전자물리학과",
                         "phone": "010-2021-0001",
-                        "email": "testmail1",
-                        "attendance": 0
+                        "email": "gildong@kookmin.ac.kr",
+                        "grade": 1,
+                        "attendance": 0,
+                        "approved": true,
+                        "on_delete": false,
+                        "created_at": "1629060720",
+                        "updated_at": "1629060720"
                     },
                     {
                         "id": "20171718",
+                        "password": "8809dfsfdsf",
                         "name": "심청이",
-                        "department": "정보보안암호수학과",
-                        "grade": "1",
+                        "department": "공과대학 정보보안암호수학과",
                         "phone": "010-2021-0001",
-                        "email": "testmail2",
-                        "attendance": 0
+                        "email": "simch@naver.com",
+                        "grade": 1,
+                        "attendance": 0,
+                        "approved": true,
+                        "on_delete": false,
+                        "created_at": "1629060720",
+                        "updated_at": "1629060720"
                     }
                 ]
             },
-            "error": ""
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
         }
         ```
 
-4. Yets - 회비 미납자 명단 조회
+    - Status Code
+        - 200 OK: 쿼리 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 시스템 오류
+
+4. Deptors - 회비 미납자 명단 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | GET | /api/v1/fee/yets | manager |
+    | POST | /api/v1/fee/deptors | manager |
     
     - Request
-        - year:(number) 미납자를 조회할 연도
-        - semester:(number) 미납자를 조회할 학기
+        - year:(number) 조회할 연도
+        - semester:(number) 조회할 학기
         
     - Request Body example
         ```json
         {
-            "year": "2021",
-            "semester": "1"
+            "year": 2021,
+            "semester": 1
         }
 
     - Response
-        - dones: (Array&lt;JSON&gt;) 미납자 목록
-        - error: (string) 에러 메시지 (쿼리 성공 시 "")
+        - data.deptors: (Array&lt;JSON&gt;) 미납자 정보 및 미납액 목록
+        - error: (string) 에러 메시지 (쿼리 성공 시 empty)
 
     - Response Body example
         ```json
         {
             "data": {
-                "yets": [
+                "deptors": [
                     {
                         "id": "20172229",
+                        "password": "asdf2322",
                         "name": "홍길동",
-                        "department": "나노전자물리학과",
-                        "grade": "1",
+                        "department": "공과대학 나노전자물리학과",
                         "phone": "010-2021-0001",
-                        "email": "testmail1",
-                        "attendance": 0
+                        "email": "gildong@kookmin.ac.kr",
+                        "grade": 1,
+                        "attendance": 0,
+                        "approved": true,
+                        "on_delete": false,
+                        "created_at": "1629060720",
+                        "updated_at": "1629060720",
+                        "dept": 3000
                     },
                     {
                         "id": "20171718",
+                        "password": "8809dfsfdsf",
                         "name": "심청이",
-                        "department": "정보보안암호수학과",
-                        "grade": "1",
+                        "department": "공과대학 정보보안암호수학과",
                         "phone": "010-2021-0001",
-                        "email": "testmail2",
-                        "attendance": 0
+                        "email": "simch@naver.com",
+                        "grade": 1,
+                        "attendance": 0,
+                        "approved": true,
+                        "on_delete": false,
+                        "created_at": "1629060720",
+                        "updated_at": "1629060720",
+                        "dept": 15000
                     }
                 ]
             },
-            "error": ""
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
         }
         ```
 
-5. All - 회비 내역 조회
+    - Status Code
+        - 200 OK: 쿼리 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 시스템 오류
+
+5. Search - 회비 내역 검색
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | GET | /api/v1/fee/all | member |
+    | POST | /api/v1/fee/search | member |
     
     - Request
-        - startdate: (number) 회비 내역을 조회할 시작 기준 날짜
-        - enddate: (number) 회비 내역을 조회할 끝 기준 날짜
-        
+        - year: (number) 조회할 연도
+        - semester: (number) 조회할 학기
+
     - Request Body example
         ```json
         {
-            "startdate": 1627794157,
-            "enddate": 1627794157
+            "year": 2021,
+            "semester": 1
         }
 
     - Response
-        - logs: (Array&lt;JSON&gt;) 회비 내역
-        - error: (string) 에러 메시지 (쿼리 성공 시 "")
+        - data.init: (number) 이월 금액
+        - data.logs: (Array&lt;JSON&gt;) 회비 내역 (`type` - 회비 납부: 0, 입/출금: 1)
+        - data.total: (number) 계
+        - error: (string) 에러 메시지 (쿼리 성공 시 empty)
 
     - Response Body example
         ```json
         {
             "data": {
+                "init": 150000,
                 "logs": [
-                      {
-                        "id": "610521781cc9c3cc51f7c06c",
-                        "member_id": "20172229",
-                        "amount": "15000",
-                        "type": "approved",
-                        "updated_at": "0"
-                      },
-                      {
-                        "id": "610521791cc9c3cc51f7c06d",
-                        "member_id": "20190002",
-                        "amount": "10000",
-                        "type": "approved",
-                        "updated_at": "0"
-                      }
-                ]
+                    {
+                        "id": "20172229",
+                        "amount": 15000,
+                        "type": 0,
+                        "created_at": "1619060720"
+                    },
+                    {
+                        "id": "",
+                        "amount": -10000,
+                        "type": 1,
+                        "created_at": "1629000020"
+                    }
+                ],
+                "total": 155000
             },
-            "error": ""
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
         }
         ```
 
-6. Approve - 회비 납부 처리
+6. Pay - 회비 납부 처리
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/fee/approve | manager |
+    | POST | /api/v1/fee/pay | manager |
 
     - Request
-        - ids : (&lt;Array&gt;string) 납부 요청 목록
-    
+        - payments : (Array&lt;JSON&gt;) 납부 처리 목록
+
     - Request Body example
         ```json
         {
-            "ids": [
-                "610bf6b09a38451598148a25",
-                "610bf6b09a38451598148a55"
+            "payments": [
+                {
+                    "id": "20189879",
+                    "amount": 15000
+                },
+                {
+                    "id": "20209013",
+                    "amount": 15000
+                },
+                {
+                    "id": "20170907",
+                    "amount": 10000
+                }
             ]
         }
         ```
     
     - Response
-        - data : (string) 반환 정보 (반환이 없을 경우 "")
-        - error: (string) 에러 메시지 (정상 처리 시 "")
+        - error: (string) 에러 메시지 (납부 처리 성공 시 empty)
     
     - Response Body example
         ```json
         {
-            "data" : [
-                {
-                    "Response": "Contents"
-                }
-            ],
             "error": "mongo: no such documents"
         }
         ```
+
+    - Status Code
+        - 200 OK: 회비 납부 처리 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 시스템 오류
 
 7. Deposit - 입금/지출 처리
 
@@ -259,31 +311,38 @@
     | POST | /api/v1/fee/deposit | manager |
 
     - Request
-        - year : (string) 연도
-        - semester : (string) 학기
-        - amount : (string) 금액
+        - year : (number) 연도
+        - semester : (number) 학기
+        - amount : (number) 금액 (입금일 경우 양수, 지출일 경우 음수)
 
     - Request Body example
         ```json
         {
-            "year" : "2021",
-            "semester" : "4",
-            "amount" : "10000"
+            "year" : 2021,
+            "semester" : 2,
+            "amount" : 100000
         }
         ```
     
     - Response
-        - data : (string) 반환 정보 (반환이 없을 경우 "")
-        - error: (string) 에러 메시지 (정상 처리 시 "")
+        - error: (string) 에러 메시지 (입금 처리 성공 시 empty)
     
     - Response Body example
         ```json
         {
-            "data" : [
-                {
-                    "Response": "Contents"
-                }
-            ],
             "error": "mongo: no such documents"
         }
         ```
+
+    - Status Code
+        - 200 OK: 입금 처리 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 시스템 오류
+
+8. ? - 면제 처리
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | POST | /api/v1/fee/? | manager |
+
+    - 미구현 상태
