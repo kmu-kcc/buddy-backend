@@ -129,13 +129,13 @@ func Amount(year, semester int, memberID string) (sum int, err error) {
 	return sum, client.Disconnect(ctx)
 }
 
-// Dones returns the list of members who submitted the fee in specific year and semester.
+// Payers returns the list of members who paid the fee of year and semester.
 //
 // NOTE:
 //
 // It is privileged operation:
 //	Only the club managers can access to this operation.
-func (f *Fee) Dones() (members member.Members, err error) {
+func (f *Fee) Payers() (members member.Members, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -160,8 +160,9 @@ func (f *Fee) Dones() (members member.Members, err error) {
 		}
 		return bson.D{
 			bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: arr}}},
-			bson.E{Key: "type", Value: "approved"},
-		}
+			bson.E{Key: "$or", Value: bson.A{
+				bson.D{bson.E{Key: "type", Value: payment}},
+				bson.D{bson.E{Key: "type", Value: exemption}}}}}
 	}()
 
 	cur, err := client.Database("club").Collection("logs").Find(ctx, filter)
@@ -188,8 +189,7 @@ func (f *Fee) Dones() (members member.Members, err error) {
 				arr = append(arr, membID)
 			}
 		}
-		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}},
-			bson.E{Key: "attendance", Value: bson.D{bson.E{Key: "$ne", Value: 2}}}}
+		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
 	}()
 
 	cur, err = client.Database("club").Collection("members").Find(ctx, filter)
@@ -211,16 +211,21 @@ func (f *Fee) Dones() (members member.Members, err error) {
 	return members, client.Disconnect(ctx)
 }
 
-// Yets returns the list of members who have not yet submitted the fee in specific year and semester.
+// Deptors returns the list of members who did not pay the fee of year and semester.
 //
 // NOTE:
 //
 // It is privileged operation:
 //	Only the club managers can access to this operation.
-func (f *Fee) Yets() (members member.Members, err error) {
-	dones, err := f.Dones()
+func (f *Fee) Deptors() (deptors member.Members, depts []int, err error) {
+	payers, err := f.Payers()
 	if err != nil {
 		return
+	}
+
+	ids := make(bson.A, len(payers))
+	for idx, payer := range payers {
+		ids[idx] = payer.ID
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -231,19 +236,11 @@ func (f *Fee) Yets() (members member.Members, err error) {
 		return
 	}
 
-	filter := func() bson.D {
-		ids := make(bson.A, len(dones))
-		for idx, memb := range dones {
-			ids[idx] = memb.ID
-		}
-		return bson.D{
-			bson.E{Key: "id", Value: bson.D{bson.E{Key: "$nin", Value: ids}}},
-			bson.E{Key: "attendance", Value: bson.D{bson.E{Key: "$ne", Value: 2}}}}
-	}()
-
 	memb := new(member.Member)
-
-	cur, err := client.Database("club").Collection("members").Find(ctx, filter)
+	cur, err := client.Database("club").Collection("members").Find(ctx, bson.D{
+		bson.E{Key: "attendance", Value: bson.D{bson.E{Key: "$ne", Value: member.Graduate}}},
+		bson.E{Key: "id", Value: bson.D{bson.E{Key: "$nin", Value: ids}}},
+	})
 	if err != nil {
 		return
 	}
@@ -252,36 +249,24 @@ func (f *Fee) Yets() (members member.Members, err error) {
 		if err = cur.Decode(memb); err != nil {
 			return
 		}
-		members = append(members, *memb)
+		deptors = append(deptors, *memb)
 	}
-
 	if err = cur.Close(ctx); err != nil {
 		return
 	}
-	return members, client.Disconnect(ctx)
-}
 
-// All returns the all club fee logs.
-//
-// NOTE:
-//
-// It is member-limited operation:
-//	Only the authenticated members can access to this operation.
-func All(startdate, enddate int) (logs Logs, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
-	if err != nil {
-		return
+	ids = make(bson.A, len(deptors))
+	for idx, deptor := range deptors {
+		ids[idx] = deptor.ID
 	}
 
 	log := new(Log)
-
-	cur, err := client.Database("club").Collection("logs").Find(ctx, bson.D{bson.E{Key: "$and",
-		Value: bson.A{
-			bson.D{bson.E{Key: "updated_at", Value: bson.D{bson.E{Key: "$lte", Value: enddate}}}},
-			bson.D{bson.E{Key: "updated_at", Value: bson.D{bson.E{Key: "$gte", Value: startdate}}}}}}})
+	amounts := make(map[string]int)
+	cur, err = client.Database("club").Collection("logs").Find(ctx, bson.D{
+		bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: f.Logs}}},
+		bson.E{Key: "type", Value: payment},
+		bson.E{Key: "member_id", Value: bson.D{bson.E{Key: "$in", Value: ids}}},
+	})
 	if err != nil {
 		return
 	}
@@ -290,15 +275,79 @@ func All(startdate, enddate int) (logs Logs, err error) {
 		if err = cur.Decode(log); err != nil {
 			return
 		}
-		logs = append(logs, *log)
+		amounts[log.MemberID] += log.Amount
 	}
 	if err = cur.Close(ctx); err != nil {
 		return
 	}
 
-	sort.Slice(logs, func(i, j int) bool { return logs[i].UpdatedAt < logs[j].UpdatedAt })
+	depts = make([]int, len(deptors))
+	for idx, deptor := range deptors {
+		depts[idx] = f.Amount - amounts[deptor.ID]
+	}
+	return
+}
 
-	return logs, client.Disconnect(ctx)
+// Search returns the fee history of year and semester.
+//
+// NOTE:
+//
+// It is member-limited operation:
+//	Only the authenticated members can access to this operation.
+func (f *Fee) Search() (carryOver int, logs Logs, total int, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return
+	}
+
+	if err = client.Database("club").Collection("fees").FindOne(ctx,
+		bson.D{
+			bson.E{Key: "year", Value: f.Year},
+			bson.E{Key: "semester", Value: f.Semester}}).Decode(f); err == mongo.ErrNoDocuments {
+		return 0, Logs{}, 0, nil
+	} else if err != nil {
+		return
+	}
+
+	filter := func() bson.D {
+		arr := make(bson.A, len(f.Logs))
+
+		for idx, logID := range f.Logs {
+			arr[idx] = logID
+		}
+
+		return bson.D{
+			bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: arr}}},
+			bson.E{Key: "$or", Value: bson.A{
+				bson.D{bson.E{Key: "type", Value: payment}},
+				bson.D{bson.E{Key: "type", Value: deposit}}}}}
+	}()
+
+	cur, err := client.Database("club").Collection("logs").Find(ctx, filter)
+	if err != nil {
+		return
+	}
+
+	total = f.CarryOver
+	log := new(Log)
+
+	for cur.Next(ctx) {
+		if err = cur.Decode(log); err != nil {
+			return
+		}
+		logs = append(logs, *log)
+		total += log.Amount
+	}
+	if err = cur.Close(ctx); err != nil {
+		return
+	}
+
+	sort.Slice(logs, func(i, j int) bool { return logs[i].CreatedAt < logs[j].CreatedAt })
+
+	return f.CarryOver, logs, total, client.Disconnect(ctx)
 }
 
 // Approve approves the submission request of ids.
