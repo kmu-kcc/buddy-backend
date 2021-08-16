@@ -9,9 +9,9 @@ import (
 	"github.com/akamensky/argparse"
 	"github.com/gin-gonic/gin"
 
-	// "github.com/kmu-kcc/buddy-backend/web/api/v1/activity"
+	"github.com/kmu-kcc/buddy-backend/web/api/v1/activity"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/fee"
-	// "github.com/kmu-kcc/buddy-backend/web/api/v1/member"
+	"github.com/kmu-kcc/buddy-backend/web/api/v1/member"
 )
 
 func main() {
@@ -34,33 +34,33 @@ func main() {
 	{
 		v1 := api.Group("/v1")
 		{
-			// mgroup := v1.Group("/member")
-			// {
-			// 	mgroup.POST("/signin", member.SignIn())
-			// 	mgroup.POST("/signup", member.SignUp())
-			// 	mgroup.GET("/signups", member.SignUps())
-			// 	mgroup.POST("/approve", member.Approve())
-			// 	mgroup.POST("/delete", member.Delete())
-			// 	mgroup.POST("/exit", member.Exit())
-			// 	mgroup.GET("/exits", member.Exits())
-			// 	mgroup.POST("/search", member.Search())
-			// 	mgroup.POST("/update", member.Update())
-			// 	mgroup.GET("/graduates", member.Graduates())
-			// }
-			// agroup := v1.Group("/activity")
-			// {
-			// 	agroup.POST("/create", activity.Create())
-			// 	agroup.POST("/search", activity.Search())
-			// 	agroup.POST("/update", activity.Update())
-			// 	agroup.POST("/delete", activity.Delete())
-			// }
+			mgroup := v1.Group("/member")
+			{
+				mgroup.POST("/signin", member.SignIn())
+				mgroup.POST("/signup", member.SignUp())
+				mgroup.GET("/signups", member.SignUps())
+				mgroup.POST("/approve", member.Approve())
+				mgroup.POST("/delete", member.Delete())
+				mgroup.POST("/exit", member.Exit())
+				mgroup.GET("/exits", member.Exits())
+				mgroup.POST("/search", member.Search())
+				mgroup.POST("/update", member.Update())
+				mgroup.GET("/graduates", member.Graduates())
+			}
+			agroup := v1.Group("/activity")
+			{
+				agroup.POST("/create", activity.Create())
+				agroup.POST("/search", activity.Search())
+				agroup.POST("/update", activity.Update())
+				agroup.POST("/delete", activity.Delete())
+			}
 			fgroup := v1.Group("/fee")
 			{
-				// fgroup.POST("/create", fee.Create())
-				// fgroup.POST("/amount", fee.Amount())
-				// fgroup.GET("/dones", fee.Dones())
-				// fgroup.GET("/yets", fee.Yets())
-				// fgroup.GET("/all", fee.All())
+				fgroup.POST("/create", fee.Create())
+				fgroup.POST("/amount", fee.Amount())
+				fgroup.GET("/dones", fee.Dones())
+				fgroup.GET("/yets", fee.Yets())
+				fgroup.GET("/all", fee.All())
 				fgroup.POST("/pay", fee.Pay())
 				fgroup.POST("/deposit", fee.Deposit())
 			}

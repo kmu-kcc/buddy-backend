@@ -20,15 +20,15 @@ func Create() gin.HandlerFunc {
 			Error string `json:"error"`
 		})
 
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+		// if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
 
 		if err := activity.
-			New(body.Start, body.End, body.Place, body.Type, body.Description, body.Participants, body.Private).
-			Create(); err != nil {
+			// New(body.Start, body.End, body.Place, body.Type, body.Description, body.Participants, body.Private).
+			// Create(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return

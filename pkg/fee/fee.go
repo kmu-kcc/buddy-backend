@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	// "sort"
+	"sort"
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
@@ -297,18 +297,18 @@ func All(startdate, enddate int) (logs Logs, err error) {
 		return
 	}
 
-	// sort.Slice(logs, func(i, j int) bool { return logs[i].UpdatedAt < logs[j].UpdatedAt })
+	sort.Slice(logs, func(i, j int) bool { return logs[i].UpdatedAt < logs[j].UpdatedAt })
 
 	return logs, client.Disconnect(ctx)
 }
 
-// Pay makes payment
+// Pay registers payments of members of ids for each amount of amounts.
 //
 // Note:
 //
 // This is privileged operation:
 // 	Only the club managers can access to this operation.
-func Pay(year, sem int, ids []string, amounts []int) error {
+func Pay(year, semester int, ids []string, amounts []int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -317,45 +317,58 @@ func Pay(year, sem int, ids []string, amounts []int) error {
 		return err
 	}
 
-	insertDoc := func() []interface{} {
-		ans := make([]interface{}, len(amounts))
-		for i := 0; i < len(amounts) && i < len(ids); i++ {
-			tmp := bson.D{
-				bson.E{Key: "member_id", Value: ids[i]},
-				bson.E{Key: "amount", Value: amounts[i]},
-			}
-			ans[i] = tmp
-		}
-		return ans
-	}()
-
-	if _, err := client.Database("club").Collection("logs").InsertMany(ctx, insertDoc); err != nil {
+	if _, err = client.Database("club").
+		Collection("fees").
+		Find(ctx, bson.M{"year": year, "semester": semester}); err != nil {
 		return err
 	}
 
-	targetID := make(bson.A, len(ids))
-	for idx, id := range ids {
-		targetID[idx] = id
-	}
-	// Fee of year,sem .logs +
-	// fmt.Print("feee Insertion")
-	// if _, err = client.Database("club").Collection("fees").UpdateMany(ctx, bson.M{"year": year, "semester": sem},
-	// 	bson.D{
-	// 		bson.E{Key: "$push", Value: bson.D{
-	// 			bson.E{Key: "logs", Value: bson.D{
-	// 				bson.E{Key: "_id", Value: bson.D{
-	// 					bson.E{Key: "$in", Value: bson.D{
-	// 						bson.E{Key: "member_id", Value: targetID}}}}}}}}}}); err != nil {
-	// 	return err
-	// }
+	docs := func() bson.A {
+		logs := make(bson.A, len(ids))
+		for idx, id := range ids {
+			logs[idx] = NewLog(id, amounts[idx], payment)
+		}
+		return logs
+	}()
 
-	if _, err = client.Database("club").Collection("fees").UpdateMany(ctx, bson.M{"year": year, "semester": sem},
-		bson.D{
-			bson.E{Key: "$push", Value: bson.D{
-				bson.E{Key: "logs", Value: bson.D{
-					bson.E{Key: "_id", Value: bson.D{
-						bson.E{Key: "$in", Value: bson.D{
-							bson.E{Key: "member_id", Value: targetID}}}}}}}}}}); err != nil {
+	if _, err = client.Database("club").
+		Collection("logs").
+		InsertMany(ctx, docs); err != nil {
+		return err
+	}
+
+	cur, err := client.Database("club").
+		Collection("logs").
+		Find(ctx,
+			bson.D{
+				bson.E{Key: "member_id", Value: bson.D{
+					bson.E{Key: "$in", Value: ids}}}})
+
+	if err != nil {
+		return err
+	}
+
+	log := new(Log)
+	logs := bson.A{}
+
+	for i := 0; cur.Next(ctx); i++ {
+		if err = cur.Decode(log); err != nil {
+			return err
+		}
+		logs = append(logs, log.ID)
+	}
+
+	if err = cur.Close(ctx); err != nil {
+		return err
+	}
+
+	if _, err = client.Database("club").
+		Collection("fees").
+		UpdateOne(ctx,
+			bson.M{"year": year, "semester": semester}, bson.D{
+				bson.E{Key: "$push", Value: bson.D{
+					bson.E{Key: "logs", Value: bson.D{
+						bson.E{Key: "$each", Value: logs}}}}}}); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)
@@ -376,7 +389,7 @@ func Deposit(year, semester, amount int) error {
 		return err
 	}
 
-	depo := NewLog("", amount, 1)
+	log := NewLog("", amount, deposit)
 
 	if _, err = client.Database("club").
 		Collection("fees").
@@ -387,7 +400,7 @@ func Deposit(year, semester, amount int) error {
 			},
 			bson.D{
 				bson.E{Key: "$push", Value: bson.D{
-					bson.E{Key: "logs", Value: depo.ID},
+					bson.E{Key: "logs", Value: log.ID},
 				}},
 			}); err != nil {
 		return err
@@ -395,7 +408,7 @@ func Deposit(year, semester, amount int) error {
 
 	if _, err = client.Database("club").
 		Collection("logs").
-		InsertOne(ctx, depo); err != nil {
+		InsertOne(ctx, log); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)
