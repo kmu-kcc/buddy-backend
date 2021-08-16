@@ -68,29 +68,30 @@ func TestAmount(t *testing.T) {
 	}
 }
 
-func TestDones(t *testing.T) {
+func TestPayers(t *testing.T) {
 	f := fee.Fee{Year: 2021, Semester: 1}
-	if members, err := f.Dones(); err != nil {
+	if members, err := f.Payers(); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(members)
 	}
 }
 
-func TestYets(t *testing.T) {
+func TestDeptors1(t *testing.T) {
 	f := fee.Fee{Year: 2021, Semester: 1}
-	if members, err := f.Yets(); err != nil {
+	if members, a, err := f.Deptors(); err != nil {
 		t.Error(err)
 	} else {
-		t.Log(members)
+		t.Log(members, a)
 	}
 }
 
-func TestAll(t *testing.T) {
-	if logs, err := fee.All(1627794157, 1627794157); err != nil {
+func TestSearch(t *testing.T) {
+	f := fee.Fee{Year: 2021, Semester: 1}
+	if a, logs, b, err := f.Search(); err != nil {
 		t.Error(err)
 	} else {
-		t.Log(logs)
+		t.Log(a, logs, b)
 	}
 }
 

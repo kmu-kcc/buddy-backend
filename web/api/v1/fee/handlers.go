@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/fee"
+	"github.com/kmu-kcc/buddy-backend/pkg/member"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -72,17 +73,50 @@ func Amount() gin.HandlerFunc {
 	}
 }
 
-//Dones handles the inquiry of done submitted personel
-func Dones() gin.HandlerFunc {
+// Payers handles the payer list request.
+func Payers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
 			Data struct {
-				Dones []map[string]interface{} `json:"dones"`
+				Payers member.Members `json:"payers"`
 			} `json:"data"`
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
+		body := new(fee.Fee)
+
+		err := json.NewDecoder(c.Request.Body).Decode(body)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if resp.Data.Payers, err = body.Payers(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Deptors handles deptor list request.
+func Deptors() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			Data struct {
+				Deptors []struct {
+					member.Member
+					Dept int `json:"dept"`
+				} `json:"deptors"`
+			} `json:"data"`
+			Error string `json:"error,omitempty"`
+		})
+
 		body := new(fee.Fee)
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -91,76 +125,54 @@ func Dones() gin.HandlerFunc {
 			return
 		}
 
-		res, err := body.Dones()
+		deptors, depts, err := body.Deptors()
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 
-		resp.Data.Dones = res.Memfilter()
+		resp.Data.Deptors = make([]struct {
+			member.Member
+			Dept int `json:"dept"`
+		}, len(deptors))
+
+		for idx, deptor := range deptors {
+			resp.Data.Deptors[idx].Member = deptor
+			resp.Data.Deptors[idx].Dept = depts[idx]
+		}
 		c.JSON(http.StatusOK, resp)
 	}
 }
 
-//Yets handles the inquiry of yet submitted personel
-func Yets() gin.HandlerFunc {
+// Search handles the fee search request.
+func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
 			Data struct {
-				Yets []map[string]interface{} `json:"yets"`
+				CarryOver int      `json:"carry_over"`
+				Logs      fee.Logs `json:"logs"`
+				Total     int      `json:"total"`
 			} `json:"data"`
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
+
 		body := new(fee.Fee)
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-		res, err := body.Yets()
+
+		err := json.NewDecoder(c.Request.Body).Decode(body)
 		if err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusInternalServerError, resp)
-			return
-		}
-		resp.Data.Yets = res.Memfilter()
-		c.JSON(http.StatusOK, resp)
-	}
-}
-
-//All handles the inquiry of all fee logs
-func All() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		resp := new(struct {
-			Data struct {
-				Logs []map[string]interface{} `json:"logs"`
-			} `json:"data"`
-			Error string `json:"error"`
-		})
-		body := new(struct {
-			Startdate int `json:"startdate"`
-			Enddate   int `json:"enddate"`
-		})
-
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
 
-		res, err := fee.All(body.Startdate, body.Enddate)
-		if err != nil {
+		if resp.Data.CarryOver, resp.Data.Logs, resp.Data.Total, err = body.Search(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-
-		resp.Data.Logs = res.Logfilter()
 		c.JSON(http.StatusOK, resp)
 	}
 }
