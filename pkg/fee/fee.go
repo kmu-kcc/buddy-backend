@@ -4,7 +4,6 @@ package fee
 import (
 	"context"
 	"errors"
-	"sort"
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
@@ -50,6 +49,21 @@ func New(year, semester, carryOver, amount int) *Fee {
 // It is privileged operation:
 //	Only the club managers can access to this operation.
 func (f Fee) Create() (err error) {
+	var year, semester int
+
+	if f.Semester == 1 {
+		year, semester = f.Year-1, 2
+	} else {
+		year, semester = f.Year, 1
+	}
+
+	f.CarryOver, _, _, err = New(year, semester, 0, 0).Search()
+	if err != nil {
+		return
+	}
+
+	f.Logs = []primitive.ObjectID{}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -61,24 +75,31 @@ func (f Fee) Create() (err error) {
 	collection := client.Database("club").Collection("fees")
 	fee := new(Fee)
 
-	if err = collection.FindOne(ctx, bson.D{
-		bson.E{Key: "year", Value: f.Year},
-		bson.E{Key: "semester", Value: f.Semester},
-	}).Decode(fee); err != mongo.ErrNoDocuments {
+	if err = collection.FindOne(
+		ctx,
+		bson.D{
+			bson.E{Key: "year", Value: f.Year},
+			bson.E{Key: "semester", Value: f.Semester},
+		}).
+		Decode(fee); err == mongo.ErrNoDocuments {
+		if _, err = collection.InsertOne(ctx, f); err != nil {
+			return
+		}
+		return client.Disconnect(ctx)
+	} else if err == nil {
 		if err = client.Disconnect(ctx); err != nil {
 			return
 		}
 		return ErrDuplicatedFee
 	}
-
-	if _, err = collection.InsertOne(ctx, f); err != nil {
-		return
-	}
-
-	return client.Disconnect(ctx)
+	return
 }
 
-// Amount finds log by year and semester, and returns the sum of all amounts using memberID and type.
+func (f *Fee) Search() (int, Logs, int, error) {
+	return 40000, nil, 0, nil
+}
+
+// Amount returns the sum of payments of member of memberID.
 //
 // NOTE:
 //
@@ -105,12 +126,18 @@ func Amount(year, semester int, memberID string) (sum int, err error) {
 		return
 	}
 
+	filter := bson.D{
+		bson.E{Key: "_id", Value: bson.D{
+			bson.E{Key: "$in", Value: fee.Logs},
+		}},
+		bson.E{Key: "member_id", Value: memberID},
+		bson.E{Key: "type", Value: payment},
+	}
+
 	cur, err := client.Database("club").
 		Collection("logs").
-		Find(ctx, bson.M{
-			"member_id": memberID,
-			"type":      "approved",
-		})
+		Find(ctx, filter)
+
 	if err != nil {
 		return
 	}
@@ -267,7 +294,7 @@ func (f *Fee) Yets() (members member.Members, err error) {
 //
 // It is member-limited operation:
 //	Only the authenticated members can access to this operation.
-func All(startdate, enddate int) (logs Logs, err error) {
+/* func All(startdate, enddate int) (logs Logs, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -300,6 +327,7 @@ func All(startdate, enddate int) (logs Logs, err error) {
 
 	return logs, client.Disconnect(ctx)
 }
+
 
 // Approve approves the submission request of ids.
 //
@@ -380,3 +408,4 @@ func Deposit(year, semester, amount int) error {
 	}
 	return client.Disconnect(ctx)
 }
+*/

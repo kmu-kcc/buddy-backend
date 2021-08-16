@@ -110,7 +110,7 @@ func Search(query string) (activities Activities, err error) {
 			// {"start": bson.M{"$regex": query}},
 			// {"end": bson.M{"$regex": query}},
 			{"place": bson.M{"$regex": query}},
-			{"type": bson.M{"$regex": query}},
+			// {"type": bson.M{"$regex": query}},
 			{"description": bson.M{"$regex": query}},
 		}})
 

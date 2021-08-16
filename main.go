@@ -59,9 +59,9 @@ func main() {
 				fgroup.POST("/amount", fee.Amount())
 				fgroup.GET("/dones", fee.Dones())
 				fgroup.GET("/yets", fee.Yets())
-				fgroup.GET("/all", fee.All())
-				fgroup.POST("/approve", fee.Approve())
-				fgroup.POST("/deposit", fee.Deposit())
+				// fgroup.GET("/all", fee.All())
+				// fgroup.POST("/approve", fee.Approve())
+				// fgroup.POST("/deposit", fee.Deposit())
 			}
 		}
 	}

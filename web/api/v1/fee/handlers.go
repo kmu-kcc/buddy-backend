@@ -4,11 +4,9 @@ package fee
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/fee"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Create handles the fee creation request.
@@ -18,7 +16,7 @@ func Create() gin.HandlerFunc {
 
 		body := new(fee.Fee)
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -26,8 +24,7 @@ func Create() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-
-		if err := fee.New(body.Year, body.Semester, body.Amount).Create(); err != nil {
+		if err := body.Create(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
@@ -51,7 +48,7 @@ func Amount() gin.HandlerFunc {
 			Data struct {
 				Sum int `json:"sum"`
 			} `json:"data"`
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -98,7 +95,7 @@ func Dones() gin.HandlerFunc {
 			return
 		}
 
-		resp.Data.Dones = res.Memfilter()
+		resp.Data.Dones = res.Public()
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -126,11 +123,12 @@ func Yets() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Data.Yets = res.Memfilter()
+		resp.Data.Yets = res.Public()
 		c.JSON(http.StatusOK, resp)
 	}
 }
 
+/*
 //All handles the inquiry of all fee logs
 func All() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -248,3 +246,4 @@ func Deposit() gin.HandlerFunc {
 		c.JSON(http.StatusOK, resp)
 	}
 }
+*/
