@@ -4,7 +4,7 @@ package fee
 import (
 	"context"
 	"errors"
-  "sort"
+	"sort"
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
@@ -94,10 +94,6 @@ func (f Fee) Create() (err error) {
 		return ErrDuplicatedFee
 	}
 	return
-}
-
-func (f *Fee) Search() (int, Logs, int, error) {
-	return 40000, nil, 0, nil
 }
 
 // Amount returns the sum of payments of member of memberID.

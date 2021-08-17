@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/fee"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // // Create handles the fee creation request.
@@ -97,7 +96,6 @@ func Payers() gin.HandlerFunc {
 			return
 		}
 
-		resp.Data.Dones = res.Public()
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -142,7 +140,7 @@ func Deptors() gin.HandlerFunc {
 			resp.Data.Deptors[idx].Dept = depts[idx]
 		}
 
-    c.JSON(http.StatusOK, resp)
+		c.JSON(http.StatusOK, resp)
 	}
 }
 

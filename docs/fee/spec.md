@@ -343,10 +343,10 @@
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 시스템 오류
 
-8. ? - 면제 처리
+8. Exempt - 면제 처리
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/fee/? | manager |
+    | POST | /api/v1/fee/exempt | manager |
 
     - 미구현 상태

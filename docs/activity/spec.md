@@ -257,10 +257,10 @@
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 잘못된 ID, 시스템 오류 등
 
-6. ? - 사진 추가
+6. Add Picture - 사진 추가
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/activity/? | manager |
+    | PUT | /api/v1/activity/addpicture | manager |
 
     - 미구현 상태

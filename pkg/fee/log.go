@@ -33,12 +33,12 @@ func NewLog(memberID string, amount, typ int) *Log {
 func (ls Logs) Public() []map[string]interface{} {
 	pubs := make([]map[string]interface{}, len(ls))
 
-	for idx, l := range ls {
+	for idx, log := range ls {
 		pubs[idx] = make(map[string]interface{})
-		pubs[idx]["member_id"] = l.MemberID
-		pubs[idx]["amount"] = l.Amount
-		pubs[idx]["type"] = l.Type
-		pubs[idx]["created_at"] = l.CreatedAt
+		pubs[idx]["member_id"] = log.MemberID
+		pubs[idx]["amount"] = log.Amount
+		pubs[idx]["type"] = log.Type
+		pubs[idx]["created_at"] = log.CreatedAt
 	}
 
 	return pubs
