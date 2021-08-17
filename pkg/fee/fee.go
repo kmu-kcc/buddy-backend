@@ -4,6 +4,7 @@ package fee
 import (
 	"context"
 	"errors"
+  "sort"
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
@@ -377,14 +378,13 @@ func (f *Fee) Search() (carryOver int, logs Logs, total int, err error) {
 	return f.CarryOver, logs, total, client.Disconnect(ctx)
 }
 
-
-// Approve approves the submission request of ids.
+// Pay registers payments of members of ids for each amount of amounts.
 //
 // Note:
 //
 // This is privileged operation:
 // 	Only the club managers can access to this operation.
-func Approve(ids []primitive.ObjectID) error {
+func Pay(year, semester int, ids []string, amounts []int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -393,28 +393,60 @@ func Approve(ids []primitive.ObjectID) error {
 		return err
 	}
 
-	// update logs to be approved
-	filter := func() bson.D {
-		arr := make(bson.A, len(ids))
-		for idx, id := range ids {
-			arr[idx] = id
+	if _, err = client.Database("club").
+		Collection("fees").
+		Find(ctx, bson.M{"year": year, "semester": semester}); err != nil {
+		return err
+	}
 
+	docs := func() bson.A {
+		logs := make(bson.A, len(ids))
+		for idx, id := range ids {
+			logs[idx] = NewLog(id, amounts[idx], payment)
 		}
-		return bson.D{bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
+		return logs
 	}()
 
 	if _, err = client.Database("club").
 		Collection("logs").
-		UpdateMany(
-			ctx,
-			filter,
-			bson.D{
-				bson.E{Key: "$set", Value: bson.D{
-					bson.E{Key: "type", Value: "approved"},
-					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}); err != nil {
+		InsertMany(ctx, docs); err != nil {
 		return err
 	}
 
+	cur, err := client.Database("club").
+		Collection("logs").
+		Find(ctx,
+			bson.D{
+				bson.E{Key: "member_id", Value: bson.D{
+					bson.E{Key: "$in", Value: ids}}}})
+
+	if err != nil {
+		return err
+	}
+
+	log := new(Log)
+	logs := bson.A{}
+
+	for i := 0; cur.Next(ctx); i++ {
+		if err = cur.Decode(log); err != nil {
+			return err
+		}
+		logs = append(logs, log.ID)
+	}
+
+	if err = cur.Close(ctx); err != nil {
+		return err
+	}
+
+	if _, err = client.Database("club").
+		Collection("fees").
+		UpdateOne(ctx,
+			bson.M{"year": year, "semester": semester}, bson.D{
+				bson.E{Key: "$push", Value: bson.D{
+					bson.E{Key: "logs", Value: bson.D{
+						bson.E{Key: "$each", Value: logs}}}}}}); err != nil {
+		return err
+	}
 	return client.Disconnect(ctx)
 }
 
@@ -433,7 +465,7 @@ func Deposit(year, semester, amount int) error {
 		return err
 	}
 
-	deposit := NewLog("", "direct", amount)
+	log := NewLog("", amount, deposit)
 
 	if _, err = client.Database("club").
 		Collection("fees").
@@ -444,7 +476,7 @@ func Deposit(year, semester, amount int) error {
 			},
 			bson.D{
 				bson.E{Key: "$push", Value: bson.D{
-					bson.E{Key: "logs", Value: deposit.ID},
+					bson.E{Key: "logs", Value: log.ID},
 				}},
 			}); err != nil {
 		return err
@@ -452,7 +484,7 @@ func Deposit(year, semester, amount int) error {
 
 	if _, err = client.Database("club").
 		Collection("logs").
-		InsertOne(ctx, deposit); err != nil {
+		InsertOne(ctx, log); err != nil {
 		return err
 	}
 	return client.Disconnect(ctx)

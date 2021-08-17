@@ -85,7 +85,7 @@ func TestSearch(t *testing.T) {
 	}
 }
 
-func TestApprove(t *testing.T) {
+func TestPay(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -94,23 +94,22 @@ func TestApprove(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	collection := client.Database("club").Collection("fees")
-	collectionLogs := client.Database("club").Collection("logs")
+	// collection := client.Database("club").Collection("fees")
+	// collectionLogs := client.Database("club").Collection("logs")
 
-	testLog := fee.NewLog("20181681", "unapproved", 0)
-	testFee := fee.New(2021, 4, 0)
+	testLog := fee.NewLog("20181681", 0, 0)
+	testLog2 := fee.NewLog("20181682", 0, 0)
+	// testFee := fee.New(2021, 4, 0, 0)
 
-	testFee.Logs = append(testFee.Logs, testLog.ID)
+	// // insert test log
+	// if _, err := collection.InsertOne(ctx, testFee); err != nil {
+	// 	t.Fatal()
+	// }
+	// if _, err := collectionLogs.InsertOne(ctx, testLog); err != nil {
+	// 	t.Fatal(err)
+	// }
 
-	// insert test log
-	if _, err := collection.InsertOne(ctx, testFee); err != nil {
-		t.Fatal()
-	}
-	if _, err := collectionLogs.InsertOne(ctx, testLog); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := fee.Approve([]primitive.ObjectID{testLog.ID}); err != nil {
+	if err := fee.Pay(2021, 4, []string{testLog.MemberID, testLog2.MemberID}, []int{10000, 1000}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -124,19 +123,19 @@ func TestDeposit(t *testing.T) {
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
-	collection := client.Database("club").Collection("fees")
+	// collection := client.Database("club").Collection("fees")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	targetSemester := fee.New(2021, 3, 0)
+	// targetSemester := fee.New(2021, 4, 0, 0)
 
-	if _, err := collection.InsertOne(ctx, targetSemester); err != nil {
-		t.Fatal(err)
-	}
+	// if _, err := collection.InsertOne(ctx, targetSemester); err != nil {
+	// 	t.Fatal(err)
+	// }
 
-	if err := fee.Deposit(2021, 3, 100); err != nil {
+	if err := fee.Deposit(2021, 4, 100); err != nil {
 		t.Fatal(err)
 	}
 

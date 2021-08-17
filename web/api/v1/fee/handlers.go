@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Create handles the fee creation request.
+// // Create handles the fee creation request.
 func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -35,7 +35,7 @@ func Create() gin.HandlerFunc {
 	}
 }
 
-// Amount handles the submission amount request.
+// // Amount handles the submission amount request.
 func Amount() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
@@ -178,56 +178,22 @@ func Search() gin.HandlerFunc {
 	}
 }
 
-func Approve() gin.HandlerFunc {
+// Pay handles the payment request.
+func Pay() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		body := new(struct {
-			IDs []string `json:"ids"`
-		})
-
-		err := json.NewDecoder(c.Request.Body).Decode(body)
-		if err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-
-		ids := make([]primitive.ObjectID, 10)
-
-		for idx, id := range body.IDs {
-			ids[idx], err = primitive.ObjectIDFromHex(id)
-			if err != nil {
-				resp.Error = err.Error()
-				c.JSON(http.StatusInternalServerError, resp)
-				return
-			}
-		}
-
-		if err := fee.Approve(ids); err != nil {
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-		c.JSON(http.StatusOK, resp)
-	}
-}
-
-func Deposit() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		resp := new(struct {
-			Error string `json:"error"`
-		})
-
-		body := new(struct {
-			Year     string `json:"year"`
-			Semester string `json:"semester"`
-			Amount   string `json:"amount"`
+			Year     int `json:"year"`
+			Semester int `json:"semester"`
+			Payments []struct {
+				ID     string `json:"id"`
+				Amount int    `json:"amount"`
+			} `json:"payments"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -235,27 +201,47 @@ func Deposit() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
-		year, err := strconv.Atoi(body.Year)
-		if err != nil {
+
+		ids := make([]string, len(body.Payments))
+		amounts := make([]int, len(body.Payments))
+
+		for idx, payment := range body.Payments {
+			ids[idx], amounts[idx] = payment.ID, payment.Amount
+		}
+
+		if err := fee.Pay(body.Year, body.Semester, ids, amounts); err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		semester, err := strconv.Atoi(body.Semester)
-		if err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-		amount, err := strconv.Atoi(body.Amount)
-		if err != nil {
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Deposit handles the deposit request.
+func Deposit() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			Error string `json:"error,omitempty"`
+		})
+
+		body := new(struct {
+			Year     int `json:"year"`
+			Semester int `json:"semester"`
+			Amount   int `json:"amount"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
 
-		if err := fee.Deposit(year, semester, amount); err != nil {
-			c.JSON(http.StatusBadRequest, resp)
+		if err := fee.Deposit(body.Year, body.Semester, body.Amount); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
 		c.JSON(http.StatusOK, resp)

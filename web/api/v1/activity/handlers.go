@@ -26,8 +26,7 @@ func Create() gin.HandlerFunc {
 			return
 		}
 
-		if err := activity.
-			New(body.Start, body.End, body.Place, body.Description, body.Type, body.Participants, body.Private).
+		if err := activity.New(body.Start, body.End, body.Place, body.Description, body.Type, body.Participants, body.Private).
 			Create(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
