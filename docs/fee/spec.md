@@ -230,7 +230,7 @@
         }
 
     - Response
-        - data.init: (number) 이월 금액
+        - data.carry_over: (number) 이월 금액
         - data.logs: (Array&lt;JSON&gt;) 회비 내역 (`type` - 회비 납부: 0, 입/출금: 1)
         - data.total: (number) 계
         - error: (string) 에러 메시지 (쿼리 성공 시 empty)
@@ -239,7 +239,7 @@
         ```json
         {
             "data": {
-                "init": 150000,
+                "carry_over": 150000,
                 "logs": [
                     {
                         "id": "20172229",

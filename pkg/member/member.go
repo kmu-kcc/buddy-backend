@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	attending = iota
-	absent
-	graduate
+	Attending = iota
+	Absent
+	Graduate
 )
 
 var (
@@ -430,7 +430,7 @@ func Graduates() (members Members, err error) {
 
 	cur, err := client.Database("club").
 		Collection("members").
-		Find(ctx, bson.D{bson.E{Key: "attendance", Value: graduate}})
+		Find(ctx, bson.D{bson.E{Key: "attendance", Value: Graduate}})
 	if err != nil {
 		return
 	}

@@ -8,7 +8,6 @@ import (
 
 	"github.com/akamensky/argparse"
 	"github.com/gin-gonic/gin"
-
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/activity"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/fee"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/member"
