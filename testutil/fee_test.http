@@ -32,32 +32,32 @@ Content-Type: application/json
 
 ###
 
-GET  http://localhost:3000/api/v1/fee/dones HTTP/1.1
+GET  http://localhost:3000/api/v1/fee/payers HTTP/1.1
 Content-Type: application/json
 
 {
-  "year": "2021",
-  "semester": "1"
+  "year": 2021,
+  "semester": 1
 }
 
 ###
 
-GET  http://localhost:3000/api/v1/fee/yets HTTP/1.1
+GET  http://localhost:3000/api/v1/fee/deptors HTTP/1.1
 Content-Type: application/json
 
 {
-  "year": "2021",
-  "semester": "1"
+  "year": 2021,
+  "semester": 1
 }
 
 ###
 
-GET  http://localhost:3000/api/v1/fee/all HTTP/1.1
+GET  http://localhost:3000/api/v1/fee/search HTTP/1.1
 Content-Type: application/json
 
 {
-  "startdate": 1627794157,
-  "enddate": 1627794157 
+  "year": 2021,
+  "semester": 1
 }
 
 ###

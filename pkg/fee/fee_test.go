@@ -58,88 +58,89 @@ func TestAmount(t *testing.T) {
 	}
 }
 
-func TestDones(t *testing.T) {
+func TestPayers(t *testing.T) {
 	f := fee.Fee{Year: 2021, Semester: 1}
-	if members, err := f.Dones(); err != nil {
+	if members, err := f.Payers(); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(members)
 	}
 }
 
-func TestYets(t *testing.T) {
+func TestDeptors1(t *testing.T) {
 	f := fee.Fee{Year: 2021, Semester: 1}
-	if members, err := f.Yets(); err != nil {
+	if members, a, err := f.Deptors(); err != nil {
 		t.Error(err)
 	} else {
-		t.Log(members)
+		t.Log(members, a)
 	}
 }
 
-// func TestAll(t *testing.T) {
-// 	if logs, err := fee.All(1627794157, 1627794157); err != nil {
-// 		t.Error(err)
-// 	} else {
-// 		t.Log(logs)
-// 	}
-// }
+func TestSearch(t *testing.T) {
+	f := fee.Fee{Year: 2021, Semester: 1}
+	if a, logs, b, err := f.Search(); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(a, logs, b)
+	}
+}
 
-// func TestApprove(t *testing.T) {
-// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-// 	defer cancel()
+func TestApprove(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
-// 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	collection := client.Database("club").Collection("fees")
-// 	collectionLogs := client.Database("club").Collection("logs")
+	collection := client.Database("club").Collection("fees")
+	collectionLogs := client.Database("club").Collection("logs")
 
-// 	testLog := fee.NewLog("20181681", "unapproved", 0)
-// 	testFee := fee.New(2021, 4, 0)
+	testLog := fee.NewLog("20181681", "unapproved", 0)
+	testFee := fee.New(2021, 4, 0)
 
-// 	testFee.Logs = append(testFee.Logs, testLog.ID)
+	testFee.Logs = append(testFee.Logs, testLog.ID)
 
-// 	// insert test log
-// 	if _, err := collection.InsertOne(ctx, testFee); err != nil {
-// 		t.Fatal()
-// 	}
-// 	if _, err := collectionLogs.InsertOne(ctx, testLog); err != nil {
-// 		t.Fatal(err)
-// 	}
+	// insert test log
+	if _, err := collection.InsertOne(ctx, testFee); err != nil {
+		t.Fatal()
+	}
+	if _, err := collectionLogs.InsertOne(ctx, testLog); err != nil {
+		t.Fatal(err)
+	}
 
-// 	if err := fee.Approve([]primitive.ObjectID{testLog.ID}); err != nil {
-// 		t.Fatal(err)
-// 	}
+	if err := fee.Approve([]primitive.ObjectID{testLog.ID}); err != nil {
+		t.Fatal(err)
+	}
 
-// 	if err = client.Disconnect(ctx); err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
+	if err = client.Disconnect(ctx); err != nil {
+		t.Fatal(err)
+	}
+}
 
-// func TestDeposit(t *testing.T) {
-// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-// 	defer cancel()
+func TestDeposit(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 
-// 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
-// 	collection := client.Database("club").Collection("fees")
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	collection := client.Database("club").Collection("fees")
 
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	targetSemester := fee.New(2021, 3, 0)
+	targetSemester := fee.New(2021, 3, 0)
 
-// 	if _, err := collection.InsertOne(ctx, targetSemester); err != nil {
-// 		t.Fatal(err)
-// 	}
+	if _, err := collection.InsertOne(ctx, targetSemester); err != nil {
+		t.Fatal(err)
+	}
 
-// 	if err := fee.Deposit(2021, 3, 100); err != nil {
-// 		t.Fatal(err)
-// 	}
+	if err := fee.Deposit(2021, 3, 100); err != nil {
+		t.Fatal(err)
+	}
 
-// 	if err = client.Disconnect(ctx); err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
+	if err = client.Disconnect(ctx); err != nil {
+		t.Fatal(err)
+	}
+}
