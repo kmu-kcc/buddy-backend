@@ -14,8 +14,8 @@ import (
 
 func TestCreate(t *testing.T) {
 	fees := []*fee.Fee{
-		fee.New(2022, 1, 30000),
-		fee.New(2022, 2, 40000),
+		fee.New(2022, 1, 0, 30000),
+		fee.New(2022, 2, 0, 40000),
 	}
 
 	for _, fee := range fees {
@@ -34,23 +34,13 @@ func TestAmount(t *testing.T) {
 		return
 	}
 
-	log1 := new(fee.Log)
-	log1.ID = primitive.NewObjectID()
-	log1.MemberID = "abc"
-	log1.Type = "approved"
-	log1.Amount = 20000
-	log1.CreatedAt = time.Now().Unix()
-	log1.UpdatedAt = time.Now().Unix()
+	log1 := fee.NewLog("abc", 20000, 0)
+	log2 := fee.NewLog("abc", 30000, 0)
 
-	log2 := new(fee.Log)
-	log2.ID = primitive.NewObjectID()
-	log2.MemberID = "abc"
-	log2.Type = "approved"
-	log2.Amount = 20000
-	log2.CreatedAt = time.Now().Unix()
-	log2.UpdatedAt = time.Now().Unix()
-
-	testFee := fee.New(2021, 1, 40000)
+	testFee := new(fee.Fee)
+	testFee.Year = 2022
+	testFee.Semester = 2
+	testFee.Amount = 30000
 	testFee.Logs = []primitive.ObjectID{log1.ID, log2.ID}
 
 	if _, err := client.Database("club").Collection("logs").InsertMany(ctx, []interface{}{log1, log2}); err != nil {
@@ -60,7 +50,7 @@ func TestAmount(t *testing.T) {
 		t.Error(err)
 	}
 
-	sum, err := fee.Amount(2021, 1, "abc")
+	sum, err := fee.Amount(2022, 2, "abc")
 	if err != nil {
 		t.Error(err)
 	} else {

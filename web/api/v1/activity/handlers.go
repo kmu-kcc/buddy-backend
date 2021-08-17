@@ -17,7 +17,7 @@ func Create() gin.HandlerFunc {
 
 		body := new(activity.Activity)
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -27,7 +27,7 @@ func Create() gin.HandlerFunc {
 		}
 
 		if err := activity.
-			New(body.Start, body.End, body.Place, body.Type, body.Description, body.Participants, body.Private).
+			New(body.Start, body.End, body.Place, body.Description, body.Type, body.Participants, body.Private).
 			Create(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
@@ -50,7 +50,7 @@ func Search() gin.HandlerFunc {
 			Data struct {
 				Activities []map[string]interface{} `json:"activities"`
 			} `json:"data"`
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -66,7 +66,7 @@ func Search() gin.HandlerFunc {
 			return
 		}
 
-		resp.Data.Activities = activities.Actfilter()
+		resp.Data.Activities = activities.Public()
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -82,7 +82,7 @@ func Update() gin.HandlerFunc {
 		})
 
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -124,7 +124,7 @@ func Delete() gin.HandlerFunc {
 		})
 
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
