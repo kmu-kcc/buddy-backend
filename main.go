@@ -44,8 +44,8 @@ func main() {
 				mgroup.GET("/exits", member.Exits())
 				mgroup.GET("/search", member.Search())
 				mgroup.PUT("/update", member.Update())
+				mgroup.GET("/active", nil)
 				mgroup.PUT("/activate", nil)
-				mgroup.PUT("/deactivate", nil)
 				mgroup.GET("/graduates", member.Graduates())
 			}
 			agroup := v1.Group("/activity")
@@ -66,7 +66,7 @@ func main() {
 				fgroup.POST("/search", fee.Search())
 				fgroup.POST("/pay", fee.Pay())
 				fgroup.POST("/deposit", fee.Deposit())
-				fgroup.POST("/exempt", nil)
+				fgroup.POST("/exempt", fee.Exempt())
 			}
 		}
 	}
