@@ -6,20 +6,20 @@ import (
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
 )
 
-// func TestSignUp(t *testing.T) {
-// 	guests := []*member.Member{
-// 		member.New("20210001", "Test1", "Department1", "010-2021-0001", "testmail1", 1, member.Attending),
-// 		member.New("20190002", "Test2", "Department2", "010-2019-0002", "testmail2", 2, member.Absent),
-// 		member.New("20190003", "Test3", "Department3", "010-2019-0003", "testmail3", 3, member.Attending),
-// 		member.New("20160004", "Test4", "Department2", "010-2016-0004", "testmail4", 4, member.Graduate),
-// 	}
+func TestSignUp(t *testing.T) {
+	guests := []*member.Member{
+		member.New("20210001", "Test1", "Department1", "010-2021-0001", "testmail1", 1, member.Attending),
+		member.New("20190002", "Test2", "Department2", "010-2019-0002", "testmail2", 2, member.Absent),
+		member.New("20190003", "Test3", "Department3", "010-2019-0003", "testmail3", 3, member.Attending),
+		member.New("20160004", "Test4", "Department2", "010-2016-0004", "testmail4", 4, member.Graduate),
+	}
 
-// 	for _, guest := range guests {
-// 		if err := guest.SignUp(); err != nil {
-// 			t.Error(err)
-// 		}
-// 	}
-// }
+	for _, guest := range guests {
+		if err := guest.SignUp(); err != nil {
+			t.Error(err)
+		}
+	}
+}
 
 func TestSignUps(t *testing.T) {
 	guests, err := member.SignUps()
@@ -89,28 +89,44 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-// func TestUpdate(t *testing.T) {
-// 	if err := member.Approve([]string{"20190002"}); err != nil {
-// 		t.Error(err)
-// 	}
+func TestUpdate(t *testing.T) {
+	if err := member.Approve([]string{"20190002"}); err != nil {
+		t.Error(err)
+	}
 
-// 	memb := member.Member{ID: "20190002"}
-// 	if err := memb.Update(map[string]interface{}{
-// 		"attendance": member.Attending,
-// 		"password":   "00000000"}); err != nil {
-// 		t.Error(err)
-// 	}
-// }
+	memb := member.Member{ID: "20190002"}
+	if err := memb.Update(map[string]interface{}{
+		"attendance": member.Attending,
+		"password":   "00000000"}); err != nil {
+		t.Error(err)
+	}
+}
 
-// func TestSearch(t *testing.T) {
-// 	if membs, err := member.Search(map[string]interface{}{"attendance": member.Attending}); err != nil {
-// 		t.Error(err)
-// 	} else {
-// 		for _, memb := range membs {
-// 			t.Log(memb)
-// 		}
-// 	}
-// }
+func TestSearch(t *testing.T) {
+	if membs, err := member.Search(map[string]interface{}{"attendance": member.Attending}); err != nil {
+		t.Error(err)
+	} else {
+		for _, memb := range membs {
+			t.Log(memb)
+		}
+	}
+}
+
+func TestActive(t *testing.T) {
+	if active, err := member.Active(); err != nil {
+		t.Error(err)
+	} else {
+		t.Logf("active: %t", active)
+	}
+}
+
+func TestActivate(t *testing.T) {
+	if active, err := member.Activate(true); err != nil {
+		t.Error(err)
+	} else {
+		t.Logf("active: %t", active)
+	}
+}
 
 func TestGraduates(t *testing.T) {
 	members, err := member.Graduates()
