@@ -36,8 +36,8 @@ type Member struct {
 	Department string `json:"department" bson:"department"`        // department
 	Phone      string `json:"phone" bson:"phone"`                  // phone number
 	Email      string `json:"email" bson:"email"`                  // e-mail address
-	Grade      int    `json:"grade,string" bson:"grade"`           // grade
-	Attendance int    `json:"attendance,string" bson:"attendance"` // attendance status (attending/absent/graduate)
+	Grade      int    `json:"grade" bson:"grade"`                  // grade
+	Attendance int    `json:"attendance" bson:"attendance"`        // attendance status (attending/absent/graduate)
 	Approved   bool   `json:"approved" bson:"approved"`            // approved or not
 	OnDelete   bool   `json:"on_delete" bson:"on_delete"`          // on exit process or not
 	CreatedAt  int64  `json:"created_at,string" bson:"created_at"` // when created - Unix timestamp
@@ -345,13 +345,13 @@ func Exits() (members Members, err error) {
 	return members, client.Disconnect(ctx)
 }
 
-// Search returns the search result filtered by filter.
+// Search returns the search result with query.
 //
 // NOTE:
 //
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
-func Search(filter map[string]interface{}) (members Members, err error) {
+func Search(query string) (members Members, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -360,11 +360,11 @@ func Search(filter map[string]interface{}) (members Members, err error) {
 		return
 	}
 
-	filter["approved"] = true
-
 	cur, err := client.Database("club").
 		Collection("members").
-		Find(ctx, filter)
+		Find(ctx, bson.D{
+			bson.E{Key: "approved", Value: true},
+		})
 
 	if err == mongo.ErrNoDocuments {
 		return members, client.Disconnect(ctx)
@@ -487,8 +487,8 @@ func Activate(activate bool) (bool, error) {
 //
 // NOTE:
 //
-// It is a member-limited operation:
-//	Only the authenticated members can access to this operation.
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
 func Graduates() (members Members, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()

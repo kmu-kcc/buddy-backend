@@ -14,11 +14,11 @@ func SignIn() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		body := new(member.Member)
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
-		body := new(member.Member)
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
@@ -39,11 +39,11 @@ func SignUp() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		body := new(member.Member)
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
-		body := new(member.Member)
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
@@ -66,17 +66,19 @@ func SignUps() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			SignUps member.Members `json:"signups"`
-			Error   string         `json:"error"`
+			Data struct {
+				SignUps member.Members `json:"signups"`
+			} `json:"data"`
+			Error string `json:"error,omitempty"`
 		})
 
-		guests, err := member.SignUps()
+		var err error
+		resp.Data.SignUps, err = member.SignUps()
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.SignUps = guests
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -89,9 +91,8 @@ func Approve() gin.HandlerFunc {
 		body := new(struct {
 			IDs []string `json:"ids"`
 		})
-
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -117,9 +118,8 @@ func Delete() gin.HandlerFunc {
 		body := new(struct {
 			IDs []string `json:"ids"`
 		})
-
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -143,9 +143,8 @@ func Exit() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		body := new(member.Member)
-
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -169,17 +168,19 @@ func Exits() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Exits member.Members `json:"exits"`
-			Error string         `json:"error"`
+			Data struct {
+				Exits member.Members `json:"exits"`
+			} `json:"data"`
+			Error string `json:"error,omitempty"`
 		})
 
-		members, err := member.Exits()
+		var err error
+		resp.Data.Exits, err = member.Exits()
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Exits = members
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -189,28 +190,21 @@ func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		body := new(struct {
-			Filter map[string]interface{} `json:"filter"`
-		})
-
+		query := c.Query("query")
 		resp := new(struct {
-			Members member.Members `json:"members"`
-			Error   string         `json:"error"`
+			Data struct {
+				Members []map[string]interface{} `json:"members"`
+			} `json:"data"`
+			Error string `json:"error,omitempty"`
 		})
 
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-
-		members, err := member.Search(body.Filter)
+		members, err := member.Search(query)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Members = members
+		resp.Data.Members = members.Public()
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -221,12 +215,11 @@ func Update() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		body := new(struct {
-			member.Member
+			ID     string                 `json:"id"`
 			Update map[string]interface{} `json:"update"`
 		})
-
 		resp := new(struct {
-			Error string `json:"error"`
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -235,10 +228,9 @@ func Update() gin.HandlerFunc {
 			return
 		}
 
-		if err := body.Member.Update(body.Update); err != nil {
+		if err := (member.Member{ID: body.ID}).Update(body.Update); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
-			return
 		}
 		c.JSON(http.StatusOK, resp)
 	}
@@ -274,7 +266,6 @@ func Activate() gin.HandlerFunc {
 		body := new(struct {
 			Activate bool `json:"activate"`
 		})
-
 		resp := new(struct {
 			Data struct {
 				Active bool `json:"active"`
@@ -304,17 +295,19 @@ func Graduates() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		resp := new(struct {
-			Graduates member.Members `json:"graduates"`
-			Error     string         `json:"error"`
+			Data struct {
+				Graduates member.Members `json:"graduates"`
+			} `json:"data"`
+			Error string `json:"error,omitempty"`
 		})
 
-		graduates, err := member.Graduates()
+		var err error
+		resp.Data.Graduates, err = member.Graduates()
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-		resp.Graduates = graduates
 		c.JSON(http.StatusOK, resp)
 	}
 }
