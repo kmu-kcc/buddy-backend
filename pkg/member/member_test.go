@@ -103,7 +103,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
-	if membs, err := member.Search(map[string]interface{}{"attendance": member.Attending}); err != nil {
+	if membs, err := member.Search("2021"); err != nil {
 		t.Error(err)
 	} else {
 		for _, memb := range membs {

@@ -337,11 +337,13 @@
     | PUT | /api/v1/member/update | member |
 
     - Request
+        - id: (string) 학번
         - update: (JSON) 갱신하고자 하는 회원 정보 (비밀번호, 소속 대학/학부, 전화번호, 이메일, 학년, 재학 여부 중 0개 이상 택)
 
     - Request Body example
         ```json
         {
+            "id": "20210001",
             "update": {
                 "password": "asdf1234",
                 "department": "소프트웨어융합대학 소프트웨어학부",
