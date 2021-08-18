@@ -368,21 +368,64 @@
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 시스템 오류
 
-10. Activate - 회원 가입 신청 활성화
+10. Active - 회원 가입 신청 활성 상태 확인
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | GET | /api/v1/member/active | - |
+
+    - Response
+        - data.active: (boolean) 활성 여부
+        - error: (string) 에러 메시지 (확인 성공 시 empty)
+
+    - Response Body example
+    ```json
+    {
+        "data": {
+            "active": true
+        },
+        "error": "this MongoDB deployment does not support retryable writes. Please add retryWrites=false to your connection string"
+    }
+    ```
+
+    - Status Code
+        - 200 OK: 확인 성공
+        - 500 Internal Server Error: 시스템 오류
+
+11. activate - 회원 가입 신청 활성화/비활성화
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
     | PUT | /api/v1/member/activate | manager |
 
-    - 미구현 상태
+    - Request
+        - activate: (boolean) 활성화 여부 (활성화: true, 비활성화: false)
 
-11. Deactivate - 회원 가입 신청 비활성화
+    - Request Body example
+    ```json
+    {
+        "activate": true
+    }
+    ```
 
-    | method | route | priviledge |
-    | :---: | :---: | :---: |
-    | PUT | /api/v1/member/deactivate | manager |
+    - Response
+        - data.active: (boolean) 활성화 여부
+        - error: (string) 에러 메시지 (활성화/비활성화 성공 시 empty)
 
-    - 미구현 상태
+    - Response Body example
+    ```json
+    {
+        "data": {
+            "active": true
+        },
+        "error": "Already active"
+    }
+    ```
+
+    - Status Code
+        - 200 OK: 활성화/비활성화 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 이미 활성화/비활성화 돼있는 경우, 시스템 오류
 
 12. Graduates - 졸업자 목록 조회 (추후 졸업자 일괄 메일 발송 시 사용)
 

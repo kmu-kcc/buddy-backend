@@ -349,4 +349,31 @@
     | :---: | :---: | :---: |
     | POST | /api/v1/fee/exempt | manager |
 
-    - 미구현 상태
+    - Request
+        - year: (number) 연도
+        - semester: (number) 학기
+        - id: (string) 회비 면제 대상의 학번
+
+    - Request Body example
+        ```json
+        {
+            "year": 2021,
+            "semester": 2,
+            "id": "20210001"
+        }
+        ```
+
+    - Response
+        - error: (string) 에러 메시지 (면제 처리 성공 시 empty)
+
+    - Response Body example
+        ```json
+        {
+            "error": "mongo: no such documents"
+        }
+        ```
+
+    - Status Code
+        - 200 OK: 면제 처리 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 시스템 오류
