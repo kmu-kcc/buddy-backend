@@ -244,6 +244,60 @@ func Update() gin.HandlerFunc {
 	}
 }
 
+// Active handles the member signup activation status request.
+func Active() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		resp := new(struct {
+			Data struct {
+				Active bool `json:"active"`
+			} `json:"data"`
+			Error string `json:"error,omitempty"`
+		})
+
+		var err error
+		if resp.Data.Active, err = member.Active(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Activate handles the member signup activation status update request.
+func Activate() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			Activate bool `json:"activate"`
+		})
+
+		resp := new(struct {
+			Data struct {
+				Active bool `json:"active"`
+			} `json:"data"`
+			Error string `json:"error,omitempty"`
+		})
+
+		err := json.NewDecoder(c.Request.Body).Decode(body)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if resp.Data.Active, err = member.Activate(body.Activate); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
 // Graduates handles the graduate list request.
 func Graduates() gin.HandlerFunc {
 	return func(c *gin.Context) {

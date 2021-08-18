@@ -44,8 +44,8 @@ func main() {
 				mgroup.GET("/exits", member.Exits())
 				mgroup.GET("/search", member.Search())
 				mgroup.PUT("/update", member.Update())
-				mgroup.GET("/active", nil)
-				mgroup.PUT("/activate", nil)
+				mgroup.GET("/active", member.Active())
+				mgroup.PUT("/activate", member.Activate())
 				mgroup.GET("/graduates", member.Graduates())
 			}
 			agroup := v1.Group("/activity")

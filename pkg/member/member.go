@@ -24,6 +24,8 @@ var (
 	ErrAlreadyMember    = errors.New("already a member")
 	ErrUnderReview      = errors.New("under review")
 	ErrOnDelete         = errors.New("already on delete")
+	ErrAlreadyActive    = errors.New("already active")
+	ErrAlreadyInactive  = errors.New("already inactive")
 )
 
 // Member represents a club member state.
@@ -411,6 +413,74 @@ func (m Member) Update(update map[string]interface{}) error {
 		return err
 	}
 	return client.Disconnect(ctx)
+}
+
+// Active returns the activation status for member signup.
+func Active() (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return false, err
+	}
+
+	active := new(struct {
+		Active bool `bson:"active"`
+	})
+
+	if err = client.Database("club").
+		Collection("signup").
+		FindOne(ctx, bson.D{}).
+		Decode(active); err != nil {
+		return false, err
+	}
+
+	return active.Active, client.Disconnect(ctx)
+}
+
+// Activate updates the activation status for member signup.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
+func Activate(activate bool) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return false, err
+	}
+
+	active := struct {
+		Active bool `bson:"active"`
+	}{Active: activate}
+
+	if err = client.Database("club").
+		Collection("signup").
+		FindOneAndUpdate(
+			ctx,
+			bson.D{},
+			bson.D{bson.E{Key: "$set", Value: active}}).
+		Decode(&active); err != nil {
+		return false, err
+	}
+
+	if err = client.Disconnect(ctx); err != nil {
+		return activate, err
+	}
+
+	if active.Active == activate {
+		if activate {
+			return active.Active, ErrAlreadyActive
+		} else {
+			return active.Active, ErrAlreadyInactive
+		}
+	}
+
+	return activate, nil
 }
 
 // Graduates returns all graduate members.
