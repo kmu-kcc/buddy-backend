@@ -245,3 +245,32 @@ func Deposit() gin.HandlerFunc {
 		c.JSON(http.StatusOK, resp)
 	}
 }
+
+// Exempt handles the exemption request.
+func Exempt() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			fee.Fee
+			ID string `json:"id"`
+		})
+
+		resp := new(struct {
+			Error string `json:"error,omitempty"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := body.Exempt(body.ID); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}

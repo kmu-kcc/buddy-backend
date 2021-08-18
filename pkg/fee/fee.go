@@ -485,3 +485,47 @@ func Deposit(year, semester, amount int) error {
 	}
 	return client.Disconnect(ctx)
 }
+
+// Exempt exempts the member of id from the fee of year and semester.
+//
+// Note :
+//
+// This is a privileged operation:
+// 	Only the club managers can access to this operation
+func (f *Fee) Exempt(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	log := NewLog(id, 0, exemption)
+
+	if err = client.Database("club").
+		Collection("fees").
+		FindOneAndUpdate(
+			ctx,
+			bson.D{
+				bson.E{Key: "year", Value: f.Year},
+				bson.E{Key: "semester", Value: f.Semester}},
+			bson.D{
+				bson.E{Key: "$push", Value: bson.D{
+					bson.E{Key: "logs", Value: log.ID},
+				}},
+			}).
+		Decode(f); err != nil {
+		return err
+	}
+
+	log.Amount = f.Amount
+
+	if _, err = client.Database("club").
+		Collection("logs").
+		InsertOne(ctx, log); err != nil {
+		return err
+	}
+
+	return client.Disconnect(ctx)
+}
