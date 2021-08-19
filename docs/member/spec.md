@@ -394,7 +394,7 @@
         - 200 OK: 확인 성공
         - 500 Internal Server Error: 시스템 오류
 
-11. activate - 회원 가입 신청 활성화/비활성화
+11. Activate - 회원 가입 신청 활성화/비활성화
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
