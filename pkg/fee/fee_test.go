@@ -34,8 +34,8 @@ func TestAmount(t *testing.T) {
 		return
 	}
 
-	log1 := fee.NewLog("abc", 20000, 0)
-	log2 := fee.NewLog("abc", 30000, 0)
+	log1 := fee.NewLog("abc", "회비 납부", 20000, 0)
+	log2 := fee.NewLog("abc", "회비 납부", 30000, 0)
 
 	testFee := new(fee.Fee)
 	testFee.Year = 2022
@@ -94,8 +94,8 @@ func TestPay(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testLog := fee.NewLog("20181681", 0, 0)
-	testLog2 := fee.NewLog("20181682", 0, 0)
+	testLog := fee.NewLog("20181681", "회비 납부", 0, 0)
+	testLog2 := fee.NewLog("20181682", "회비 납부", 0, 0)
 
 	if err := fee.Pay(2021, 4, []string{testLog.MemberID, testLog2.MemberID}, []int{10000, 1000}); err != nil {
 		t.Fatal(err)
@@ -116,7 +116,7 @@ func TestDeposit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := fee.Deposit(2021, 4, 100); err != nil {
+	if err := fee.Deposit(2021, 4, 100, "test"); err != nil {
 		t.Fatal(err)
 	}
 

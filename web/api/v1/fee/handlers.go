@@ -44,7 +44,6 @@ func Amount() gin.HandlerFunc {
 			Year     int    `json:"year"`
 			Semester int    `json:"semester"`
 		})
-
 		resp := new(struct {
 			Data struct {
 				Sum int `json:"sum"`
@@ -75,13 +74,13 @@ func Payers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
 				Payers member.Members `json:"payers"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
-		body := new(fee.Fee)
 
 		err := json.NewDecoder(c.Request.Body).Decode(body)
 		if err != nil {
@@ -105,6 +104,7 @@ func Deptors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
 				Deptors []struct {
@@ -114,8 +114,6 @@ func Deptors() gin.HandlerFunc {
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
-
-		body := new(fee.Fee)
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
@@ -149,16 +147,15 @@ func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
-				CarryOver int      `json:"carry_over"`
-				Logs      fee.Logs `json:"logs"`
-				Total     int      `json:"total"`
+				CarryOver int                      `json:"carry_over"`
+				Logs      []map[string]interface{} `json:"logs"`
+				Total     int                      `json:"total"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
-
-		body := new(fee.Fee)
 
 		err := json.NewDecoder(c.Request.Body).Decode(body)
 		if err != nil {
@@ -181,10 +178,6 @@ func Pay() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		resp := new(struct {
-			Error string `json:"error,omitempty"`
-		})
-
 		body := new(struct {
 			Year     int `json:"year"`
 			Semester int `json:"semester"`
@@ -192,6 +185,9 @@ func Pay() gin.HandlerFunc {
 				ID     string `json:"id"`
 				Amount int    `json:"amount"`
 			} `json:"payments"`
+		})
+		resp := new(struct {
+			Error string `json:"error,omitempty"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -221,14 +217,14 @@ func Deposit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		body := new(struct {
+			Year        int    `json:"year"`
+			Semester    int    `json:"semester"`
+			Amount      int    `json:"amount"`
+			Description string `json:"description"`
+		})
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
-		})
-
-		body := new(struct {
-			Year     int `json:"year"`
-			Semester int `json:"semester"`
-			Amount   int `json:"amount"`
 		})
 
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
@@ -237,7 +233,7 @@ func Deposit() gin.HandlerFunc {
 			return
 		}
 
-		if err := fee.Deposit(body.Year, body.Semester, body.Amount); err != nil {
+		if err := fee.Deposit(body.Year, body.Semester, body.Amount, body.Description); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
