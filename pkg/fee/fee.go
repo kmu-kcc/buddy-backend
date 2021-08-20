@@ -318,7 +318,7 @@ func (f *Fee) Deptors() (deptors member.Members, depts []int, err error) {
 //
 // It is member-limited operation:
 //	Only the authenticated members can access to this operation.
-func (f *Fee) Search() (carryOver int, logs Logs, total int, err error) {
+func (f *Fee) Search() (carryOver int, _ []map[string]interface{}, total int, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -331,7 +331,7 @@ func (f *Fee) Search() (carryOver int, logs Logs, total int, err error) {
 		bson.D{
 			bson.E{Key: "year", Value: f.Year},
 			bson.E{Key: "semester", Value: f.Semester}}).Decode(f); err == mongo.ErrNoDocuments {
-		return 0, Logs{}, 0, nil
+		return 0, Logs{}.Public(), 0, nil
 	} else if err != nil {
 		return
 	}
@@ -357,6 +357,7 @@ func (f *Fee) Search() (carryOver int, logs Logs, total int, err error) {
 
 	total = f.CarryOver
 	log := new(Log)
+	var logs Logs
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(log); err != nil {
@@ -371,7 +372,7 @@ func (f *Fee) Search() (carryOver int, logs Logs, total int, err error) {
 
 	sort.Slice(logs, func(i, j int) bool { return logs[i].CreatedAt < logs[j].CreatedAt })
 
-	return f.CarryOver, logs, total, client.Disconnect(ctx)
+	return f.CarryOver, logs.Public(), total, client.Disconnect(ctx)
 }
 
 // Pay registers payments of members of ids for each amount of amounts.
@@ -398,7 +399,7 @@ func Pay(year, semester int, ids []string, amounts []int) error {
 	docs := func() bson.A {
 		logs := make(bson.A, len(ids))
 		for idx, id := range ids {
-			logs[idx] = NewLog(id, amounts[idx], payment)
+			logs[idx] = NewLog(id, "회비 납부", amounts[idx], payment)
 		}
 		return logs
 	}()
@@ -448,11 +449,11 @@ func Pay(year, semester int, ids []string, amounts []int) error {
 
 // Deposit makes a new log with amount and append it to fee with Year  of year, Semester of semester
 //
-// Note :
+// Note:
 //
 // This is privileged operation:
 // 	Only the club managers can access to this operation
-func Deposit(year, semester, amount int) error {
+func Deposit(year, semester, amount int, description string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -461,7 +462,7 @@ func Deposit(year, semester, amount int) error {
 		return err
 	}
 
-	log := NewLog("", amount, deposit)
+	log := NewLog("", description, amount, deposit)
 
 	if _, err = client.Database("club").
 		Collection("fees").
@@ -501,7 +502,7 @@ func (f *Fee) Exempt(id string) error {
 		return err
 	}
 
-	log := NewLog(id, 0, exemption)
+	log := NewLog(id, "회비 면제", 0, exemption)
 
 	if err = client.Database("club").
 		Collection("fees").

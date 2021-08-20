@@ -145,7 +145,7 @@
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 시스템 오류
 
-4. Deptors - 회비 미납자 명단 조회
+4. Deptors - 회비 미납자 목록 조회
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -242,15 +242,15 @@
                 "carry_over": 150000,
                 "logs": [
                     {
-                        "id": "20172229",
                         "amount": 15000,
                         "type": 0,
+                        "description": "회비 납부",
                         "created_at": "1619060720"
                     },
                     {
-                        "id": "",
                         "amount": -10000,
                         "type": 1,
+                        "description": "비품 구입",
                         "created_at": "1629000020"
                     }
                 ],
@@ -315,16 +315,18 @@
     | POST | /api/v1/fee/deposit | manager |
 
     - Request
-        - year : (number) 연도
-        - semester : (number) 학기
-        - amount : (number) 금액 (입금일 경우 양수, 지출일 경우 음수)
+        - year: (number) 연도
+        - semester: (number) 학기
+        - amount: (number) 금액 (입금일 경우 양수, 지출일 경우 음수)
+        - description: (string) 비고
 
     - Request Body example
         ```json
         {
-            "year" : 2021,
-            "semester" : 2,
-            "amount" : 100000
+            "year": 2021,
+            "semester": 2,
+            "amount": 100000,
+            "description": "운영비 지원"
         }
         ```
     
