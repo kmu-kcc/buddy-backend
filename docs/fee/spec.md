@@ -371,11 +371,11 @@
     - Response Body example
         ```json
         {
-            "error": "mongo: no such documents"
+            "error": "already exempted"
         }
         ```
 
     - Status Code
         - 200 OK: 면제 처리 성공
         - 400 Bad Request: 요청 포맷/타입 오류
-        - 500 Internal Server Error: 시스템 오류
+        - 500 Internal Server Error: 이미 면제 처리된 경우, 시스템 오류

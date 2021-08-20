@@ -20,7 +20,7 @@ Content-Type: application/json
 
 ###
 
-GET  http://localhost:3000/api/v1/fee/payers HTTP/1.1
+POST http://localhost:3000/api/v1/fee/payers HTTP/1.1
 Content-Type: application/json
 
 {
@@ -30,7 +30,7 @@ Content-Type: application/json
 
 ###
 
-GET  http://localhost:3000/api/v1/fee/deptors HTTP/1.1
+POST http://localhost:3000/api/v1/fee/deptors HTTP/1.1
 Content-Type: application/json
 
 {
@@ -40,7 +40,7 @@ Content-Type: application/json
 
 ###
 
-GET  http://localhost:3000/api/v1/fee/search HTTP/1.1
+POST http://localhost:3000/api/v1/fee/search HTTP/1.1
 Content-Type: application/json
 
 {
@@ -80,7 +80,8 @@ Content-Type: application/json
 {
   "year": 2021,
   "semester": 2,
-  "amount": 987654
+  "amount": 987654,
+  "description": "test description"
 }
 
 ###

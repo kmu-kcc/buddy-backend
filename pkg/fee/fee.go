@@ -21,7 +21,10 @@ const (
 	exemption
 )
 
-var ErrDuplicatedFee = errors.New("duplicated fee")
+var (
+	ErrDuplicatedFee   = errors.New("duplicated fee")
+	ErrAlreadyExempted = errors.New("already exempted")
+)
 
 // Fee represents a club fee state.
 type Fee struct {
@@ -502,11 +505,37 @@ func (f *Fee) Exempt(id string) error {
 		return err
 	}
 
-	log := NewLog(id, "회비 면제", 0, exemption)
+	db := client.Database("club")
+	feeCollection := db.Collection("fees")
+	logCollection := db.Collection("logs")
 
-	if err = client.Database("club").
-		Collection("fees").
-		FindOneAndUpdate(
+	if err = feeCollection.FindOne(
+		ctx,
+		bson.D{
+			bson.E{Key: "year", Value: f.Year},
+			bson.E{Key: "semester", Value: f.Semester},
+		}).
+		Decode(f); err != nil {
+		return err
+	}
+
+	log := new(Log)
+	filter := bson.D{
+		bson.E{Key: "_id", Value: bson.D{
+			bson.E{Key: "$in", Value: f.Logs},
+		}},
+		bson.E{Key: "member_id", Value: id},
+		bson.E{Key: "type", Value: exemption},
+	}
+
+	if err = logCollection.FindOne(ctx, filter).Decode(log); err == nil {
+		if err = client.Disconnect(ctx); err != nil {
+			return err
+		}
+		return ErrAlreadyExempted
+	} else if err == mongo.ErrNoDocuments {
+		log = NewLog(id, "회비 면제", f.Amount, exemption)
+		if _, err = feeCollection.UpdateOne(
 			ctx,
 			bson.D{
 				bson.E{Key: "year", Value: f.Year},
@@ -515,16 +544,14 @@ func (f *Fee) Exempt(id string) error {
 				bson.E{Key: "$push", Value: bson.D{
 					bson.E{Key: "logs", Value: log.ID},
 				}},
-			}).
-		Decode(f); err != nil {
+			}); err != nil {
+			return err
+		}
+	} else {
 		return err
 	}
 
-	log.Amount = f.Amount
-
-	if _, err = client.Database("club").
-		Collection("logs").
-		InsertOne(ctx, log); err != nil {
+	if _, err = logCollection.InsertOne(ctx, log); err != nil {
 		return err
 	}
 

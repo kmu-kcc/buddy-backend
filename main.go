@@ -25,7 +25,7 @@ func main() {
 		log.Fatalln(parser.Usage(err))
 	}
 
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(gin.ReleaseMode)
 
 	engine := gin.Default()
 
