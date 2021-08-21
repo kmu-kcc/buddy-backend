@@ -494,7 +494,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | PUT | /api/v1/member/activate | manager |
+    | PUT | /api/v1/member/activate | member manager |
 
     - Request
         - activate: (boolean) 활성화 여부 (활성화: true, 비활성화: false)
@@ -529,7 +529,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | GET | /api/v1/member/graduates | manager |
+    | GET | /api/v1/member/graduates | member manager |
 
     - Response
         - data.graduates: (Array&lt;JSON&gt;) 졸업자 목록
