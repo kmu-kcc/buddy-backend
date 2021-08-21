@@ -184,6 +184,11 @@
                         "on_delete": false,
                         "created_at": "1629060720",
                         "updated_at": "1629060720",
+                        "role": {
+                            "member_management": false,
+                            "activity_management": false,
+                            "fee_management": false
+                        },
                         "dept": 3000
                     },
                     {
@@ -199,6 +204,11 @@
                         "on_delete": false,
                         "created_at": "1629060720",
                         "updated_at": "1629060720",
+                        "role": {
+                            "member_management": false,
+                            "activity_management": false,
+                            "fee_management": false
+                        },
                         "dept": 15000
                     }
                 ]

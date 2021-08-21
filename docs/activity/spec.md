@@ -154,7 +154,12 @@
                                 "approved": true,
                                 "on_delete": false,
                                 "created_at": "1628974315",
-                                "updated_at": "1628974315"
+                                "updated_at": "1628974315",
+                                "role": {
+                                    "member_management": false,
+                                    "activity_management": false,
+                                    "fee_management": false
+                                }
                             },
                             {
                                 "id": "20175271",
@@ -168,7 +173,12 @@
                                 "approved": true,
                                 "on_delete": false,
                                 "created_at": "1629060720",
-                                "updated_at": "1629060720"
+                                "updated_at": "1629060720",
+                                "role": {
+                                    "member_management": false,
+                                    "activity_management": false,
+                                    "fee_management": false
+                                }
                             }
                         ],
                         "private": true

@@ -42,6 +42,9 @@ func NewToken(id string) (Token, int64, error) {
 	tokens[Token(token)] = make(map[string]interface{})
 	tokens[Token(token)]["id"] = id
 	tokens[Token(token)]["exp"] = exp
+
+	time.AfterFunc(6*time.Hour, func() { delete(tokens, Token(token)) })
+
 	return Token(token), exp, err
 }
 
