@@ -290,7 +290,55 @@
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 시스템 오류
 
-8. Search - 회원 검색
+8. My - 내 정보
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | POST | /api/v1/member/my | - |
+
+    - Request
+        - id: (string) 학번
+        - password: (string) 비밀번호
+
+    - Request Body example
+        ```json
+        {
+            "id": "20210021",
+            "password": "abcdffw112"
+        }
+        ```
+
+    - Response
+        - data.data: (JSON) 내 정보
+        - error: (string) 에러 메시지 (회원 검색 성공 시 empty)
+
+    - Response Body example
+        ```json
+        {
+            "data": {
+                "data": {
+                    "id": "202100021",
+                    "password": "abcdffw112",
+                    "name": "홍길동",
+                    "department": "소프트웨어융합대학 소프트웨어학부",
+                    "phone": "01012345678",
+                    "email": "gildong@kookmin.ac.kr",
+                    "grade": 1,
+                    "attendance": 0,
+                    "approved": true,
+                    "on_delete": false
+                }
+            },
+            "error": "password mismatch"
+        }
+        ```
+
+    - Status Code
+        - 200 OK: 내 정보 가져오기 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 비밀 번호 오류, 시스템 오류 등
+
+9. Search - 회원 검색
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -300,7 +348,7 @@
         - query: (string) 검색어
 
     - Query Parameter example
-        ```
+        ```json
         http://localhost:3000/api/v1/member/search?query=20190302
         ```
 
@@ -330,7 +378,7 @@
         - 200 OK: 회원 검색 성공
         - 500 Internal Server Error: 시스템 오류
 
-9. Update - 회원 정보 갱신
+10. Update - 회원 정보 갱신
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -370,7 +418,7 @@
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 시스템 오류
 
-10. Active - 회원 가입 신청 활성 상태 확인
+11. Active - 회원 가입 신청 활성 상태 확인
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -394,7 +442,7 @@
         - 200 OK: 확인 성공
         - 500 Internal Server Error: 시스템 오류
 
-11. Activate - 회원 가입 신청 활성화/비활성화
+12. Activate - 회원 가입 신청 활성화/비활성화
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -429,7 +477,7 @@
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 이미 활성화/비활성화 돼있는 경우, 시스템 오류
 
-12. Graduates - 졸업자 목록 조회 (추후 졸업자 일괄 메일 발송 시 사용)
+13. Graduates - 졸업자 목록 조회 (추후 졸업자 일괄 메일 발송 시 사용)
 
     | method | route | priviledge |
     | :---: | :---: | :---: |

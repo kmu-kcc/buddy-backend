@@ -6,19 +6,14 @@ Content-Type: application/json
   "end": "1",
   "place": "cafe",
   "type": 0,
-  "description": "good",
+  "description": "test",
   "participants": [],
   "private": true
 }
 
 ###
 
-POST http://127.0.0.1:3000/api/v1/activity/search HTTP/1.1
-Content-Type: application/json
-
-{
-  "query": "go"
-}
+GET http://127.0.0.1:3000/api/v1/activity/search?query=2021 HTTP/1.1
 
 ###
 
@@ -26,137 +21,36 @@ POST http://127.0.0.1:3000/api/v1/activity/update HTTP/1.1
 Content-Type: application/json
 
 {
+  "id": "6113ed60c7913f56af94f532",
   "update": {
-    "_id": "6113ed60c7913f56af94f532",
     "description": "good"
   }
 }
 
 ###
 
-POST http://127.0.0.1:3000/api/v1/activity/delete HTTP/1.1
+DELETE http://127.0.0.1:3000/api/v1/activity/delete HTTP/1.1
 Content-Type: application/json
 
 {
-  "_id": "610d458b79e122ea1d150cd4"
-
+  "id": "610d458b79e122ea1d150cd4"
 }
 
 ###
 
-POST http://127.0.0.1:3000/api/v1/activity/participants HTTP/1.1
+POST http://127.0.0.1:3000/api/v1/activity/download HTTP/1.1
 Content-Type: application/json
 
 {
-  "_id": "6114b05fc53de7a31cfeb199"
+  "filename": "motorcycle.svg"
 }
 
 ###
 
-PUT http://localhost:3000/api/v1/activity/applyp HTTP/1.1
+POST http://127.0.0.1:3000/api/v1/activity/deletefile HTTP/1.1
 Content-Type: application/json
 
 {
-  "_id": "610d4cfa567af2cc318e7f97",
-  "member_id": "20172227"
-  
-}
-
-###
-
-GET  http://localhost:3000/api/v1/activity/papplies HTTP/1.1
-Content-Type: application/json
-
-{
-  "_id": "610d4cfa567af2cc318e7f97"
-  
-}
-
-###
-
-PUT  http://localhost:3000/api/v1/activity/approvep HTTP/1.1
-Content-Type: application/json
-
-{
-  "_id": "610d4cfa567af2cc318e7f97",
-  "member_ids": [
-    "20172227",
-    "20171718"
-  ]
-  
-}
-
-###
-
-PUT  http://localhost:3000/api/v1/activity/rejectp HTTP/1.1
-Content-Type: application/json
-
-{
-  "_id": "610d4cfa567af2cc318e7f97",
-  "member_ids": [
-    "20172228",
-    "20171718"
-  ]
-  
-}
-
-###
-
-PUT   http://localhost:3000/api/v1/activity/cancelp HTTP/1.1
-Content-Type: application/json
-
-{
-  "_id": "610d4cfa567af2cc318e7f97",
-  "member_id": "20172227"
-
-}
-
-###
-
-POST http://localhost:3000/api/v1/activity/applyc HTTP/1.1
-Content-Type: application/json
-
-{
-  "activity_id":"610e442b9a1be415c1ba04d5",
-  "member_id":"20181681"
-
-}
-
-###
-
-POST http://localhost:3000/api/v1/activity/cancelc HTTP/1.1
-Content-Type: application/json
-
-{
-  "activity_id":"610e442b9a1be415c1ba04d5",
-  "member_id":"20181681"
-}
-
-###
-
-GET  http://localhost:3000/api/v1/activity/capplies HTTP/1.1
-Content-Type: application/json
-
-{
-  "activity_id":"610e442b9a1be415c1ba04d5"
-}
-
-###
-
-POST http://localhost:3000/api/v1/activity/approvec HTTP/1.1
-Content-Type: application/json
-
-{
-  "activity_id":"610e442b9a1be415c1ba04d5",
-  "member_id" : "20181681"
-}
-
-###
-
-POST http://localhost:3000/api/v1/activity/rejectc HTTP/1.1
-Content-Type: application/json
-
-{
-  "activity_id":"610e442b9a1be415c1ba04d5",
-  "member_id" : "20181681"
+  "id": "6120347c7289f5bf7e22a7ad",
+  "filename": "motorcycle.svg"
 }

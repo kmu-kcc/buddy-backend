@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Single file upload</title>
+</head>
+
+<body>
+    <h1>Upload single file</h1>
+
+    <form action="http://127.0.0.1:3000/api/v1/activity/upload?id=6120347c7289f5bf7e22a7ad&filename=motorcycle.svg"
+        method="post" enctype="multipart/form-data">
+        File: <input type="file" name="file"><br><br>
+        <input type="submit" value="submit">
+    </form>
+</body>

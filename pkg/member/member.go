@@ -65,17 +65,25 @@ func New(id, name, department, phone, email string, grade, attendance int) *Memb
 	}
 }
 
+// Public returns the limited informations of m.
+func (m Member) Public() map[string]interface{} {
+	pub := make(map[string]interface{})
+
+	pub["id"] = m.ID
+	pub["name"] = m.Name
+	pub["department"] = m.Department
+	pub["email"] = m.Email
+	pub["grade"] = m.Grade
+
+	return pub
+}
+
 // Public returns the limited informations of ms.
 func (ms Members) Public() []map[string]interface{} {
 	pubs := make([]map[string]interface{}, len(ms))
 
-	for idx, m := range ms {
-		pubs[idx] = make(map[string]interface{})
-		pubs[idx]["id"] = m.ID
-		pubs[idx]["name"] = m.Name
-		pubs[idx]["department"] = m.Department
-		pubs[idx]["email"] = m.Email
-		pubs[idx]["grade"] = m.Grade
+	for idx, member := range ms {
+		pubs[idx] = member.Public()
 	}
 
 	return pubs
@@ -343,6 +351,57 @@ func Exits() (members Members, err error) {
 		return
 	}
 	return members, client.Disconnect(ctx)
+}
+
+// My returns the personal information of m.
+func (m *Member) My() (map[string]interface{}, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return nil, err
+	}
+
+	member := new(Member)
+
+	if err = client.Database("club").
+		Collection("members").
+		FindOne(
+			ctx,
+			bson.D{
+				bson.E{Key: "id", Value: m.ID}}).
+		Decode(member); err == mongo.ErrNoDocuments {
+		if err = client.Disconnect(ctx); err != nil {
+			return nil, err
+		}
+		return nil, mongo.ErrNoDocuments
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if m.Password != member.Password {
+		if err = client.Disconnect(ctx); err != nil {
+			return nil, err
+		}
+		return nil, ErrPasswordMismatch
+	}
+
+	data := make(map[string]interface{})
+
+	data["id"] = member.ID
+	data["password"] = member.Password
+	data["name"] = member.Name
+	data["department"] = member.Department
+	data["phone"] = member.Phone
+	data["email"] = member.Email
+	data["grade"] = member.Grade
+	data["attendance"] = member.Attendance
+	data["approved"] = member.Approved
+	data["on_delete"] = member.OnDelete
+
+	return data, client.Disconnect(ctx)
 }
 
 // Search returns the search result with query.

@@ -63,7 +63,7 @@
         - query: (string) 검색어
 
     - Query Parameter example
-        ```
+        ```json
         http://localhost:3000/api/v1/activity/search?query=2021
         ```
 
@@ -121,7 +121,7 @@
         - query: (string) 검색어
 
     - Query Parameter example
-        ```
+        ```json
         http://localhost:3000/api/v1/activity/private?query=2021
         ```
 
@@ -204,9 +204,9 @@
                 "type": "study",
                 "description": "Study End!",
                 "participants": [
-                        "20192019",
-                        "20182018"
-                    ]
+                    "20192019",
+                    "20182018"
+                ]
             }
         }
         ```
@@ -257,10 +257,98 @@
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 잘못된 ID, 시스템 오류 등
 
-6. Add Picture - 사진 추가
+6. Upload - 파일 업로드 (사진 포함)
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | PUT | /api/v1/activity/addpicture | manager |
+    | POST | /api/v1/activity/upload | manager |
 
-    - 미구현 상태
+    - Query Parameter
+        - id: (string) 활동 ID
+    
+    - Query Parameter example
+        ```json
+        http://localhost:3000/api/v1/activity/upload?id=6120347c7289f5bf7e22a7ad
+        ```
+    
+    - Request form
+        - file (최대 용량: 32MiB)
+    
+    - Request form example
+        - [여기](https://github.com/kmu-kcc/buddy-backend/blob/develop/testutil/upload_test.html)를 참고하세요.
+    
+    - Response
+        - error: (string) 에러 메시지 (파일 업로드 성공 시 empty)
+    
+    - Response Body example
+        ```json
+        {
+            "error": "http:no such file"
+        }
+        ```
+
+    - Status Code
+        - 200 OK: 파일 업로드 성공
+        - 500 Internal Server Error: 파일이 없는 경우, 저장 실패, 잘못된 ID, 시스템 오류 등
+
+7. Download - 파일 다운로드
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | POST | /api/v1/activity/download | - |
+
+    - Request
+        - filename: (string) 다운받고자 하는 파일 이름
+
+   - Request Body Example
+    ```json
+    {
+        "filename": "motorcycle.svg"
+    }
+    ```
+
+    - Response
+        - error: (string) 에러 메시지 (400 Bad Request에만 해당)
+        - file: 찾고자 하는 파일
+
+    - Response Body example
+        ```json
+        "error": "404 page not found"
+        ```
+
+    - Status Code
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 404 Page Not Found: 찾고자 하는 파일이 없는 경우
+
+8. Delete File - 파일 삭제
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | POST | /api/v1/activity/deletefile | manager |
+
+    - Request
+        - id: (string) 활동 ID
+        - filename: (string) 삭제하고자 하는 파일명
+    
+    - Request Body example
+        ```json
+        {
+            "id": "6120347c7289f5bf7e22a7ad",
+            "filename": "motorcycle.svg"
+        }
+        ```
+
+    - Response
+        - error: (string) 에러 메시지 (파일 삭제 성공 시 empty)
+    
+    - Response Body example
+        ```json
+        {
+            "error": "http:no such file"
+        }
+        ```
+
+    - Status Code
+        - 200 OK: 파일 삭제 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
+        - 500 Internal Server Error: 잘못된 ID, 시스템 오류 등

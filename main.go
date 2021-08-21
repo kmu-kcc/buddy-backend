@@ -42,6 +42,7 @@ func main() {
 				mgroup.DELETE("/delete", member.Delete())
 				mgroup.PUT("/exit", member.Exit())
 				mgroup.GET("/exits", member.Exits())
+				mgroup.POST("/my", member.My())
 				mgroup.GET("/search", member.Search())
 				mgroup.PUT("/update", member.Update())
 				mgroup.GET("/active", member.Active())
@@ -55,7 +56,9 @@ func main() {
 				agroup.GET("/private", nil)
 				agroup.PUT("/update", activity.Update())
 				agroup.DELETE("/delete", activity.Delete())
-				agroup.PUT("/addpicture", nil)
+				agroup.POST("/upload", activity.Upload())
+				agroup.POST("/download", activity.Download())
+				agroup.POST("/deletefile", activity.DeleteFile())
 			}
 			fgroup := v1.Group("/fee")
 			{
