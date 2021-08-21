@@ -3,6 +3,7 @@ package activity
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
@@ -10,6 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+const (
+	FoundingEvent = iota
+	Study
+	Etc
 )
 
 // Activity represents a club activity state.
@@ -97,7 +104,7 @@ func (a Activity) Create() (err error) {
 //
 // It is privileged operation:
 //	Only the club managers can access to this operation.
-func Search(query string) (activities Activities, err error) {
+func Search(query string, private bool) (activities Activities, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -106,17 +113,28 @@ func Search(query string) (activities Activities, err error) {
 		return
 	}
 
-	collection := client.Database("club").Collection("activities")
+	var filter bson.D
 	activity := new(Activity)
 
-	cur, err := collection.Find(ctx,
-		bson.M{"$or": []bson.M{
-			// {"start": bson.M{"$regex": query}},
-			// {"end": bson.M{"$regex": query}},
-			{"place": bson.M{"$regex": query}},
-			// {"type": bson.M{"$regex": query}},
-			{"description": bson.M{"$regex": query}},
-		}})
+	switch strings.TrimSpace(query) {
+	case "창립제":
+		filter = bson.D{bson.E{Key: "type", Value: FoundingEvent}}
+	case "스터디":
+		fallthrough
+	case "study":
+		filter = bson.D{bson.E{Key: "type", Value: Study}}
+	default:
+		filter = bson.D{
+			bson.E{Key: "$or", Value: bson.A{
+				bson.D{
+					bson.E{Key: "place", Value: bson.D{
+						bson.E{Key: "$regex", Value: query}}}},
+				bson.D{
+					bson.E{Key: "description", Value: bson.D{
+						bson.E{Key: "$regex", Value: query}}}}}}}
+	}
+
+	cur, err := client.Database("club").Collection("activities").Find(ctx, filter)
 
 	if err == mongo.ErrNoDocuments {
 		return activities, client.Disconnect(ctx)

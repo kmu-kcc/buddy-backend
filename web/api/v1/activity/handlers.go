@@ -8,6 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/activity"
+	"github.com/kmu-kcc/buddy-backend/pkg/member"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,6 +18,7 @@ func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(activity.Activity)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -24,6 +27,22 @@ func Create() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.ActivityManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 
@@ -37,11 +56,12 @@ func Create() gin.HandlerFunc {
 	}
 }
 
-// Search handles the activity search request.
+// Search handles the public activity search request.
 func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Query string `json:"query"`
 		})
@@ -58,7 +78,63 @@ func Search() gin.HandlerFunc {
 			return
 		}
 
-		activities, err := activity.Search(body.Query)
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		activities, err := activity.Search(body.Query, false)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+
+		resp.Data.Activities = activities.Public()
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// Private handles the private activity search request.
+func Private() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		body := new(struct {
+			Query string `json:"query"`
+		})
+		resp := new(struct {
+			Data struct {
+				Activities []map[string]interface{} `json:"activities"`
+			} `json:"data"`
+			Error string `json:"error,omitempty"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !(role.MemberManagement || role.ActivityManagement || role.FeeManagement) {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
+			return
+		}
+
+		activities, err := activity.Search(body.Query, true)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
@@ -75,6 +151,7 @@ func Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID     string                 `json:"id"`
 			Update map[string]interface{} `json:"update"`
@@ -86,6 +163,12 @@ func Update() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
@@ -106,6 +189,7 @@ func Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID string `json:"id"`
 		})
@@ -116,6 +200,22 @@ func Delete() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.ActivityManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 
@@ -136,10 +236,27 @@ func Upload() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		id := c.Query("id")
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
 		})
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.ActivityManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
+			return
+		}
 
 		file, err := c.FormFile("file")
 		if err != nil {
@@ -194,6 +311,7 @@ func DeleteFile() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID       string `json:"id"`
 			FileName string `json:"filename"`
@@ -205,6 +323,22 @@ func DeleteFile() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.ActivityManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 
