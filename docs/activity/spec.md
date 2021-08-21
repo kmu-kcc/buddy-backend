@@ -10,7 +10,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/activity/create | manager |
+    | POST | /api/v1/activity/create | activity manager |
 
     - Request
         - start: (string) 시작일, Unixtimestamp
@@ -57,7 +57,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | GET | /api/v1/activity/search | member |
+    | GET | /api/v1/activity/search | - |
 
     - Query Parameter
         - query: (string) 검색어
@@ -115,7 +115,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | GET | /api/v1/activity/private | manager |
+    | GET | /api/v1/activity/private | member manager or activity manager or fee manager |
 
     - Query Parameter
         - query: (string) 검색어
@@ -197,7 +197,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | PUT | /api/v1/activity/update | manager |
+    | PUT | /api/v1/activity/update | activity manager |
 
     - Request
         - id: (string) 수정할 활동 ID
@@ -240,7 +240,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | DELETE | /api/v1/activity/delete | manager |
+    | DELETE | /api/v1/activity/delete | activity manager |
 
     - Request
         - id: (string) 삭제할 활동 ID
@@ -271,7 +271,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/activity/upload | manager |
+    | POST | /api/v1/activity/upload | member manager or activity manager or fee manager |
 
     - Query Parameter
         - id: (string) 활동 ID
@@ -334,7 +334,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/activity/deletefile | manager |
+    | POST | /api/v1/activity/deletefile | member manager or activity manager or fee manager |
 
     - Request
         - id: (string) 활동 ID

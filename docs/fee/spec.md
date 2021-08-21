@@ -10,7 +10,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/fee/create | manager |
+    | POST | /api/v1/fee/create | fee manager |
 
     - Request
         - year: (number) 연도
@@ -84,7 +84,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/fee/payers | manager |
+    | POST | /api/v1/fee/payers | fee manager |
     
     - Request
         - year: (number) 조회할 연도
@@ -149,7 +149,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/fee/deptors | manager |
+    | POST | /api/v1/fee/deptors | fee manager |
     
     - Request
         - year:(number) 조회할 연도
@@ -274,7 +274,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/fee/pay | manager |
+    | POST | /api/v1/fee/pay | fee manager |
 
     - Request
         - year: (number) 납부 처리할 연도
@@ -322,7 +322,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/fee/deposit | manager |
+    | POST | /api/v1/fee/deposit | fee manager |
 
     - Request
         - year: (number) 연도
@@ -359,7 +359,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | POST | /api/v1/fee/exempt | manager |
+    | POST | /api/v1/fee/exempt | fee manager |
 
     - Request
         - year: (number) 연도
