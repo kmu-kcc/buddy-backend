@@ -2,7 +2,7 @@
 
 0. Server Domain:Port
 
-    http://localhost:3000 (추후 변경 예정)
+    http://132.226.170.200:3000
 
 <br>
 
