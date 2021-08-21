@@ -12,12 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	foundingEvent = iota
-	study
-	etc
-)
-
 // Activity represents a club activity state.
 type Activity struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id"`
@@ -28,7 +22,7 @@ type Activity struct {
 	Description  string             `json:"description" bson:"description"`
 	Participants []string           `json:"participants" bson:"participants"`
 	Private      bool               `json:"private" bson:"private"`
-	// Pictures     []Picture          `json:"pictures" bson:"pictures"`
+	Files        Files              `json:"files" bson:"files"`
 }
 
 type Activities []Activity
@@ -44,23 +38,33 @@ func New(start, end int64, place, description string, typ int, participants []st
 		Description:  description,
 		Participants: participants,
 		Private:      private,
+		Files:        Files{},
 	}
+}
+
+// Public returns the limited informations of a.
+func (a Activity) Public() map[string]interface{} {
+	pub := make(map[string]interface{})
+
+	pub["start"] = a.Start
+	pub["end"] = a.End
+	pub["place"] = a.Place
+	pub["type"] = a.Type
+	pub["description"] = a.Description
+	pub["participants"] = a.Participants
+	pub["files"] = a.Files
+
+	return pub
 }
 
 // Public returns the limited informations of as.
 func (as Activities) Public() []map[string]interface{} {
 	pubs := make([]map[string]interface{}, len(as))
 
-	for idx, a := range as {
-		pubs[idx] = make(map[string]interface{})
-		pubs[idx]["start"] = a.Start
-		pubs[idx]["end"] = a.End
-		pubs[idx]["place"] = a.Place
-		pubs[idx]["type"] = a.Type
-		pubs[idx]["description"] = a.Description
-		pubs[idx]["participants"] = a.Participants
-		// pubs[idx]["pictures"] = a.Pictures
+	for idx, activity := range as {
+		pubs[idx] = activity.Public()
 	}
+
 	return pubs
 }
 
@@ -130,7 +134,6 @@ func Search(query string) (activities Activities, err error) {
 	if err = cur.Close(ctx); err != nil {
 		return
 	}
-
 	return activities, client.Disconnect(ctx)
 }
 
@@ -151,7 +154,7 @@ func (a Activity) Update(update map[string]interface{}) (err error) {
 
 	if _, err = client.Database("club").
 		Collection("activities").
-		UpdateByID(ctx, update["_id"], bson.M{"$set": update}); err != nil {
+		UpdateByID(ctx, a.ID, bson.M{"$set": update}); err != nil {
 		return
 	}
 	return client.Disconnect(ctx)
@@ -163,7 +166,7 @@ func (a Activity) Update(update map[string]interface{}) (err error) {
 //
 // It is privileged operation:
 //	Only the club managers can access to this operation.
-func Delete(activityID primitive.ObjectID) (err error) {
+func Delete(id primitive.ObjectID) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -174,9 +177,59 @@ func Delete(activityID primitive.ObjectID) (err error) {
 
 	if _, err = client.Database("club").
 		Collection("activities").
-		DeleteOne(ctx, bson.M{"_id": activityID}); err != nil {
+		DeleteOne(ctx, bson.M{"_id": id}); err != nil {
 		return
 	}
+	return client.Disconnect(ctx)
+}
 
+// Upload saves file of filename into a.
+func (a Activity) Upload(filename string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	if _, err = client.Database("club").
+		Collection("activities").
+		UpdateByID(
+			ctx,
+			a.ID,
+			bson.D{
+				bson.E{Key: "$push", Value: bson.D{
+					bson.E{Key: "files", Value: NewFile(filename)}}}}); err != nil {
+		return err
+	}
+	return client.Disconnect(ctx)
+}
+
+// DeleteFile deletes file of filename from a.
+func (a Activity) DeleteFile(filename string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	if _, err = client.Database("club").
+		Collection("activities").
+		UpdateByID(
+			ctx,
+			a.ID,
+			bson.D{
+				bson.E{Key: "$pull", Value: bson.D{
+					bson.E{Key: "files", Value: bson.D{
+						bson.E{Key: "$in", Value: bson.A{filename}}}}}}}); err != nil {
+		return err
+	}
+
+	if err := NewFile(filename).Delete(); err != nil {
+		return err
+	}
 	return client.Disconnect(ctx)
 }

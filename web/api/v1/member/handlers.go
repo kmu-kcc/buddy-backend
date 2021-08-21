@@ -185,6 +185,38 @@ func Exits() gin.HandlerFunc {
 	}
 }
 
+// My handles the personal information request.
+func My() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		body := new(struct {
+			ID       string `json:"id"`
+			Password string `json:"password"`
+		})
+		resp := new(struct {
+			Data struct {
+				Data map[string]interface{} `json:"data"`
+			} `json:"data"`
+			Error string `json:"error,omitempty"`
+		})
+
+		err := json.NewDecoder(c.Request.Body).Decode(body)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if resp.Data.Data, err = (&member.Member{ID: body.ID, Password: body.Password}).My(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
 // Search handles the member search request.
 func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
