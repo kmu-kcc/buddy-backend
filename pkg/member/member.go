@@ -17,6 +17,10 @@ const (
 	Attending = iota
 	Absent
 	Graduate
+	Master = iota
+	MemberManagement
+	ActivityManagement
+	FeeManagement
 )
 
 var (
@@ -30,18 +34,19 @@ var (
 
 // Member represents a club member state.
 type Member struct {
-	ID         string `json:"id" bson:"id"`                        // student ID
-	Password   string `json:"password" bson:"password"`            // password
-	Name       string `json:"name" bson:"name"`                    // Name
-	Department string `json:"department" bson:"department"`        // department
-	Phone      string `json:"phone" bson:"phone"`                  // phone number
-	Email      string `json:"email" bson:"email"`                  // e-mail address
-	Grade      int    `json:"grade" bson:"grade"`                  // grade
-	Attendance int    `json:"attendance" bson:"attendance"`        // attendance status (attending/absent/graduate)
-	Approved   bool   `json:"approved" bson:"approved"`            // approved or not
-	OnDelete   bool   `json:"on_delete" bson:"on_delete"`          // on exit process or not
-	CreatedAt  int64  `json:"created_at,string" bson:"created_at"` // when created - Unix timestamp
-	UpdatedAt  int64  `json:"updated_at,string" bson:"updated_at"` // last updated - Unix timestamp
+	ID         string       `json:"id" bson:"id"`                        // student ID
+	Password   string       `json:"password" bson:"password"`            // password
+	Name       string       `json:"name" bson:"name"`                    // Name
+	Department string       `json:"department" bson:"department"`        // department
+	Phone      string       `json:"phone" bson:"phone"`                  // phone number
+	Email      string       `json:"email" bson:"email"`                  // e-mail address
+	Grade      int          `json:"grade" bson:"grade"`                  // grade
+	Attendance int          `json:"attendance" bson:"attendance"`        // attendance status (attending/absent/graduate)
+	Approved   bool         `json:"approved" bson:"approved"`            // approved or not
+	OnDelete   bool         `json:"on_delete" bson:"on_delete"`          // on exit process or not
+	CreatedAt  int64        `json:"created_at,string" bson:"created_at"` // when created - Unix timestamp
+	UpdatedAt  int64        `json:"updated_at,string" bson:"updated_at"` // last updated - Unix timestamp
+	Role       map[int]bool `json:"role" bson:"role"`                    // role of member
 }
 
 type Members []Member
@@ -62,6 +67,12 @@ func New(id, name, department, phone, email string, grade, attendance int) *Memb
 		OnDelete:   false,
 		CreatedAt:  now,
 		UpdatedAt:  now,
+		Role: map[int]bool{
+			Master:             false,
+			MemberManagement:   false,
+			ActivityManagement: false,
+			FeeManagement:      false,
+		},
 	}
 }
 
@@ -74,6 +85,7 @@ func (m Member) Public() map[string]interface{} {
 	pub["department"] = m.Department
 	pub["email"] = m.Email
 	pub["grade"] = m.Grade
+	pub["role"] = m.Role
 
 	return pub
 }
@@ -400,6 +412,7 @@ func (m *Member) My() (map[string]interface{}, error) {
 	data["attendance"] = member.Attendance
 	data["approved"] = member.Approved
 	data["on_delete"] = member.OnDelete
+	data["role"] = member.Role
 
 	return data, client.Disconnect(ctx)
 }
