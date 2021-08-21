@@ -6,7 +6,10 @@ import (
 	"strings"
 )
 
-const FilePathPrefix = "./registry"
+var (
+	home, _        = os.UserHomeDir()
+	FilePathPrefix = strings.Join([]string{home, "registry"}, "/")
+)
 
 // File represents a file.
 type File string
