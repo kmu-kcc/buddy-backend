@@ -1,3 +1,8 @@
 package config
 
-const MongoURI = "mongodb://localhost:27017"
+import "os"
+
+var (
+	MongoURI     = os.Getenv("MONGO_URI")
+	AccessSecret = os.Getenv("ACCESS_SECRET")
+)

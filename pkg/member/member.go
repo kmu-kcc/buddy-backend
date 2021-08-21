@@ -17,10 +17,6 @@ const (
 	Attending = iota
 	Absent
 	Graduate
-	Master = iota
-	MemberManagement
-	ActivityManagement
-	FeeManagement
 )
 
 var (
@@ -35,19 +31,19 @@ var (
 
 // Member represents a club member state.
 type Member struct {
-	ID         string       `json:"id" bson:"id"`                        // student ID
-	Password   string       `json:"password" bson:"password"`            // password
-	Name       string       `json:"name" bson:"name"`                    // Name
-	Department string       `json:"department" bson:"department"`        // department
-	Phone      string       `json:"phone" bson:"phone"`                  // phone number
-	Email      string       `json:"email" bson:"email"`                  // e-mail address
-	Grade      int          `json:"grade" bson:"grade"`                  // grade
-	Attendance int          `json:"attendance" bson:"attendance"`        // attendance status (attending/absent/graduate)
-	Approved   bool         `json:"approved" bson:"approved"`            // approved or not
-	OnDelete   bool         `json:"on_delete" bson:"on_delete"`          // on exit process or not
-	CreatedAt  int64        `json:"created_at,string" bson:"created_at"` // when created - Unix timestamp
-	UpdatedAt  int64        `json:"updated_at,string" bson:"updated_at"` // last updated - Unix timestamp
-	Role       map[int]bool `json:"role" bson:"role"`                    // role of member
+	ID         string `json:"id" bson:"id"`                        // student ID
+	Password   string `json:"password" bson:"password"`            // password
+	Name       string `json:"name" bson:"name"`                    // Name
+	Department string `json:"department" bson:"department"`        // department
+	Phone      string `json:"phone" bson:"phone"`                  // phone number
+	Email      string `json:"email" bson:"email"`                  // e-mail address
+	Grade      int    `json:"grade" bson:"grade"`                  // grade
+	Attendance int    `json:"attendance" bson:"attendance"`        // attendance status (attending/absent/graduate)
+	Approved   bool   `json:"approved" bson:"approved"`            // approved or not
+	OnDelete   bool   `json:"on_delete" bson:"on_delete"`          // on exit process or not
+	CreatedAt  int64  `json:"created_at,string" bson:"created_at"` // when created - Unix timestamp
+	UpdatedAt  int64  `json:"updated_at,string" bson:"updated_at"` // last updated - Unix timestamp
+	Role       Role   `json:"role" bson:"role"`                    // role of member
 }
 
 type Members []Member
@@ -68,12 +64,7 @@ func New(id, name, department, phone, email string, grade, attendance int) *Memb
 		OnDelete:   false,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-		Role: map[int]bool{
-			Master:             false,
-			MemberManagement:   false,
-			ActivityManagement: false,
-			FeeManagement:      false,
-		},
+		Role:       Role{},
 	}
 }
 
@@ -135,7 +126,7 @@ func (m Member) SingIn() error {
 	if err = client.Disconnect(ctx); err != nil {
 		return err
 	}
-	if !member.Approved {
+	if member.ID != "MASTER" && !member.Approved {
 		return ErrUnderReview
 	}
 	if m.Password != member.Password {
@@ -198,7 +189,9 @@ func SignUps() (members Members, err error) {
 		Collection("members").
 		Find(
 			ctx,
-			bson.D{bson.E{Key: "approved", Value: false}})
+			bson.D{
+				bson.E{Key: "id", Value: bson.D{bson.E{Key: "$not", Value: "MASTER"}}},
+				bson.E{Key: "approved", Value: false}})
 
 	if err != nil {
 		return
@@ -401,19 +394,13 @@ func (m *Member) My() (map[string]interface{}, error) {
 		return nil, ErrPasswordMismatch
 	}
 
-	data := make(map[string]interface{})
+	data := member.Public()
 
-	data["id"] = member.ID
 	data["password"] = member.Password
-	data["name"] = member.Name
-	data["department"] = member.Department
 	data["phone"] = member.Phone
-	data["email"] = member.Email
-	data["grade"] = member.Grade
 	data["attendance"] = member.Attendance
 	data["approved"] = member.Approved
 	data["on_delete"] = member.OnDelete
-	data["role"] = member.Role
 
 	return data, client.Disconnect(ctx)
 }
@@ -433,11 +420,15 @@ func Search(query string) (members Members, err error) {
 		return
 	}
 
-	cur, err := client.Database("club").
-		Collection("members").
-		Find(ctx, bson.D{
-			bson.E{Key: "approved", Value: true},
-		})
+	filter := bson.D{
+		bson.E{Key: "approved", Value: true},
+		bson.E{Key: "$or", Value: bson.A{
+			bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$regex", Value: query}}}},
+			bson.D{bson.E{Key: "name", Value: bson.D{bson.E{Key: "$regex", Value: query}}}},
+			bson.D{bson.E{Key: "department", Value: bson.D{bson.E{Key: "$regex", Value: query}}}},
+		}}}
+
+	cur, err := client.Database("club").Collection("members").Find(ctx, filter)
 
 	if err == mongo.ErrNoDocuments {
 		return members, client.Disconnect(ctx)
@@ -591,6 +582,34 @@ func Graduates() (members Members, err error) {
 		return
 	}
 	return members, client.Disconnect(ctx)
+}
+
+// UpdateRole updates the role of member of id.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
+func UpdateRole(id string, role Role) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
+	if err != nil {
+		return err
+	}
+
+	if _, err = client.Database("club").
+		Collection("members").
+		UpdateOne(
+			ctx,
+			bson.D{bson.E{Key: "id", Value: id}},
+			bson.D{bson.E{Key: "$set", Value: bson.D{
+				bson.E{Key: "role", Value: role}}}}); err != nil {
+		return err
+	}
+
+	return client.Disconnect(ctx)
 }
 
 // String implements fmt.Stringer.

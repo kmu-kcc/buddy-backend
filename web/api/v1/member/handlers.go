@@ -98,7 +98,7 @@ func SignUps() gin.HandlerFunc {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
-		} else if !role[member.MemberManagement] {
+		} else if !role.MemberManagement {
 			resp.Error = member.ErrPermissionDenied.Error()
 			c.JSON(http.StatusForbidden, resp)
 			return
@@ -119,6 +119,7 @@ func Approve() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			IDs []string `json:"ids"`
 		})
@@ -129,6 +130,22 @@ func Approve() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.MemberManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 
@@ -146,6 +163,7 @@ func Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			IDs []string `json:"ids"`
 		})
@@ -156,6 +174,22 @@ func Delete() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.MemberManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 
@@ -173,6 +207,7 @@ func Exit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(member.Member)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -181,6 +216,12 @@ func Exit() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
@@ -198,12 +239,29 @@ func Exits() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		resp := new(struct {
 			Data struct {
 				Exits member.Members `json:"exits"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.MemberManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
+			return
+		}
 
 		var err error
 		resp.Data.Exits, err = member.Exits()
@@ -221,6 +279,7 @@ func My() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID       string `json:"id"`
 			Password string `json:"password"`
@@ -239,6 +298,12 @@ func My() gin.HandlerFunc {
 			return
 		}
 
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
 		if resp.Data.Data, err = (&member.Member{ID: body.ID, Password: body.Password}).My(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
@@ -253,6 +318,7 @@ func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
@@ -260,6 +326,12 @@ func Search() gin.HandlerFunc {
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
 
 		members, err := member.Search(query)
 		if err != nil {
@@ -277,6 +349,7 @@ func Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID     string                 `json:"id"`
 			Update map[string]interface{} `json:"update"`
@@ -288,6 +361,12 @@ func Update() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
@@ -326,6 +405,7 @@ func Activate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Activate bool `json:"activate"`
 		})
@@ -343,6 +423,22 @@ func Activate() gin.HandlerFunc {
 			return
 		}
 
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.MemberManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
+			return
+		}
+
 		if resp.Data.Active, err = member.Activate(body.Activate); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
@@ -357,6 +453,7 @@ func Graduates() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		resp := new(struct {
 			Data struct {
 				Graduates member.Members `json:"graduates"`
@@ -364,9 +461,70 @@ func Graduates() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.MemberManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
+			return
+		}
+
 		var err error
 		resp.Data.Graduates, err = member.Graduates()
 		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
+	}
+}
+
+// UpdateRole handles the role update request.
+func UpdateRole() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer c.Request.Body.Close()
+
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		body := new(struct {
+			ID   string      `json:"id"`
+			Role member.Role `json:"role"`
+		})
+		resp := new(struct {
+			Error string `json:"error,omitempty"`
+		})
+
+		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.Master {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
+			return
+		}
+
+		if err := member.UpdateRole(body.ID, body.Role); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return

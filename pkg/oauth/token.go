@@ -4,7 +4,6 @@ package oauth
 import (
 	"context"
 	"errors"
-	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -35,7 +34,7 @@ func NewToken(id string) (Token, int64, error) {
 	atClaims["expire"] = exp
 
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
-	token, err := at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
+	token, err := at.SignedString([]byte(config.AccessSecret))
 	if err != nil {
 		return "", 0, err
 	}
@@ -69,13 +68,13 @@ func (t Token) ID() string {
 }
 
 // Role returns the role corresponding to t.
-func (t Token) Role() (map[int]bool, error) {
+func (t Token) Role() (member.Role, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
-		return nil, err
+		return member.Role{}, err
 	}
 
 	memb := new(member.Member)
@@ -86,7 +85,7 @@ func (t Token) Role() (map[int]bool, error) {
 			ctx,
 			bson.D{bson.E{Key: "id", Value: t.ID()}}).
 		Decode(memb); err != nil {
-		return nil, err
+		return member.Role{}, err
 	}
 
 	return memb.Role, client.Disconnect(ctx)

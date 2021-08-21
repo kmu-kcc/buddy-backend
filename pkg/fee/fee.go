@@ -105,7 +105,7 @@ func (f Fee) Create() (err error) {
 //
 // It is member-limited operation:
 //	Only the authenticated members can access to this operation.
-func Amount(year, semester int, memberID string) (sum int, err error) {
+func Amount(year, semester int, id string) (sum int, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -130,7 +130,7 @@ func Amount(year, semester int, memberID string) (sum int, err error) {
 		bson.E{Key: "_id", Value: bson.D{
 			bson.E{Key: "$in", Value: fee.Logs},
 		}},
-		bson.E{Key: "member_id", Value: memberID},
+		bson.E{Key: "member_id", Value: id},
 		bson.E{Key: "type", Value: payment},
 	}
 
@@ -250,10 +250,11 @@ func (f *Fee) Deptors() (deptors member.Members, depts []int, err error) {
 		return
 	}
 
-	ids := make(bson.A, len(payers))
+	ids := make(bson.A, len(payers)+1)
 	for idx, payer := range payers {
 		ids[idx] = payer.ID
 	}
+	ids = append(ids, "MASTER")
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()

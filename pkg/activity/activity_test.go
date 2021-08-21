@@ -21,7 +21,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
-	if activities, err := activity.Search("go"); err != nil {
+	if activities, err := activity.Search("te", false); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(activities)

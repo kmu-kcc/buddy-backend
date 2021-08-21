@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/fee"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
 )
 
 // // Create handles the fee creation request.
@@ -15,6 +16,7 @@ func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -25,6 +27,23 @@ func Create() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.FeeManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
+			return
+		}
+
 		if err := body.Create(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
@@ -39,6 +58,7 @@ func Amount() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			MemberID string `json:"member_id"`
 			Year     int    `json:"year"`
@@ -54,6 +74,12 @@ func Amount() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
@@ -74,6 +100,7 @@ func Payers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
@@ -86,6 +113,22 @@ func Payers() gin.HandlerFunc {
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.FeeManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 
@@ -104,6 +147,7 @@ func Deptors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
@@ -118,6 +162,22 @@ func Deptors() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.FeeManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 
@@ -147,6 +207,7 @@ func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
@@ -164,6 +225,12 @@ func Search() gin.HandlerFunc {
 			return
 		}
 
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
 		if resp.Data.CarryOver, resp.Data.Logs, resp.Data.Total, err = body.Search(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
@@ -178,6 +245,7 @@ func Pay() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Year     int `json:"year"`
 			Semester int `json:"semester"`
@@ -193,6 +261,22 @@ func Pay() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.FeeManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 
@@ -217,6 +301,7 @@ func Deposit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Year        int    `json:"year"`
 			Semester    int    `json:"semester"`
@@ -230,6 +315,22 @@ func Deposit() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.FeeManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 
@@ -247,6 +348,7 @@ func Exempt() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			fee.Fee
 			ID string `json:"id"`
@@ -259,6 +361,22 @@ func Exempt() gin.HandlerFunc {
 		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
+			return
+		}
+
+		if err := token.Verify(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role.FeeManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
 			return
 		}
 

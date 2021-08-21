@@ -48,12 +48,13 @@ func main() {
 				mgroup.GET("/active", member.Active())
 				mgroup.PUT("/activate", member.Activate())
 				mgroup.GET("/graduates", member.Graduates())
+				mgroup.PUT("/updaterole", member.UpdateRole())
 			}
 			agroup := v1.Group("/activity")
 			{
 				agroup.POST("/create", activity.Create())
 				agroup.GET("/search", activity.Search())
-				agroup.GET("/private", nil)
+				agroup.GET("/private", activity.Private())
 				agroup.PUT("/update", activity.Update())
 				agroup.DELETE("/delete", activity.Delete())
 				agroup.POST("/upload", activity.Upload())

@@ -6,7 +6,7 @@
 
 <br>
 
-* 로그인을 제외한 모든 API들은 헤더의 Authorization 필드의 access token을 통해 토큰 유효성과 API 접근 권한을 검사합니다.
+* 로그인을 제외한 모든 priviledge에 제약이 있는 API들은 헤더의 Authorization 필드의 access token을 통해 토큰 유효성과 API 접근 권한을 검사합니다.
 
 * 만약 access token이 유효하지 않은 경우 401 Unauthorized, 해당 API에 대한 접근 권한이 없을 경우 403 Permission Denied 오류를 반환합니다.
 
@@ -586,4 +586,41 @@
 
     - Status Code
         - 200 OK: 쿼리 성공
+        - 500 Internal Server Error: 시스템 오류
+
+14. Update Role - 회원 권한 수정
+
+    | method | route | priviledge |
+    | :---: | :---: | :---: |
+    | PUT | /api/v1/member/updaterole | master |
+
+    - Request
+        - id: (string) 권한을 수정할 회원의 학번
+        - role: (JSON) 수정된 권한
+
+    - Request Body example
+    ```json
+    {
+        "id": "20210021",
+        "role": {
+            "member_management": true,
+            "activity_management": false,
+            "fee_management": false
+        }
+    }
+    ```
+
+    - Response
+        - error: (string) 에러 메시지 (회원 권한 수정 성공 시 empty)
+
+    - Response Body example
+    ```json
+    {
+        "error": "permission denied"
+    }
+    ```
+
+    - Status Code
+        - 200 OK: 회원 권한 수정 성공
+        - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: 시스템 오류
