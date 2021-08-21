@@ -1,0 +1,122 @@
+POST http://127.0.0.1:3000/api/v1/member/signin HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "MASTER",
+  "password": "MASTER"
+}
+
+###
+
+POST http://127.0.0.1:3000/api/v1/member/signup HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "MASTER",
+  "name": "kmu-kcc",
+  "department": "",
+  "phone": "",
+  "email": "kmu.kcc@gmail.com",
+  "grade": 0,
+  "attendance": 0
+}
+
+###
+
+GET http://127.0.0.1:3000/api/v1/member/signups HTTP/1.1
+
+###
+
+PUT http://127.0.0.1:3000/api/v1/member/approve HTTP/1.1
+Content-Type: application/json
+
+{
+  "ids": [
+    "20160004",
+    "20210021"
+  ]
+}
+
+###
+
+PUT http://127.0.0.1:3000/api/v1/member/exit HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "20210021"
+}
+
+###
+
+GET http://127.0.0.1:3000/api/v1/member/exits HTTP/1.1
+
+###
+
+DELETE http://127.0.0.1:3000/api/v1/member/delete HTTP/1.1
+Content-Type: application/json
+
+{
+  "ids": [
+    "20210021"
+  ]
+}
+
+###
+
+POST http://127.0.0.1:3000/api/v1/member/my HTTP/1.1
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHBpcmUiOjE2Mjk1OTQwODUsImlkIjoiMjAyMTAwMjEifQ.p0YMnkIR8NrFqTW9onmtPD07VV5LanNXJjTS9Gxu1t4
+Content-Type: application/json
+
+{
+  "id": "20210021",
+  "password": "20210021"
+}
+
+###
+
+GET http://127.0.0.1:3000/api/v1/member/search?query=2021 HTTP/1.1
+
+###
+
+PUT http://127.0.0.1:3000/api/v1/member/update HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "20190002",
+  "update": {
+    "department": "CSE",
+    "password": "12345678"
+  }
+}
+
+###
+
+GET http://127.0.0.1:3000/api/v1/member/active HTTP/1.1
+
+###
+
+PUT  http://127.0.0.1:3000/api/v1/member/activate HTTP/1.1
+Content-Type: application/json
+
+{
+  "activate": true
+}
+
+###
+
+GET http://127.0.0.1:3000/api/v1/member/graduates HTTP/1.1
+
+###
+
+PUT http://127.0.0.1:3000/api/v1/member/updaterole HTTP/1.1
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHBpcmUiOjE2Mjk1OTY3MTYsImlkIjoiTUFTVEVSIn0.yZMiPI5zxV0V9F0f8x2Vv8aDanBdMd7hWUyxNX-qreM
+Content-Type: application/json
+
+{
+  "id": "20210021",
+  "role": {
+    "member_management": true,
+    "activity_management": true,
+    "fee_management": true
+  }
+}

@@ -1,0 +1,56 @@
+POST http://127.0.0.1:3000/api/v1/activity/create HTTP/1.1
+Content-Type: application/json
+
+{
+  "start": "1",
+  "end": "1",
+  "place": "cafe",
+  "type": 0,
+  "description": "test",
+  "participants": [],
+  "private": true
+}
+
+###
+
+GET http://127.0.0.1:3000/api/v1/activity/search?query=2021 HTTP/1.1
+
+###
+
+POST http://127.0.0.1:3000/api/v1/activity/update HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "6113ed60c7913f56af94f532",
+  "update": {
+    "description": "good"
+  }
+}
+
+###
+
+DELETE http://127.0.0.1:3000/api/v1/activity/delete HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "610d458b79e122ea1d150cd4"
+}
+
+###
+
+POST http://127.0.0.1:3000/api/v1/activity/download HTTP/1.1
+Content-Type: application/json
+
+{
+  "filename": "motorcycle.svg"
+}
+
+###
+
+POST http://127.0.0.1:3000/api/v1/activity/deletefile HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": "6120347c7289f5bf7e22a7ad",
+  "filename": "motorcycle.svg"
+}
