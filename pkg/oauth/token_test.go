@@ -7,7 +7,7 @@ import (
 )
 
 func TestNewToken(t *testing.T) {
-	token, exp, err := oauth.NewToken("20171619")
+	token, exp, err := oauth.NewToken("20210001")
 	if err != nil {
 		t.Error(err)
 	}

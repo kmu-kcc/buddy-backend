@@ -30,6 +30,7 @@ var (
 	ErrOnDelete         = errors.New("already on delete")
 	ErrAlreadyActive    = errors.New("already active")
 	ErrAlreadyInactive  = errors.New("already inactive")
+	ErrPermissionDenied = errors.New("permission denied")
 )
 
 // Member represents a club member state.

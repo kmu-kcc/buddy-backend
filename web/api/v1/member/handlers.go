@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
 )
 
 // SignIn handles the signin request.
@@ -16,6 +17,10 @@ func SignIn() gin.HandlerFunc {
 
 		body := new(member.Member)
 		resp := new(struct {
+			Data struct {
+				AccessToken oauth.Token `json:"access_token"`
+				ExpiredAt   int64       `json:"expired_at,string"`
+			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
 
@@ -25,11 +30,20 @@ func SignIn() gin.HandlerFunc {
 			return
 		}
 
-		if err := body.SingIn(); err != nil {
+		err := body.SingIn()
+		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
+
+		resp.Data.AccessToken, resp.Data.ExpiredAt, err = oauth.NewToken(body.ID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnprocessableEntity, resp)
+			return
+		}
+
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -65,6 +79,7 @@ func SignUps() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
+		token := oauth.Token(c.Request.Header.Get("Authorization"))
 		resp := new(struct {
 			Data struct {
 				SignUps member.Members `json:"signups"`
@@ -72,7 +87,23 @@ func SignUps() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		var err error
+		err := token.Verify()
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusUnauthorized, resp)
+			return
+		}
+
+		if role, err := token.Role(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		} else if !role[member.MemberManagement] {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
+			return
+		}
+
 		resp.Data.SignUps, err = member.SignUps()
 		if err != nil {
 			resp.Error = err.Error()

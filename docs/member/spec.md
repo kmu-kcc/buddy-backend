@@ -6,7 +6,18 @@
 
 <br>
 
-1. SignIn - 회원 로그인
+* 로그인을 제외한 모든 API들은 헤더의 Authorization 필드의 access token을 통해 토큰 유효성과 API 접근 권한을 검사합니다.
+
+* 만약 access token이 유효하지 않은 경우 401 Unauthorized, 해당 API에 대한 접근 권한이 없을 경우 403 Permission Denied 오류를 반환합니다.
+
+* 발급받은 access token은 6시간 뒤에 자동으로 삭제됩니다. 토큰이 유효성 검증 실패 오류를 받으면 재로그인하도록 처리해주세요.
+
+    - 401 Unauthorized: 토큰 인증 실패
+    - 403 Permission Denied: 접근 권한 없음
+
+<br>
+
+1. SignIn - 회원 로그인 (로그인 성공 후 사용하는 모든 API들의 헤더의 Authorization 필드에 발급받은 access token을 넣어주세요 :) )
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
@@ -25,17 +36,24 @@
         ```
 
     - Response
+        - data.access_token: (string) 엑세스 토큰
+        - data.expired_at: (string) 만료 시각 (Unix timestamp)
         - error: (string) 에러 메시지 (로그인 성공 시 empty)
 
     - Response Body example
         ```json
         {
+            "data": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHBpcmUiOjE2Mjk1NzMwOTMsImlkIjoiMjAyMTAwMDEifQ.LXE7k3kubkCMFJL7bNQYTWPDymCFtclKOBIAKHqDHfQ",
+                "expired_at": "1629573093"
+            },
             "error": "password mismatch"
         }
         ```
 
     - Status Code
-        - 200 OK: 로그인 성공
+        - 200 OK: 로그인 성공 (유효한 엑세스 토큰 발급)
+        - 422 Unprocessable Entity: 엑세스 토큰 발급 실패
         - 400 Bad Request: 요청 포맷/타입 오류
         - 500 Internal Server Error: ID/PW 오류, 가입 미승인 상태, 시스템 오류 등
 
@@ -86,7 +104,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | GET | /api/v1/member/signups | manager |
+    | GET | /api/v1/member/signups | member manager |
 
     - Response
         - data.signups: (Array&lt;JSON&gt;) 회원 가입 신청자 목록
@@ -109,7 +127,12 @@
                         "approved": false,
                         "on_delete": false,
                         "created_at": "1628974315",
-                        "updated_at": "1628974315"
+                        "updated_at": "1628974315",
+                        "role": {
+                            "member_management": false,
+                            "activity_management": false,
+                            "fee_management": false
+                        }
                     },
                     {
                         "id": "20200299",
@@ -123,11 +146,16 @@
                         "approved": false,
                         "on_delete": false,
                         "created_at": "1629060720",
-                        "updated_at": "1629060720"
+                        "updated_at": "1629060720",
+                        "role": {
+                            "member_management": false,
+                            "activity_management": false,
+                            "fee_management": false
+                        }
                     }
                 ]
             },
-            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
+            "error": "permission denied"
         }
         ```
 
@@ -140,7 +168,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | PUT | /api/v1/member/approve | manager |
+    | PUT | /api/v1/member/approve | member manager |
 
     - Request
         - ids: (Array&lt;string&gt;) 회원 가입을 승인할 신청자들의 학번 List
@@ -206,7 +234,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | GET | /api/v1/member/exits | manager |
+    | GET | /api/v1/member/exits | member manager |
 
     - Response
         - data.exits: (Array&lt;JSON&gt;) 회원 탈퇴 신청자 목록
@@ -229,7 +257,12 @@
                         "approved": true,
                         "on_delete": true,
                         "created_at": "1629060720",
-                        "updated_at": "1629060930"
+                        "updated_at": "1629060930",
+                        "role": {
+                            "member_management": false,
+                            "activity_management": false,
+                            "fee_management": false
+                        }
                     },
                     {
                         "id": "20200299",
@@ -243,7 +276,12 @@
                         "approved": true,
                         "on_delete": true,
                         "created_at": "1629080720",
-                        "updated_at": "1629081720"
+                        "updated_at": "1629081720",
+                        "role": {
+                            "member_management": false,
+                            "activity_management": true,
+                            "fee_management": false
+                        }
                     }
                 ]
             },
@@ -259,7 +297,7 @@
 
     | method | route | priviledge |
     | :---: | :---: | :---: |
-    | DELETE | /api/v1/member/delete | manager |
+    | DELETE | /api/v1/member/delete | member manager |
 
     - Request
         - ids: (Array&lt;string&gt;) 회원 가입 승인 거부/탈퇴 처리하는 신청자/회원들의 학번 List
@@ -326,7 +364,12 @@
                     "grade": 1,
                     "attendance": 0,
                     "approved": true,
-                    "on_delete": false
+                    "on_delete": false,
+                    "role": {
+                        "member_management": false,
+                        "activity_management": false,
+                        "fee_management": false
+                    }
                 }
             },
             "error": "password mismatch"
@@ -366,7 +409,12 @@
                         "name": "홍길동",
                         "department": "소프트웨어융합대학 소프트웨어학부",
                         "email": "gildong@kookmin.ac.kr",
-                        "grade": 1
+                        "grade": 1,
+                        "role": {
+                            "member_management": false,
+                            "activity_management": false,
+                            "fee_management": false
+                        }
                     }
                 ]
             },
@@ -504,7 +552,12 @@
                         "approved": true,
                         "on_delete": false,
                         "created_at": "1629000020",
-                        "updated_at": "1629002720"
+                        "updated_at": "1629002720",
+                        "role": {
+                            "member_management": false,
+                            "activity_management": false,
+                            "fee_management": false
+                        }
                     },
                     {
                         "id": "20200299",
@@ -518,7 +571,12 @@
                         "approved": true,
                         "on_delete": false,
                         "created_at": "1619060720",
-                        "updated_at": "1619061720"
+                        "updated_at": "1619061720",
+                        "role": {
+                            "member_management": true,
+                            "activity_management": true,
+                            "fee_management": true
+                        }
                     }
                 ]
             },
