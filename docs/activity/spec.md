@@ -285,7 +285,7 @@
         - file (최대 용량: 32MiB)
     
     - Request form example
-        - [여기](https://github.com/kmu-kcc/buddy-backend/blob/develop/testutil/upload_test.html)를 참고하세요.
+        - [여기](https://github.com/kmu-kcc/buddy-backend/blob/master/testutil/upload_test.html)를 참고하세요.
     
     - Response
         - error: (string) 에러 메시지 (파일 업로드 성공 시 empty)

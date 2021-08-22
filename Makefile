@@ -9,13 +9,13 @@ RM      = rm
 all: run
 
 build:
-	$(GOBUILD) -gcflags -m -o $(BINARY) -v .
+	CGO_ENABLED=0 $(GOBUILD) -gcflags -m -o $(BINARY) -v .
 
 run:
-	$(GORUN) -gcflags -m -v . --port 3000
+	CGO_ENABLED=0 $(GORUN) -gcflags -m -v . --port 3000
 
 test:
-	$(GOTEST) -v .
+	CGO_ENABLED=0 $(GOTEST) -v .
 
 clean:
 	$(GOCLEAN)
