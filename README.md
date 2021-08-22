@@ -14,7 +14,7 @@ Back-end module of the Buddy System
   ./launch.sh
   ```
 
-- Authors
+### Authors
 
   KMU KCC
 
