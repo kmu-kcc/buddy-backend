@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/akamensky/argparse"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/kmu-kcc/buddy-backend/config"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/activity"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/fee"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/member"
@@ -21,6 +21,12 @@ func main() {
 	// parse port number from command line arguments
 	//
 	// See https://github.com/akamensky/argparse#readme
+	//
+	//
+	// NOTE:
+	//
+	// argparse is redundant due to the `flag` package in the standard library.
+	// This would be removed in v1.1.0.
 	port := parser.Int("p", "port", &argparse.Options{Required: true, Help: "Port to run the server"})
 
 	if err := parser.Parse(os.Args); err != nil {
@@ -31,13 +37,7 @@ func main() {
 
 	engine := gin.Default()
 
-	engine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"*"},
-		AllowHeaders:     []string{"*"},
-		AllowCredentials: true,
-		MaxAge:           6 * time.Hour,
-	}))
+	engine.Use(cors.New(config.CORSConfig))
 
 	api := engine.Group("/api")
 	{
