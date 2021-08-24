@@ -20,13 +20,13 @@ const (
 )
 
 var (
-	ErrPasswordMismatch = errors.New("password mismatch")
-	ErrAlreadyMember    = errors.New("already a member")
-	ErrUnderReview      = errors.New("under review")
-	ErrOnDelete         = errors.New("already on delete")
+	ErrIdentityMismatch = errors.New("계정 정보를 확인해주세요")
+	ErrAlreadyMember    = errors.New("이미 등록된 사용자입니다")
+	ErrUnderReview      = errors.New("승인 검토 중입니다")
+	ErrOnDelete         = errors.New("이미 탈퇴 신청하셨습니다")
 	ErrAlreadyActive    = errors.New("already active")
 	ErrAlreadyInactive  = errors.New("already inactive")
-	ErrPermissionDenied = errors.New("permission denied")
+	ErrPermissionDenied = errors.New("권한이 없습니다")
 )
 
 // Member represents a club member state.
@@ -119,7 +119,7 @@ func (m Member) SingIn() error {
 		if err = client.Disconnect(ctx); err != nil {
 			return err
 		}
-		return mongo.ErrNoDocuments
+		return ErrIdentityMismatch
 	} else if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (m Member) SingIn() error {
 		return ErrUnderReview
 	}
 	if m.Password != member.Password {
-		return ErrPasswordMismatch
+		return ErrIdentityMismatch
 	}
 	return nil
 }
@@ -391,7 +391,7 @@ func (m *Member) My() (map[string]interface{}, error) {
 		if err = client.Disconnect(ctx); err != nil {
 			return nil, err
 		}
-		return nil, ErrPasswordMismatch
+		return nil, ErrIdentityMismatch
 	}
 
 	data := member.Public()

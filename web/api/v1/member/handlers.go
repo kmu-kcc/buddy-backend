@@ -33,7 +33,11 @@ func SignIn() gin.HandlerFunc {
 		err := body.SingIn()
 		if err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusInternalServerError, resp)
+			if err == member.ErrIdentityMismatch {
+				c.JSON(http.StatusConflict, resp)
+			} else {
+				c.JSON(http.StatusInternalServerError, resp)
+			}
 			return
 		}
 
