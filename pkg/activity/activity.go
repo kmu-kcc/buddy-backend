@@ -4,7 +4,6 @@ package activity
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,6 +21,7 @@ const (
 // Activity represents a club activity state.
 type Activity struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id"`
+	Title        string             `json:"title" bson:"title"`
 	Start        int64              `json:"start,string" bson:"start"`
 	End          int64              `json:"end,string" bson:"end"`
 	Place        string             `json:"place" bson:"place"`
@@ -35,9 +35,10 @@ type Activity struct {
 type Activities []Activity
 
 // New returns a new activity.
-func New(start, end int64, place, description string, typ int, participants []string, private bool) *Activity {
+func New(title string, start, end int64, place, description string, typ int, participants []string, private bool) *Activity {
 	return &Activity{
 		ID:           primitive.NewObjectID(),
+		Title:        title,
 		Start:        start,
 		End:          end,
 		Place:        place,
@@ -53,6 +54,7 @@ func New(start, end int64, place, description string, typ int, participants []st
 func (a Activity) Public() map[string]interface{} {
 	pub := make(map[string]interface{})
 
+	pub["title"] = a.Title
 	pub["start"] = a.Start
 	pub["end"] = a.End
 	pub["place"] = a.Place
@@ -82,9 +84,7 @@ func (as Activities) Public() []map[string]interface{} {
 // It is privileged operation:
 //	Only the club managers can access to this operation.
 func (a Activity) Create() (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -105,9 +105,7 @@ func (a Activity) Create() (err error) {
 // It is privileged operation:
 //	Only the club managers can access to this operation.
 func Search(query string, private bool) (activities Activities, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -126,6 +124,9 @@ func Search(query string, private bool) (activities Activities, err error) {
 	default:
 		filter = bson.D{
 			bson.E{Key: "$or", Value: bson.A{
+				bson.D{
+					bson.E{Key: "title", Value: bson.D{
+						bson.E{Key: "$regex", Value: query}}}},
 				bson.D{
 					bson.E{Key: "place", Value: bson.D{
 						bson.E{Key: "$regex", Value: query}}}},
@@ -162,9 +163,7 @@ func Search(query string, private bool) (activities Activities, err error) {
 // It is privileged operation:
 //	Only the club managers can access to this operation.
 func (a Activity) Update(update map[string]interface{}) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -185,9 +184,7 @@ func (a Activity) Update(update map[string]interface{}) (err error) {
 // It is privileged operation:
 //	Only the club managers can access to this operation.
 func Delete(id primitive.ObjectID) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -203,9 +200,7 @@ func Delete(id primitive.ObjectID) (err error) {
 
 // Upload saves file of filename into a.
 func (a Activity) Upload(filename string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
@@ -226,9 +221,7 @@ func (a Activity) Upload(filename string) error {
 
 // DeleteFile deletes file of filename from a.
 func (a Activity) DeleteFile(filename string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err

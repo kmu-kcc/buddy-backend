@@ -13,6 +13,7 @@
     | POST | /api/v1/activity/create | activity manager |
 
     - Request
+        - title: (string) 활동명 (제목)
         - start: (string) 시작일, Unixtimestamp
         - end: (string) 종료일, Unixtimestamp
         - place: (string) 장소
@@ -24,6 +25,7 @@
     - Request Body example
         ```json
         {
+            "title": "2차 알고리즘 스터디",
             "start": "1628249722",
             "end": "1628250522",
             "place": "성곡도서관 2층 스터디실 2번방",
@@ -78,6 +80,7 @@
                 "activities": [
                     {
                         "id": "610d458b79e122ea1d150cd6",
+                        "title": "2021년 창립제",
                         "start": "1628249722",
                         "end": "1628249722",
                         "place": "공학관 209호",
@@ -136,6 +139,7 @@
                 "activities": [
                     {
                         "id": "610d458b79e122ea1d150cd6",
+                        "title": "알고리즘 스터디 2차",
                         "start": "1628249722",
                         "end": "1628249722",
                         "place": "성곡도서관 2층 스터디룸",
@@ -201,13 +205,14 @@
 
     - Request
         - id: (string) 수정할 활동 ID
-        - update: (JSON) 수정할 활동 정보 (시작일, 종료일, 장소, 종류, 설명, 참여자 목록 중 0개 이상 택)
+        - update: (JSON) 수정할 활동 정보 (제목, 시작일, 종료일, 장소, 종류, 설명, 참여자 목록 중 0개 이상 택)
 
     - Request Body example
         ```json
         {
             "id": "610d458b79e122ea1d150cd6",
             "update": {
+                "title": "last study",
                 "start": "1628249722",
                 "end": "1628249722",
                 "place": "cafe",

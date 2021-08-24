@@ -9,8 +9,8 @@ import (
 
 func TestCreate(t *testing.T) {
 	acts := []*activity.Activity{
-		activity.New(1, 1, "cafe", "study", 0, []string{}, true),
-		activity.New(2, 2, "school", "founding festival", 1, []string{}, true),
+		activity.New("study", 1, 1, "cafe", "study", 0, []string{}, true),
+		activity.New("founding event", 2, 2, "school", "founding event", 1, []string{}, true),
 	}
 
 	for _, act := range acts {
