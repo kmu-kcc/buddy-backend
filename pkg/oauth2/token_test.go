@@ -12,9 +12,9 @@ func TestNewToken(t *testing.T) {
 		t.Error(err)
 	}
 
-	t.Logf("token: %s\texpired_at: %d", token, exp)
+	t.Logf("token: %s\nexpired_at: %d", token, exp)
 
-	if err = token.Verify(); err != nil {
+	if err = token.Valid(); err != nil {
 		t.Error(err)
 	}
 

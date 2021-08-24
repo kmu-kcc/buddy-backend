@@ -6,7 +6,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/kmu-kcc/buddy-backend/config"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
 	"go.mongodb.org/mongo-driver/bson"
@@ -47,8 +47,8 @@ func NewToken(id string) (Token, int64, error) {
 	return Token(token), exp, err
 }
 
-// Verify reports whether t is valid or not.
-func (t Token) Verify() error {
+// Valid reports whether t is valid or not.
+func (t Token) Valid() error {
 	if meta, ok := tokens[t]; !ok {
 		return ErrInvalidToken
 	} else if time.Unix(meta["exp"].(int64), 0).Before(time.Now()) {
