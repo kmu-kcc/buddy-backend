@@ -91,7 +91,7 @@ func SignUps() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		err := token.Verify()
+		err := token.Valid()
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
@@ -137,7 +137,7 @@ func Approve() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -181,7 +181,7 @@ func Delete() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -223,7 +223,7 @@ func Exit() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -251,7 +251,7 @@ func Exits() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -302,7 +302,7 @@ func My() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -331,7 +331,7 @@ func Search() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -368,7 +368,7 @@ func Update() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -427,7 +427,7 @@ func Activate() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -465,7 +465,7 @@ func Graduates() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -512,7 +512,7 @@ func UpdateRole() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return

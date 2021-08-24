@@ -30,7 +30,7 @@ func Create() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -78,7 +78,7 @@ func Search() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -118,7 +118,7 @@ func Private() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -166,7 +166,7 @@ func Update() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -203,7 +203,7 @@ func Delete() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -242,7 +242,7 @@ func Upload() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -326,7 +326,7 @@ func DeleteFile() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
