@@ -28,7 +28,7 @@ func Create() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -77,7 +77,7 @@ func Amount() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -116,7 +116,7 @@ func Payers() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -165,7 +165,7 @@ func Deptors() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -225,7 +225,7 @@ func Search() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -264,7 +264,7 @@ func Pay() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -318,7 +318,7 @@ func Deposit() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -364,7 +364,7 @@ func Exempt() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
