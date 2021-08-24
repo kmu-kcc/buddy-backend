@@ -1,13 +1,13 @@
-package oauth_test
+package oauth2_test
 
 import (
 	"testing"
 
-	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth2"
 )
 
 func TestNewToken(t *testing.T) {
-	token, exp, err := oauth.NewToken("20210001")
+	token, exp, err := oauth2.NewToken("20210001")
 	if err != nil {
 		t.Error(err)
 	}
