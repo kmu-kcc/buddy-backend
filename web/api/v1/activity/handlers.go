@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/activity"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
-	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -18,7 +18,7 @@ func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(activity.Activity)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -61,7 +61,7 @@ func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Query string `json:"query"`
 		})
@@ -101,7 +101,7 @@ func Private() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Query string `json:"query"`
 		})
@@ -151,7 +151,7 @@ func Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID     string                 `json:"id"`
 			Update map[string]interface{} `json:"update"`
@@ -189,7 +189,7 @@ func Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID string `json:"id"`
 		})
@@ -236,7 +236,7 @@ func Upload() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		id := c.Query("id")
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -311,7 +311,7 @@ func DeleteFile() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID       string `json:"id"`
 			FileName string `json:"filename"`

@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
-	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth2"
 )
 
 // SignIn handles the signin request.
@@ -18,8 +18,8 @@ func SignIn() gin.HandlerFunc {
 		body := new(member.Member)
 		resp := new(struct {
 			Data struct {
-				AccessToken oauth.Token `json:"access_token"`
-				ExpiredAt   int64       `json:"expired_at,string"`
+				AccessToken oauth2.Token `json:"access_token"`
+				ExpiredAt   int64        `json:"expired_at,string"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
@@ -41,7 +41,7 @@ func SignIn() gin.HandlerFunc {
 			return
 		}
 
-		resp.Data.AccessToken, resp.Data.ExpiredAt, err = oauth.NewToken(body.ID)
+		resp.Data.AccessToken, resp.Data.ExpiredAt, err = oauth2.NewToken(body.ID)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnprocessableEntity, resp)
@@ -83,7 +83,7 @@ func SignUps() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		resp := new(struct {
 			Data struct {
 				SignUps member.Members `json:"signups"`
@@ -123,7 +123,7 @@ func Approve() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			IDs []string `json:"ids"`
 		})
@@ -167,7 +167,7 @@ func Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			IDs []string `json:"ids"`
 		})
@@ -211,7 +211,7 @@ func Exit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(member.Member)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -243,7 +243,7 @@ func Exits() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		resp := new(struct {
 			Data struct {
 				Exits member.Members `json:"exits"`
@@ -283,7 +283,7 @@ func My() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID       string `json:"id"`
 			Password string `json:"password"`
@@ -322,7 +322,7 @@ func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
@@ -353,7 +353,7 @@ func Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID     string                 `json:"id"`
 			Update map[string]interface{} `json:"update"`
@@ -409,7 +409,7 @@ func Activate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Activate bool `json:"activate"`
 		})
@@ -457,7 +457,7 @@ func Graduates() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		resp := new(struct {
 			Data struct {
 				Graduates member.Members `json:"graduates"`
@@ -497,7 +497,7 @@ func UpdateRole() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID   string      `json:"id"`
 			Role member.Role `json:"role"`
