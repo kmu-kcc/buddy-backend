@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/fee"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
-	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth2"
 )
 
 // // Create handles the fee creation request.
@@ -16,7 +16,7 @@ func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -58,7 +58,7 @@ func Amount() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			MemberID string `json:"member_id"`
 			Year     int    `json:"year"`
@@ -100,7 +100,7 @@ func Payers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
@@ -147,7 +147,7 @@ func Deptors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
@@ -207,7 +207,7 @@ func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
@@ -245,7 +245,7 @@ func Pay() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Year     int `json:"year"`
 			Semester int `json:"semester"`
@@ -301,7 +301,7 @@ func Deposit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Year        int    `json:"year"`
 			Semester    int    `json:"semester"`
@@ -348,7 +348,7 @@ func Exempt() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			fee.Fee
 			ID string `json:"id"`
