@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"sort"
-	"time"
 
 	"github.com/kmu-kcc/buddy-backend/config"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
@@ -68,9 +67,7 @@ func (f Fee) Create() (err error) {
 
 	f.Logs = []primitive.ObjectID{}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -106,9 +103,7 @@ func (f Fee) Create() (err error) {
 // It is member-limited operation:
 //	Only the authenticated members can access to this operation.
 func Amount(year, semester int, id string) (sum int, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -163,9 +158,7 @@ func Amount(year, semester int, id string) (sum int, err error) {
 // It is privileged operation:
 //	Only the club managers can access to this operation.
 func (f *Fee) Payers() (members member.Members, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -256,9 +249,7 @@ func (f *Fee) Deptors() (deptors member.Members, depts []int, err error) {
 	}
 	ids = append(ids, "MASTER")
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -323,9 +314,7 @@ func (f *Fee) Deptors() (deptors member.Members, depts []int, err error) {
 // It is member-limited operation:
 //	Only the authenticated members can access to this operation.
 func (f *Fee) Search() (carryOver int, _ []map[string]interface{}, total int, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -386,9 +375,7 @@ func (f *Fee) Search() (carryOver int, _ []map[string]interface{}, total int, er
 // This is privileged operation:
 // 	Only the club managers can access to this operation.
 func Pay(year, semester int, ids []string, amounts []int) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
@@ -458,9 +445,7 @@ func Pay(year, semester int, ids []string, amounts []int) error {
 // This is privileged operation:
 // 	Only the club managers can access to this operation
 func Deposit(year, semester, amount int, description string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
@@ -498,9 +483,7 @@ func Deposit(year, semester, amount int, description string) error {
 // This is a privileged operation:
 // 	Only the club managers can access to this operation
 func (f *Fee) Exempt(id string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
