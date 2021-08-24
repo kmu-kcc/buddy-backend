@@ -100,9 +100,7 @@ func (ms Members) Public() []map[string]interface{} {
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
 func (m Member) SingIn() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
@@ -139,9 +137,7 @@ func (m Member) SingIn() error {
 // If m already exists (approved or not), nothing changes.
 // Else it registers an unapproved member.
 func (m Member) SignUp() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
@@ -177,9 +173,7 @@ func (m Member) SignUp() error {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func SignUps() (members Members, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -219,9 +213,7 @@ func SignUps() (members Members, err error) {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Approve(ids []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
@@ -257,9 +249,7 @@ func Approve(ids []string) error {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Delete(ids []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
@@ -289,9 +279,7 @@ func Delete(ids []string) error {
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
 func (m *Member) Exit() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
@@ -326,9 +314,7 @@ func (m *Member) Exit() error {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Exits() (members Members, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -361,9 +347,7 @@ func Exits() (members Members, err error) {
 
 // My returns the personal information of m.
 func (m *Member) My() (map[string]interface{}, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return nil, err
@@ -412,9 +396,7 @@ func (m *Member) My() (map[string]interface{}, error) {
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
 func Search(query string) (members Members, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -458,9 +440,7 @@ func Search(query string) (members Members, err error) {
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
 func (m Member) Update(update map[string]interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
@@ -481,9 +461,7 @@ func (m Member) Update(update map[string]interface{}) error {
 
 // Active returns the activation status for member signup.
 func Active() (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return false, err
@@ -510,9 +488,7 @@ func Active() (bool, error) {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Activate(activate bool) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return false, err
@@ -554,9 +530,7 @@ func Activate(activate bool) (bool, error) {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Graduates() (members Members, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
@@ -591,9 +565,7 @@ func Graduates() (members Members, err error) {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func UpdateRole(id string, role Role) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
