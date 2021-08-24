@@ -1,6 +1,6 @@
 ## Buddy Backend
 
-Back-end module of the Buddy System
+Back-end module of the [Buddy System](https://kcc-buddy.netlify.app/)
 
 ### Install dependencies
 
