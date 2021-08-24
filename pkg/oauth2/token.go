@@ -1,5 +1,5 @@
-// Package oauth provides OAuth 2.0 verification.
-package oauth
+// Package oauth2 provides OAuth 2.0 verification.
+package oauth2
 
 import (
 	"context"
@@ -69,9 +69,7 @@ func (t Token) ID() string {
 
 // Role returns the role corresponding to t.
 func (t Token) Role() (member.Role, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return member.Role{}, err
