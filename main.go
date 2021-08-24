@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/akamensky/argparse"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/activity"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/fee"
@@ -28,6 +30,14 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	engine := gin.Default()
+
+	engine.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"*"},
+		AllowHeaders:     []string{"*"},
+		AllowCredentials: true,
+		MaxAge:           6 * time.Hour,
+	}))
 
 	api := engine.Group("/api")
 	{
