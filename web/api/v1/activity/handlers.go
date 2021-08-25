@@ -61,29 +61,21 @@ func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer c.Request.Body.Close()
 
-		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
-				Activities []map[string]interface{} `json:"activities"`
+				Activities activity.Activities `json:"activities"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
+		var err error
 
-		if err := token.Valid(); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusUnauthorized, resp)
-			return
-		}
-
-		activities, err := activity.Search(query, false)
+		resp.Data.Activities, err = activity.Search(query, false)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-
-		resp.Data.Activities = activities.Public()
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -97,12 +89,13 @@ func Private() gin.HandlerFunc {
 		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
-				Activities []map[string]interface{} `json:"activities"`
+				Activities activity.Activities `json:"activities"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
+		var err error
 
-		if err := token.Valid(); err != nil {
+		if err = token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -118,14 +111,12 @@ func Private() gin.HandlerFunc {
 			return
 		}
 
-		activities, err := activity.Search(query, true)
+		resp.Data.Activities, err = activity.Search(query, true)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-
-		resp.Data.Activities = activities.Public()
 		c.JSON(http.StatusOK, resp)
 	}
 }

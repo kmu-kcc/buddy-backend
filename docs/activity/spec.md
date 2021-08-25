@@ -87,20 +87,8 @@
                         "type": 0,
                         "description": "2021년 창립제",
                         "participants": [
-                            {
-                                "id": "20190000",
-                                "name": "홍길동",
-                                "department": "예술대학 도자기학과",
-                                "email": "gildong@gmail.com",
-                                "grade": 3
-                            },
-                            {
-                                "id": "20175271",
-                                "name": "김희동",
-                                "department": "와플대학 아이스크림학과",
-                                "email": "hdong@kookmin.ac.kr",
-                                "grade": 1
-                            }
+                            "20190000",
+                            "20175271"
                         ],
                         "private": false,
                         "files": [
@@ -150,44 +138,8 @@
                         "type": 1,
                         "description": "2021년 2차 알고리즘 스터디",
                         "participants": [
-                            {
-                                "id": "20190000",
-                                "password": "asdf232",
-                                "name": "홍길동",
-                                "department": "예술대학 도자기학과",
-                                "phone": "010-1234-5678",
-                                "email": "gildong@gmail.com",
-                                "grade": 3,
-                                "attendance": 0,
-                                "approved": true,
-                                "on_delete": false,
-                                "created_at": "1628974315",
-                                "updated_at": "1628974315",
-                                "role": {
-                                    "member_management": false,
-                                    "activity_management": false,
-                                    "fee_management": false
-                                }
-                            },
-                            {
-                                "id": "20175271",
-                                "password": "sfssll292",
-                                "name": "김희동",
-                                "department": "와플대학 아이스크림학과",
-                                "phone": "010-3131-3232",
-                                "email": "hdong@kookmin.ac.kr",
-                                "grade": 1,
-                                "attendace": 1,
-                                "approved": true,
-                                "on_delete": false,
-                                "created_at": "1629060720",
-                                "updated_at": "1629060720",
-                                "role": {
-                                    "member_management": false,
-                                    "activity_management": false,
-                                    "fee_management": false
-                                }
-                            }
+                            "20190000",
+                            "20175271"
                         ],
                         "private": true,
                         "files": [

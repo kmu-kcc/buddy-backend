@@ -50,33 +50,6 @@ func New(title string, start, end int64, place, description string, typ int, par
 	}
 }
 
-// Public returns the limited informations of a.
-func (a Activity) Public() map[string]interface{} {
-	pub := make(map[string]interface{})
-
-	pub["title"] = a.Title
-	pub["start"] = a.Start
-	pub["end"] = a.End
-	pub["place"] = a.Place
-	pub["type"] = a.Type
-	pub["description"] = a.Description
-	pub["participants"] = a.Participants
-	pub["files"] = a.Files
-
-	return pub
-}
-
-// Public returns the limited informations of as.
-func (as Activities) Public() []map[string]interface{} {
-	pubs := make([]map[string]interface{}, len(as))
-
-	for idx, activity := range as {
-		pubs[idx] = activity.Public()
-	}
-
-	return pubs
-}
-
 // Create creates a new activity.
 //
 // NOTE:
