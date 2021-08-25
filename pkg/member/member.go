@@ -233,6 +233,12 @@ func Approve(ids []string) error {
 		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
 	}()
 
+	// FIXME
+	//
+	// there can be duplicated signup approval
+	//
+	// it needs to be handled in v1.1.0.
+
 	if _, err = client.Database("club").
 		Collection("members").
 		UpdateMany(
