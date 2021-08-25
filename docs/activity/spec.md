@@ -102,7 +102,11 @@
                                 "grade": 1
                             }
                         ],
-                        "private": false
+                        "private": false,
+                        "files": [
+                            "image0.jpeg",
+                            "document1.pdf"
+                        ]
                     }
                 ]
             },
@@ -185,7 +189,11 @@
                                 }
                             }
                         ],
-                        "private": true
+                        "private": true,
+                        "files": [
+                            "image0.jpeg",
+                            "document1.pdf"
+                        ]
                     }
                 ]
             },
