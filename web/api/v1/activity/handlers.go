@@ -16,8 +16,6 @@ import (
 // Create handles the activity creation request.
 func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(activity.Activity)
 		resp := new(struct {
@@ -59,8 +57,6 @@ func Create() gin.HandlerFunc {
 // Search handles the public activity search request.
 func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
@@ -83,8 +79,6 @@ func Search() gin.HandlerFunc {
 // Private handles the private activity search request.
 func Private() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		query := c.Query("query")
 		resp := new(struct {
@@ -124,8 +118,6 @@ func Private() gin.HandlerFunc {
 // Update handles the activity update request.
 func Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID     string                 `json:"id"`
@@ -162,8 +154,6 @@ func Update() gin.HandlerFunc {
 // Delete handles the activity deletion request.
 func Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID string `json:"id"`
@@ -209,8 +199,6 @@ func Delete() gin.HandlerFunc {
 // Upload handles the file upload request.
 func Upload() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		id := c.Query("id")
 		resp := new(struct {
@@ -263,8 +251,6 @@ func Upload() gin.HandlerFunc {
 // Download handles the file download request.
 func Download() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		body := new(struct {
 			FileName string `json:"filename"`
 		})
@@ -284,8 +270,6 @@ func Download() gin.HandlerFunc {
 // DeleteFile handles the file deletion request.
 func DeleteFile() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID       string `json:"id"`

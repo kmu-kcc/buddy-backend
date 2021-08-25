@@ -14,8 +14,6 @@ import (
 // // Create handles the fee creation request.
 func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
@@ -56,8 +54,6 @@ func Create() gin.HandlerFunc {
 // // Amount handles the submission amount request.
 func Amount() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			MemberID string `json:"member_id"`
@@ -98,8 +94,6 @@ func Amount() gin.HandlerFunc {
 // Payers handles the payer list request.
 func Payers() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
@@ -145,8 +139,6 @@ func Payers() gin.HandlerFunc {
 // Deptors handles deptor list request.
 func Deptors() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
@@ -205,8 +197,6 @@ func Deptors() gin.HandlerFunc {
 // Search handles the fee search request.
 func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
@@ -243,8 +233,6 @@ func Search() gin.HandlerFunc {
 // Pay handles the payment request.
 func Pay() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Year     int `json:"year"`
@@ -299,8 +287,6 @@ func Pay() gin.HandlerFunc {
 // Deposit handles the deposit request.
 func Deposit() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Year        int    `json:"year"`
@@ -346,8 +332,6 @@ func Deposit() gin.HandlerFunc {
 // Exempt handles the exemption request.
 func Exempt() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			fee.Fee
