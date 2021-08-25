@@ -1,6 +1,8 @@
+<img src="https://user-images.githubusercontent.com/29545214/130865885-9a92284a-a71d-489d-be4b-6445b7014a38.jpeg" width="400" height="400">
+
 ## Buddy Backend
 
-Back-end module of the [Buddy System](https://kcc-buddy.netlify.app/)
+Back-end module of the [Buddy System]()
 
 ### Install dependencies
 
