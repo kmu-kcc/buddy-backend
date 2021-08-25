@@ -320,10 +320,13 @@ func (f *Fee) Search() (carryOver int, _ []map[string]interface{}, total int, er
 		return
 	}
 
-	if err = client.Database("club").Collection("fees").FindOne(ctx,
-		bson.D{
-			bson.E{Key: "year", Value: f.Year},
-			bson.E{Key: "semester", Value: f.Semester}}).Decode(f); err == mongo.ErrNoDocuments {
+	if err = client.Database("club").
+		Collection("fees").
+		FindOne(ctx,
+			bson.D{
+				bson.E{Key: "year", Value: f.Year},
+				bson.E{Key: "semester", Value: f.Semester}}).
+		Decode(f); err == mongo.ErrNoDocuments {
 		return 0, Logs{}.Public(), 0, nil
 	} else if err != nil {
 		return
@@ -438,12 +441,12 @@ func Pay(year, semester int, ids []string, amounts []int) error {
 	return client.Disconnect(ctx)
 }
 
-// Deposit makes a new log with amount and append it to fee with Year  of year, Semester of semester
+// Deposit makes a new log with amount and append it to fee with year of YEAR, semester of SEMESTER.
 //
 // Note:
 //
 // This is privileged operation:
-// 	Only the club managers can access to this operation
+// 	Only the club managers can access to this operation.
 func Deposit(year, semester, amount int, description string) error {
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
@@ -481,7 +484,7 @@ func Deposit(year, semester, amount int, description string) error {
 // Note :
 //
 // This is a privileged operation:
-// 	Only the club managers can access to this operation
+// 	Only the club managers can access to this operation.
 func (f *Fee) Exempt(id string) error {
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
