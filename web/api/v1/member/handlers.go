@@ -94,16 +94,19 @@ func SignUps() gin.HandlerFunc {
 		err := token.Valid()
 		if err != nil {
 			resp.Error = err.Error()
+			resp.Data.SignUps = member.Members{}
 			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
 		if role, err := token.Role(); err != nil {
 			resp.Error = err.Error()
+			resp.Data.SignUps = member.Members{}
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		} else if !role.MemberManagement {
 			resp.Error = member.ErrPermissionDenied.Error()
+			resp.Data.SignUps = member.Members{}
 			c.JSON(http.StatusForbidden, resp)
 			return
 		}
@@ -253,16 +256,19 @@ func Exits() gin.HandlerFunc {
 
 		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
+			resp.Data.Exits = member.Members{}
 			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
 		if role, err := token.Role(); err != nil {
 			resp.Error = err.Error()
+			resp.Data.Exits = member.Members{}
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		} else if !role.MemberManagement {
 			resp.Error = member.ErrPermissionDenied.Error()
+			resp.Data.Exits = member.Members{}
 			c.JSON(http.StatusForbidden, resp)
 			return
 		}
