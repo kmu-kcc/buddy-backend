@@ -62,9 +62,7 @@ func Search() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
-		body := new(struct {
-			Query string `json:"query"`
-		})
+		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
 				Activities []map[string]interface{} `json:"activities"`
@@ -72,19 +70,13 @@ func Search() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-
 		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
-		activities, err := activity.Search(body.Query, false)
+		activities, err := activity.Search(query, false)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
@@ -102,21 +94,13 @@ func Private() gin.HandlerFunc {
 		defer c.Request.Body.Close()
 
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
-		body := new(struct {
-			Query string `json:"query"`
-		})
+		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
 				Activities []map[string]interface{} `json:"activities"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
-
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
 
 		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
@@ -134,7 +118,7 @@ func Private() gin.HandlerFunc {
 			return
 		}
 
-		activities, err := activity.Search(body.Query, true)
+		activities, err := activity.Search(query, true)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)

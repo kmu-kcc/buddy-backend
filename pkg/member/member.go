@@ -184,10 +184,13 @@ func SignUps() (members Members, err error) {
 		Find(
 			ctx,
 			bson.D{
-				bson.E{Key: "id", Value: bson.D{bson.E{Key: "$not", Value: "MASTER"}}},
+				bson.E{Key: "id", Value: bson.D{bson.E{Key: "$ne", Value: "MASTER"}}},
 				bson.E{Key: "approved", Value: false}})
 
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			err = nil
+		}
 		return
 	}
 
@@ -195,6 +198,9 @@ func SignUps() (members Members, err error) {
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(member); err != nil {
+			if err == mongo.ErrNoDocuments {
+				err = nil
+			}
 			return
 		}
 		members = append(members, *member)
@@ -327,6 +333,9 @@ func Exits() (members Members, err error) {
 			bson.D{bson.E{Key: "on_delete", Value: true}})
 
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			err = nil
+		}
 		return
 	}
 
@@ -334,6 +343,9 @@ func Exits() (members Members, err error) {
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(member); err != nil {
+			if err == mongo.ErrNoDocuments {
+				err = nil
+			}
 			return
 		}
 		members = append(members, *member)
