@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	MASTER    = "MASTER"
 	Attending = iota
 	Absent
 	Graduate
@@ -105,26 +106,16 @@ func (m Member) SingIn() error {
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	member := new(Member)
 
-	if err = client.Database("club").
-		Collection("members").
-		FindOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: m.ID}}).
-		Decode(member); err == mongo.ErrNoDocuments {
-		if err = client.Disconnect(ctx); err != nil {
-			return err
-		}
+	if err = client.Database("club").Collection("members").FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err == mongo.ErrNoDocuments {
 		return ErrIdentityMismatch
 	} else if err != nil {
 		return err
 	}
-	if err = client.Disconnect(ctx); err != nil {
-		return err
-	}
-	if member.ID != "MASTER" && !member.Approved {
+	if member.ID != MASTER && !member.Approved {
 		return ErrUnderReview
 	}
 	if m.Password != member.Password {
@@ -142,22 +133,15 @@ func (m Member) SignUp() error {
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	collection := client.Database("club").Collection("members")
 	member := new(Member)
 
-	if err = collection.FindOne(
-		ctx,
-		bson.D{bson.E{Key: "id", Value: m.ID}}).
-		Decode(member); err == mongo.ErrNoDocuments {
-		if _, err = collection.InsertOne(ctx, m); err != nil {
-			return err
-		}
-		return client.Disconnect(ctx)
-	} else if err != nil {
+	if err = collection.FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err == mongo.ErrNoDocuments {
+		_, err = collection.InsertOne(ctx, m)
 		return err
-	}
-	if err = client.Disconnect(ctx); err != nil {
+	} else if err != nil {
 		return err
 	}
 	if member.Approved {
@@ -178,15 +162,9 @@ func SignUps() (members Members, err error) {
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
-	cur, err := client.Database("club").
-		Collection("members").
-		Find(
-			ctx,
-			bson.D{
-				bson.E{Key: "id", Value: bson.D{bson.E{Key: "$ne", Value: "MASTER"}}},
-				bson.E{Key: "approved", Value: false}})
-
+	cur, err := client.Database("club").Collection("members").Find(ctx, bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$ne", Value: MASTER}}}, bson.E{Key: "approved", Value: false}})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			err = nil
@@ -206,10 +184,7 @@ func SignUps() (members Members, err error) {
 		members = append(members, *member)
 	}
 
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-	return members, client.Disconnect(ctx)
+	return members, cur.Close(ctx)
 }
 
 // Approve approves the signup requests of ids.
@@ -224,6 +199,7 @@ func Approve(ids []string) error {
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	filter := func() bson.D {
 		arr := make(bson.A, len(ids))
@@ -239,19 +215,8 @@ func Approve(ids []string) error {
 	//
 	// it needs to be handled in v1.1.0.
 
-	if _, err = client.Database("club").
-		Collection("members").
-		UpdateMany(
-			ctx,
-			filter,
-			bson.D{
-				bson.E{Key: "$set", Value: bson.D{
-					bson.E{Key: "approved", Value: true},
-					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}); err != nil {
-		return err
-	}
-
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("members").UpdateMany(ctx, filter, bson.D{bson.E{Key: "$set", Value: bson.D{bson.E{Key: "approved", Value: true}, bson.E{Key: "updated_at", Value: time.Now().Unix()}}}})
+	return err
 }
 
 // Delete deletes the members of ids.
@@ -266,6 +231,7 @@ func Delete(ids []string) error {
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	filter := func() bson.D {
 		arr := make(bson.A, len(ids))
@@ -275,13 +241,8 @@ func Delete(ids []string) error {
 		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
 	}()
 
-	if _, err = client.Database("club").
-		Collection("members").
-		DeleteMany(ctx, filter); err != nil {
-		return err
-	}
-
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("members").DeleteMany(ctx, filter)
+	return err
 }
 
 // Exit applies an exit of m.
@@ -296,21 +257,9 @@ func (m *Member) Exit() error {
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
-	if err = client.Database("club").
-		Collection("members").
-		FindOneAndUpdate(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: m.ID}},
-			bson.D{
-				bson.E{Key: "$set", Value: bson.D{
-					bson.E{Key: "on_delete", Value: true},
-					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}).
-		Decode(m); err != nil {
-		return err
-	}
-
-	if err = client.Disconnect(ctx); err != nil {
+	if err = client.Database("club").Collection("members").FindOneAndUpdate(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}, bson.D{bson.E{Key: "$set", Value: bson.D{bson.E{Key: "on_delete", Value: true}, bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}).Decode(m); err != nil {
 		return err
 	}
 	if m.OnDelete {
@@ -331,13 +280,9 @@ func Exits() (members Members, err error) {
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
-	cur, err := client.Database("club").
-		Collection("members").
-		Find(
-			ctx,
-			bson.D{bson.E{Key: "on_delete", Value: true}})
-
+	cur, err := client.Database("club").Collection("members").Find(ctx, bson.D{bson.E{Key: "on_delete", Value: true}})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			err = nil
@@ -357,10 +302,7 @@ func Exits() (members Members, err error) {
 		members = append(members, *member)
 	}
 
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-	return members, client.Disconnect(ctx)
+	return members, cur.Close(ctx)
 }
 
 // My returns the personal information of m.
@@ -370,41 +312,26 @@ func (m *Member) My() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer client.Disconnect(ctx)
 
 	member := new(Member)
 
-	if err = client.Database("club").
-		Collection("members").
-		FindOne(
-			ctx,
-			bson.D{
-				bson.E{Key: "id", Value: m.ID}}).
-		Decode(member); err == mongo.ErrNoDocuments {
-		if err = client.Disconnect(ctx); err != nil {
-			return nil, err
-		}
-		return nil, mongo.ErrNoDocuments
-	}
-	if err != nil {
-		return nil, err
+	if err = client.Database("club").Collection("members").FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err != nil {
+		return make(map[string]interface{}), err
 	}
 
 	if m.Password != member.Password {
-		if err = client.Disconnect(ctx); err != nil {
-			return nil, err
-		}
-		return nil, ErrIdentityMismatch
+		return make(map[string]interface{}), ErrIdentityMismatch
 	}
 
 	data := member.Public()
-
 	data["password"] = member.Password
 	data["phone"] = member.Phone
 	data["attendance"] = member.Attendance
 	data["approved"] = member.Approved
 	data["on_delete"] = member.OnDelete
 
-	return data, client.Disconnect(ctx)
+	return data, nil
 }
 
 // Search returns the search result with query.
@@ -419,6 +346,7 @@ func Search(query string) (members Members, err error) {
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
 	filter := bson.D{
 		bson.E{Key: "approved", Value: true},
@@ -429,26 +357,25 @@ func Search(query string) (members Members, err error) {
 		}}}
 
 	cur, err := client.Database("club").Collection("members").Find(ctx, filter)
+	member := new(Member)
 
 	if err == mongo.ErrNoDocuments {
-		return members, client.Disconnect(ctx)
+		return members, nil
 	} else if err != nil {
 		return
 	}
 
-	member := new(Member)
-
 	for cur.Next(ctx) {
 		if err = cur.Decode(member); err != nil {
+			if err == mongo.ErrNoDocuments {
+				err = nil
+			}
 			return
 		}
 		members = append(members, *member)
 	}
 
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-	return members, client.Disconnect(ctx)
+	return members, cur.Close(ctx)
 }
 
 // Update updates the state of m to update.
@@ -463,18 +390,12 @@ func (m Member) Update(update map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	update["updated_at"] = time.Now().Unix()
 
-	if _, err = client.Database("club").
-		Collection("members").
-		UpdateOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: m.ID}},
-			bson.D{bson.E{Key: "$set", Value: update}}); err != nil {
-		return err
-	}
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("members").UpdateOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}, bson.D{bson.E{Key: "$set", Value: update}})
+	return err
 }
 
 // Active returns the activation status for member signup.
@@ -484,19 +405,16 @@ func Active() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer client.Disconnect(ctx)
 
 	active := new(struct {
 		Active bool `bson:"active"`
 	})
 
-	if err = client.Database("club").
-		Collection("signup").
-		FindOne(ctx, bson.D{}).
-		Decode(active); err != nil {
+	if err = client.Database("club").Collection("signup").FindOne(ctx, bson.D{}).Decode(active); err != nil {
 		return false, err
 	}
-
-	return active.Active, client.Disconnect(ctx)
+	return active.Active, nil
 }
 
 // Activate updates the activation status for member signup.
@@ -511,23 +429,14 @@ func Activate(activate bool) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	defer client.Disconnect(ctx)
 
 	active := struct {
 		Active bool `bson:"active"`
 	}{Active: activate}
 
-	if err = client.Database("club").
-		Collection("signup").
-		FindOneAndUpdate(
-			ctx,
-			bson.D{},
-			bson.D{bson.E{Key: "$set", Value: active}}).
-		Decode(&active); err != nil {
+	if err = client.Database("club").Collection("signup").FindOneAndUpdate(ctx, bson.D{}, bson.D{bson.E{Key: "$set", Value: active}}).Decode(&active); err != nil {
 		return false, err
-	}
-
-	if err = client.Disconnect(ctx); err != nil {
-		return activate, err
 	}
 
 	if active.Active == activate {
@@ -537,7 +446,6 @@ func Activate(activate bool) (bool, error) {
 			return active.Active, ErrAlreadyInactive
 		}
 	}
-
 	return activate, nil
 }
 
@@ -553,27 +461,29 @@ func Graduates() (members Members, err error) {
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
-	cur, err := client.Database("club").
-		Collection("members").
-		Find(ctx, bson.D{bson.E{Key: "attendance", Value: Graduate}})
+	cur, err := client.Database("club").Collection("members").Find(ctx, bson.D{bson.E{Key: "attendance", Value: Graduate}})
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			err = nil
+		}
 		return
 	}
 
-	memb := new(Member)
+	member := new(Member)
 
 	for cur.Next(ctx) {
-		if err = cur.Decode(memb); err != nil {
+		if err = cur.Decode(member); err != nil {
+			if err == mongo.ErrNoDocuments {
+				err = nil
+			}
 			return
 		}
-		members = append(members, *memb)
+		members = append(members, *member)
 	}
 
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-	return members, client.Disconnect(ctx)
+	return members, cur.Close(ctx)
 }
 
 // UpdateRole updates the role of member of id.
@@ -588,18 +498,10 @@ func UpdateRole(id string, role Role) error {
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
-	if _, err = client.Database("club").
-		Collection("members").
-		UpdateOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: id}},
-			bson.D{bson.E{Key: "$set", Value: bson.D{
-				bson.E{Key: "role", Value: role}}}}); err != nil {
-		return err
-	}
-
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("members").UpdateOne(ctx, bson.D{bson.E{Key: "id", Value: id}}, bson.D{bson.E{Key: "$set", Value: bson.D{bson.E{Key: "role", Value: role}}}})
+	return err
 }
 
 // String implements fmt.Stringer.
