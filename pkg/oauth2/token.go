@@ -21,7 +21,6 @@ var (
 	tokens = make(map[Token]map[string]interface{})
 
 	ErrInvalidToken = errors.New("invalid token")
-	ErrExpiredToken = errors.New("expired token")
 )
 
 // NewToken generates an access token.
@@ -49,11 +48,8 @@ func NewToken(id string) (Token, int64, error) {
 
 // Valid reports whether t is valid or not.
 func (t Token) Valid() error {
-	if meta, ok := tokens[t]; !ok {
+	if _, exists := tokens[t]; !exists {
 		return ErrInvalidToken
-	} else if time.Unix(meta["exp"].(int64), 0).Before(time.Now()) {
-		delete(tokens, t)
-		return ErrExpiredToken
 	}
 	return nil
 }
@@ -74,17 +70,12 @@ func (t Token) Role() (member.Role, error) {
 	if err != nil {
 		return member.Role{}, err
 	}
+	defer client.Disconnect(ctx)
 
 	memb := new(member.Member)
 
-	if err = client.Database("club").
-		Collection("members").
-		FindOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: t.ID()}}).
-		Decode(memb); err != nil {
+	if err = client.Database("club").Collection("members").FindOne(ctx, bson.D{bson.E{Key: "id", Value: t.ID()}}).Decode(memb); err != nil {
 		return member.Role{}, err
 	}
-
-	return memb.Role, client.Disconnect(ctx)
+	return memb.Role, nil
 }

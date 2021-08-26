@@ -9,5 +9,5 @@ type Role struct {
 	FeeManagement      bool `json:"fee_management" bson:"fee_management"`
 }
 
-// NewRole returns a new role with any roles.
+// NewRole returns a new role without any authorities.
 func NewRole() *Role { return &Role{} }
