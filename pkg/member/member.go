@@ -115,6 +115,7 @@ func (m Member) SingIn() error {
 	} else if err != nil {
 		return err
 	}
+
 	if m.Password != member.Password {
 		return ErrIdentityMismatch
 	}
