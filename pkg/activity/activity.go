@@ -54,7 +54,7 @@ func New(title string, start, end int64, place, description string, typ int, par
 //
 // NOTE:
 //
-// It is privileged operation:
+// It is a privileged operation:
 //	Only the club managers can access to this operation.
 func (a Activity) Create() (err error) {
 	ctx := context.Background()
@@ -62,20 +62,17 @@ func (a Activity) Create() (err error) {
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
-	if _, err = client.Database("club").
-		Collection("activities").
-		InsertOne(ctx, a); err != nil {
-		return
-	}
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("activities").InsertOne(ctx, a)
+	return err
 }
 
-// Search returns search results filtered by filter.
+// Search returns search results with query.
 //
 // NOTE:
 //
-// It is privileged operation:
+// If private, it is a privileged operation:
 //	Only the club managers can access to this operation.
 func Search(query string, private bool) (activities Activities, err error) {
 	ctx := context.Background()
@@ -83,6 +80,7 @@ func Search(query string, private bool) (activities Activities, err error) {
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
 	var filter bson.D
 	activity := new(Activity)
@@ -109,111 +107,96 @@ func Search(query string, private bool) (activities Activities, err error) {
 	}
 
 	cur, err := client.Database("club").Collection("activities").Find(ctx, filter)
-
-	if err == mongo.ErrNoDocuments {
-		return activities, client.Disconnect(ctx)
-	} else if err != nil {
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			err = nil
+		}
 		return
 	}
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(activity); err != nil {
+			if err == mongo.ErrNoDocuments {
+				err = nil
+			}
 			return
 		}
 		activities = append(activities, *activity)
 	}
 
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-	return activities, client.Disconnect(ctx)
+	return activities, cur.Close(ctx)
 }
 
-// Update updates the contents to update.
+// Update updates a to update.
 //
 // NOTE:
 //
-// It is privileged operation:
+// It is a privileged operation:
 //	Only the club managers can access to this operation.
-func (a Activity) Update(update map[string]interface{}) (err error) {
+func (a Activity) Update(update map[string]interface{}) error {
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
-		return
+		return err
 	}
+	defer client.Disconnect(ctx)
 
-	if _, err = client.Database("club").
-		Collection("activities").
-		UpdateByID(ctx, a.ID, bson.M{"$set": update}); err != nil {
-		return
-	}
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("activities").UpdateByID(ctx, a.ID, bson.M{"$set": update})
+	return err
 }
 
-// Delete deletes a club activity using activityID.
+// Delete deletes a club activity of id.
 //
 // NOTE:
 //
-// It is privileged operation:
+// It is a privileged operation:
 //	Only the club managers can access to this operation.
-func Delete(id primitive.ObjectID) (err error) {
+func Delete(id primitive.ObjectID) error {
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
-		return
+		return err
 	}
+	defer client.Disconnect(ctx)
 
-	if _, err = client.Database("club").
-		Collection("activities").
-		DeleteOne(ctx, bson.M{"_id": id}); err != nil {
-		return
-	}
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("activities").DeleteOne(ctx, bson.D{bson.E{Key: "_id", Value: id}})
+	return err
 }
 
-// Upload saves file of filename into a.
+// Upload saves file of FILENAME into a.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
 func (a Activity) Upload(filename string) error {
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
-	if _, err = client.Database("club").
-		Collection("activities").
-		UpdateByID(
-			ctx,
-			a.ID,
-			bson.D{
-				bson.E{Key: "$push", Value: bson.D{
-					bson.E{Key: "files", Value: NewFile(filename)}}}}); err != nil {
-		return err
-	}
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("activities").UpdateByID(ctx, a.ID, bson.D{bson.E{Key: "$push", Value: bson.D{bson.E{Key: "files", Value: NewFile(filename)}}}})
+	return err
 }
 
-// DeleteFile deletes file of filename from a.
+// DeleteFile deletes file of FILENAME from a.
+//
+// NOTE:
+//
+// It is a privileged operation:
+//	Only the club managers can access to this operation.
 func (a Activity) DeleteFile(filename string) error {
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
-	if _, err = client.Database("club").
-		Collection("activities").
-		UpdateByID(
-			ctx,
-			a.ID,
-			bson.D{
-				bson.E{Key: "$pull", Value: bson.D{
-					bson.E{Key: "files", Value: bson.D{
-						bson.E{Key: "$in", Value: bson.A{filename}}}}}}}); err != nil {
+	if _, err = client.Database("club").Collection("activities").UpdateByID(ctx, a.ID, bson.D{bson.E{Key: "$pull", Value: bson.D{bson.E{Key: "files", Value: bson.D{bson.E{Key: "$in", Value: bson.A{filename}}}}}}}); err != nil {
 		return err
 	}
-
-	if err := NewFile(filename).Delete(); err != nil {
-		return err
-	}
-	return client.Disconnect(ctx)
+	return NewFile(filename).Delete()
 }
