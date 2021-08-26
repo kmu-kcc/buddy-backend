@@ -115,11 +115,12 @@ func (m Member) SingIn() error {
 	} else if err != nil {
 		return err
 	}
-	if member.ID != MASTER && !member.Approved {
-		return ErrUnderReview
-	}
+
 	if m.Password != member.Password {
 		return ErrIdentityMismatch
+	}
+	if member.ID != MASTER && !member.Approved {
+		return ErrUnderReview
 	}
 	return nil
 }
