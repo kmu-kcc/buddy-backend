@@ -177,9 +177,6 @@ func SignUps() (members Members, err error) {
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(member); err != nil {
-			if err == mongo.ErrNoDocuments {
-				err = nil
-			}
 			return
 		}
 		members = append(members, *member)
@@ -295,9 +292,6 @@ func Exits() (members Members, err error) {
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(member); err != nil {
-			if err == mongo.ErrNoDocuments {
-				err = nil
-			}
 			return
 		}
 		members = append(members, *member)
@@ -357,9 +351,8 @@ func Search(query string) (members Members, err error) {
 			bson.D{bson.E{Key: "department", Value: bson.D{bson.E{Key: "$regex", Value: query}}}},
 		}}}
 
-	cur, err := client.Database("club").Collection("members").Find(ctx, filter)
 	member := new(Member)
-
+	cur, err := client.Database("club").Collection("members").Find(ctx, filter)
 	if err == mongo.ErrNoDocuments {
 		return members, nil
 	} else if err != nil {
@@ -368,9 +361,6 @@ func Search(query string) (members Members, err error) {
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(member); err != nil {
-			if err == mongo.ErrNoDocuments {
-				err = nil
-			}
 			return
 		}
 		members = append(members, *member)
@@ -476,9 +466,6 @@ func Graduates() (members Members, err error) {
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(member); err != nil {
-			if err == mongo.ErrNoDocuments {
-				err = nil
-			}
 			return
 		}
 		members = append(members, *member)

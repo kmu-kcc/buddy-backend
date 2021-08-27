@@ -116,9 +116,6 @@ func Search(query string, private bool) (activities Activities, err error) {
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(activity); err != nil {
-			if err == mongo.ErrNoDocuments {
-				err = nil
-			}
 			return
 		}
 		activities = append(activities, *activity)
