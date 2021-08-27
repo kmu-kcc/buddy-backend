@@ -130,7 +130,7 @@ func Search(query string, private bool) (activities Activities, err error) {
 //
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
-func (a Activity) Update(update map[string]interface{}) error {
+func (a Activity) Update() error {
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
@@ -138,7 +138,7 @@ func (a Activity) Update(update map[string]interface{}) error {
 	}
 	defer client.Disconnect(ctx)
 
-	_, err = client.Database("club").Collection("activities").UpdateByID(ctx, a.ID, bson.M{"$set": update})
+	_, err = client.Database("club").Collection("activities").UpdateByID(ctx, a.ID, bson.M{"$set": a})
 	return err
 }
 

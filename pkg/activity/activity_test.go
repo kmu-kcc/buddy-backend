@@ -34,10 +34,7 @@ func TestUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	act := activity.Activity{ID: objectId}
-	if err := act.Update(map[string]interface{}{
-		"_id":  objectId,
-		"type": "meet"}); err != nil {
+	if err = (activity.Activity{ID: objectId, Type: 1}).Update(); err != nil {
 		t.Error(err)
 	}
 }
