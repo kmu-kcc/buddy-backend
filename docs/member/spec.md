@@ -2,7 +2,7 @@
 
 0. Server Domain:Port
 
-    http://132.226.170.200:3000
+    http://146.56.190.179:3000
 
 <br>
 
@@ -53,8 +53,9 @@
 
     - Status Code
         - 200 OK: 로그인 성공 (유효한 엑세스 토큰 발급)
-        - 422 Unprocessable Entity: 엑세스 토큰 발급 실패
         - 400 Bad Request: 요청 포맷/타입 오류
+        - 409 Conflict: ID/PW 오류
+        - 422 Unprocessable Entity: 엑세스 토큰 발급 실패
         - 500 Internal Server Error: ID/PW 오류, 가입 미승인 상태, 시스템 오류 등
 
 2. SignUp - 회원 가입 신청

@@ -9,16 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/activity"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
-	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Create handles the activity creation request.
 func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(activity.Activity)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -30,7 +28,7 @@ func Create() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -46,7 +44,7 @@ func Create() gin.HandlerFunc {
 			return
 		}
 
-		if err := activity.New(body.Start, body.End, body.Place, body.Description, body.Type, body.Participants, body.Private).
+		if err := activity.New(body.Title, body.Start, body.End, body.Place, body.Description, body.Type, body.Participants, body.Private).
 			Create(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
@@ -59,39 +57,21 @@ func Create() gin.HandlerFunc {
 // Search handles the public activity search request.
 func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
-		body := new(struct {
-			Query string `json:"query"`
-		})
+		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
-				Activities []map[string]interface{} `json:"activities"`
+				Activities activity.Activities `json:"activities"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
+		var err error
 
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-
-		if err := token.Verify(); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusUnauthorized, resp)
-			return
-		}
-
-		activities, err := activity.Search(body.Query, false)
+		resp.Data.Activities, err = activity.Search(query, false)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-
-		resp.Data.Activities = activities.Public()
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -99,26 +79,17 @@ func Search() gin.HandlerFunc {
 // Private handles the private activity search request.
 func Private() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
-		body := new(struct {
-			Query string `json:"query"`
-		})
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
+		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
-				Activities []map[string]interface{} `json:"activities"`
+				Activities activity.Activities `json:"activities"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
+		var err error
 
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusBadRequest, resp)
-			return
-		}
-
-		if err := token.Verify(); err != nil {
+		if err = token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -134,14 +105,12 @@ func Private() gin.HandlerFunc {
 			return
 		}
 
-		activities, err := activity.Search(body.Query, true)
+		resp.Data.Activities, err = activity.Search(query, true)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
-
-		resp.Data.Activities = activities.Public()
 		c.JSON(http.StatusOK, resp)
 	}
 }
@@ -149,9 +118,7 @@ func Private() gin.HandlerFunc {
 // Update handles the activity update request.
 func Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID     string                 `json:"id"`
 			Update map[string]interface{} `json:"update"`
@@ -166,7 +133,7 @@ func Update() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -187,9 +154,7 @@ func Update() gin.HandlerFunc {
 // Delete handles the activity deletion request.
 func Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID string `json:"id"`
 		})
@@ -203,7 +168,7 @@ func Delete() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -234,15 +199,13 @@ func Delete() gin.HandlerFunc {
 // Upload handles the file upload request.
 func Upload() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		id := c.Query("id")
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
 		})
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -288,8 +251,6 @@ func Upload() gin.HandlerFunc {
 // Download handles the file download request.
 func Download() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		body := new(struct {
 			FileName string `json:"filename"`
 		})
@@ -309,9 +270,7 @@ func Download() gin.HandlerFunc {
 // DeleteFile handles the file deletion request.
 func DeleteFile() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID       string `json:"id"`
 			FileName string `json:"filename"`
@@ -326,7 +285,7 @@ func DeleteFile() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return

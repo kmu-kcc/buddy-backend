@@ -1,12 +1,12 @@
-// Package oauth provides OAuth 2.0 verification.
-package oauth
+// Package oauth2 provides OAuth 2.0 verification.
+package oauth2
 
 import (
 	"context"
 	"errors"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/kmu-kcc/buddy-backend/config"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,7 +21,6 @@ var (
 	tokens = make(map[Token]map[string]interface{})
 
 	ErrInvalidToken = errors.New("invalid token")
-	ErrExpiredToken = errors.New("expired token")
 )
 
 // NewToken generates an access token.
@@ -47,13 +46,10 @@ func NewToken(id string) (Token, int64, error) {
 	return Token(token), exp, err
 }
 
-// Verify reports whether t is valid or not.
-func (t Token) Verify() error {
-	if meta, ok := tokens[t]; !ok {
+// Valid reports whether t is valid or not.
+func (t Token) Valid() error {
+	if _, exists := tokens[t]; !exists {
 		return ErrInvalidToken
-	} else if time.Unix(meta["exp"].(int64), 0).Before(time.Now()) {
-		delete(tokens, t)
-		return ErrExpiredToken
 	}
 	return nil
 }
@@ -69,24 +65,17 @@ func (t Token) ID() string {
 
 // Role returns the role corresponding to t.
 func (t Token) Role() (member.Role, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return member.Role{}, err
 	}
+	defer client.Disconnect(ctx)
 
 	memb := new(member.Member)
 
-	if err = client.Database("club").
-		Collection("members").
-		FindOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: t.ID()}}).
-		Decode(memb); err != nil {
+	if err = client.Database("club").Collection("members").FindOne(ctx, bson.D{bson.E{Key: "id", Value: t.ID()}}).Decode(memb); err != nil {
 		return member.Role{}, err
 	}
-
-	return memb.Role, client.Disconnect(ctx)
+	return memb.Role, nil
 }

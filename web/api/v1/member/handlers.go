@@ -7,19 +7,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
-	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth2"
 )
 
 // SignIn handles the signin request.
 func SignIn() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		body := new(member.Member)
 		resp := new(struct {
 			Data struct {
-				AccessToken oauth.Token `json:"access_token"`
-				ExpiredAt   int64       `json:"expired_at,string"`
+				AccessToken oauth2.Token `json:"access_token"`
+				ExpiredAt   int64        `json:"expired_at,string"`
 			} `json:"data"`
 			Error string `json:"error,omitempty"`
 		})
@@ -33,11 +31,15 @@ func SignIn() gin.HandlerFunc {
 		err := body.SingIn()
 		if err != nil {
 			resp.Error = err.Error()
-			c.JSON(http.StatusInternalServerError, resp)
+			if err == member.ErrIdentityMismatch {
+				c.JSON(http.StatusConflict, resp)
+			} else {
+				c.JSON(http.StatusInternalServerError, resp)
+			}
 			return
 		}
 
-		resp.Data.AccessToken, resp.Data.ExpiredAt, err = oauth.NewToken(body.ID)
+		resp.Data.AccessToken, resp.Data.ExpiredAt, err = oauth2.NewToken(body.ID)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnprocessableEntity, resp)
@@ -51,8 +53,6 @@ func SignIn() gin.HandlerFunc {
 // SignUp handles the signup request.
 func SignUp() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		body := new(member.Member)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -77,9 +77,7 @@ func SignUp() gin.HandlerFunc {
 // SignUps handles the signup list request.
 func SignUps() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		resp := new(struct {
 			Data struct {
 				SignUps member.Members `json:"signups"`
@@ -87,19 +85,22 @@ func SignUps() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		err := token.Verify()
+		err := token.Valid()
 		if err != nil {
 			resp.Error = err.Error()
+			resp.Data.SignUps = member.Members{}
 			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
 		if role, err := token.Role(); err != nil {
 			resp.Error = err.Error()
+			resp.Data.SignUps = member.Members{}
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		} else if !role.MemberManagement {
 			resp.Error = member.ErrPermissionDenied.Error()
+			resp.Data.SignUps = member.Members{}
 			c.JSON(http.StatusForbidden, resp)
 			return
 		}
@@ -117,9 +118,7 @@ func SignUps() gin.HandlerFunc {
 // Approve handles the signup approvement request.
 func Approve() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			IDs []string `json:"ids"`
 		})
@@ -133,7 +132,7 @@ func Approve() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -161,9 +160,7 @@ func Approve() gin.HandlerFunc {
 // Delete handles the refusal and deletion request.
 func Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			IDs []string `json:"ids"`
 		})
@@ -177,7 +174,7 @@ func Delete() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -205,9 +202,7 @@ func Delete() gin.HandlerFunc {
 // Exit handles the exit request.
 func Exit() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(member.Member)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -219,7 +214,7 @@ func Exit() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -237,9 +232,7 @@ func Exit() gin.HandlerFunc {
 // Exits handles the exit list request.
 func Exits() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		resp := new(struct {
 			Data struct {
 				Exits member.Members `json:"exits"`
@@ -247,18 +240,21 @@ func Exits() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
+			resp.Data.Exits = member.Members{}
 			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
 		if role, err := token.Role(); err != nil {
 			resp.Error = err.Error()
+			resp.Data.Exits = member.Members{}
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		} else if !role.MemberManagement {
 			resp.Error = member.ErrPermissionDenied.Error()
+			resp.Data.Exits = member.Members{}
 			c.JSON(http.StatusForbidden, resp)
 			return
 		}
@@ -277,9 +273,7 @@ func Exits() gin.HandlerFunc {
 // My handles the personal information request.
 func My() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID       string `json:"id"`
 			Password string `json:"password"`
@@ -298,7 +292,7 @@ func My() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -316,9 +310,7 @@ func My() gin.HandlerFunc {
 // Search handles the member search request.
 func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		query := c.Query("query")
 		resp := new(struct {
 			Data struct {
@@ -327,7 +319,7 @@ func Search() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -347,9 +339,7 @@ func Search() gin.HandlerFunc {
 // Update handles the member update request.
 func Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID     string                 `json:"id"`
 			Update map[string]interface{} `json:"update"`
@@ -364,7 +354,7 @@ func Update() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -381,8 +371,6 @@ func Update() gin.HandlerFunc {
 // Active handles the member signup activation status request.
 func Active() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
 		resp := new(struct {
 			Data struct {
 				Active bool `json:"active"`
@@ -403,9 +391,7 @@ func Active() gin.HandlerFunc {
 // Activate handles the member signup activation status update request.
 func Activate() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Activate bool `json:"activate"`
 		})
@@ -423,7 +409,7 @@ func Activate() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -451,9 +437,7 @@ func Activate() gin.HandlerFunc {
 // Graduates handles the graduate list request.
 func Graduates() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		resp := new(struct {
 			Data struct {
 				Graduates member.Members `json:"graduates"`
@@ -461,7 +445,7 @@ func Graduates() gin.HandlerFunc {
 			Error string `json:"error,omitempty"`
 		})
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -491,9 +475,7 @@ func Graduates() gin.HandlerFunc {
 // UpdateRole handles the role update request.
 func UpdateRole() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			ID   string      `json:"id"`
 			Role member.Role `json:"role"`
@@ -508,7 +490,7 @@ func UpdateRole() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return

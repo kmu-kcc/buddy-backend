@@ -8,15 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kmu-kcc/buddy-backend/pkg/fee"
 	"github.com/kmu-kcc/buddy-backend/pkg/member"
-	"github.com/kmu-kcc/buddy-backend/pkg/oauth"
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth2"
 )
 
 // // Create handles the fee creation request.
 func Create() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
@@ -28,7 +26,7 @@ func Create() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -56,9 +54,7 @@ func Create() gin.HandlerFunc {
 // // Amount handles the submission amount request.
 func Amount() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			MemberID string `json:"member_id"`
 			Year     int    `json:"year"`
@@ -77,7 +73,7 @@ func Amount() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -98,9 +94,7 @@ func Amount() gin.HandlerFunc {
 // Payers handles the payer list request.
 func Payers() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
@@ -116,7 +110,7 @@ func Payers() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -145,9 +139,7 @@ func Payers() gin.HandlerFunc {
 // Deptors handles deptor list request.
 func Deptors() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
@@ -165,7 +157,7 @@ func Deptors() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -205,9 +197,7 @@ func Deptors() gin.HandlerFunc {
 // Search handles the fee search request.
 func Search() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(fee.Fee)
 		resp := new(struct {
 			Data struct {
@@ -225,7 +215,7 @@ func Search() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -243,9 +233,7 @@ func Search() gin.HandlerFunc {
 // Pay handles the payment request.
 func Pay() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Year     int `json:"year"`
 			Semester int `json:"semester"`
@@ -264,7 +252,7 @@ func Pay() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -299,9 +287,7 @@ func Pay() gin.HandlerFunc {
 // Deposit handles the deposit request.
 func Deposit() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			Year        int    `json:"year"`
 			Semester    int    `json:"semester"`
@@ -318,7 +304,7 @@ func Deposit() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
@@ -346,9 +332,7 @@ func Deposit() gin.HandlerFunc {
 // Exempt handles the exemption request.
 func Exempt() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		defer c.Request.Body.Close()
-
-		token := oauth.Token(c.Request.Header.Get("Authorization"))
+		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
 			fee.Fee
 			ID string `json:"id"`
@@ -364,7 +348,7 @@ func Exempt() gin.HandlerFunc {
 			return
 		}
 
-		if err := token.Verify(); err != nil {
+		if err := token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return

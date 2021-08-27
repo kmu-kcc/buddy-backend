@@ -7,7 +7,9 @@ import (
 	"os"
 
 	"github.com/akamensky/argparse"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/kmu-kcc/buddy-backend/config"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/activity"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/fee"
 	"github.com/kmu-kcc/buddy-backend/web/api/v1/member"
@@ -19,6 +21,12 @@ func main() {
 	// parse port number from command line arguments
 	//
 	// See https://github.com/akamensky/argparse#readme
+	//
+	//
+	// NOTE:
+	//
+	// argparse is redundant due to the `flag` package in the standard library.
+	// This would be removed in v1.1.0.
 	port := parser.Int("p", "port", &argparse.Options{Required: true, Help: "Port to run the server"})
 
 	if err := parser.Parse(os.Args); err != nil {
@@ -29,48 +37,50 @@ func main() {
 
 	engine := gin.Default()
 
+	engine.Use(cors.New(config.CORSConfig))
+
 	api := engine.Group("/api")
 	{
 		v1 := api.Group("/v1")
 		{
-			mgroup := v1.Group("/member")
+			members := v1.Group("/member")
 			{
-				mgroup.POST("/signin", member.SignIn())
-				mgroup.POST("/signup", member.SignUp())
-				mgroup.GET("/signups", member.SignUps())
-				mgroup.PUT("/approve", member.Approve())
-				mgroup.DELETE("/delete", member.Delete())
-				mgroup.PUT("/exit", member.Exit())
-				mgroup.GET("/exits", member.Exits())
-				mgroup.POST("/my", member.My())
-				mgroup.GET("/search", member.Search())
-				mgroup.PUT("/update", member.Update())
-				mgroup.GET("/active", member.Active())
-				mgroup.PUT("/activate", member.Activate())
-				mgroup.GET("/graduates", member.Graduates())
-				mgroup.PUT("/updaterole", member.UpdateRole())
+				members.POST("/signin", member.SignIn())
+				members.POST("/signup", member.SignUp())
+				members.GET("/signups", member.SignUps())
+				members.PUT("/approve", member.Approve())
+				members.DELETE("/delete", member.Delete())
+				members.PUT("/exit", member.Exit())
+				members.GET("/exits", member.Exits())
+				members.POST("/my", member.My())
+				members.GET("/search", member.Search())
+				members.PUT("/update", member.Update())
+				members.GET("/active", member.Active())
+				members.PUT("/activate", member.Activate())
+				members.GET("/graduates", member.Graduates())
+				members.PUT("/updaterole", member.UpdateRole())
 			}
-			agroup := v1.Group("/activity")
+			activities := v1.Group("/activity")
 			{
-				agroup.POST("/create", activity.Create())
-				agroup.GET("/search", activity.Search())
-				agroup.GET("/private", activity.Private())
-				agroup.PUT("/update", activity.Update())
-				agroup.DELETE("/delete", activity.Delete())
-				agroup.POST("/upload", activity.Upload())
-				agroup.POST("/download", activity.Download())
-				agroup.POST("/deletefile", activity.DeleteFile())
+				activities.POST("/create", activity.Create())
+				activities.GET("/search", activity.Search())
+				activities.GET("/private", activity.Private())
+				activities.PUT("/update", activity.Update())
+				activities.DELETE("/delete", activity.Delete())
+				activities.POST("/upload", activity.Upload())
+				activities.POST("/download", activity.Download())
+				activities.POST("/deletefile", activity.DeleteFile())
 			}
-			fgroup := v1.Group("/fee")
+			fees := v1.Group("/fee")
 			{
-				fgroup.POST("/create", fee.Create())
-				fgroup.POST("/amount", fee.Amount())
-				fgroup.POST("/payers", fee.Payers())
-				fgroup.POST("/deptors", fee.Deptors())
-				fgroup.POST("/search", fee.Search())
-				fgroup.POST("/pay", fee.Pay())
-				fgroup.POST("/deposit", fee.Deposit())
-				fgroup.POST("/exempt", fee.Exempt())
+				fees.POST("/create", fee.Create())
+				fees.POST("/amount", fee.Amount())
+				fees.POST("/payers", fee.Payers())
+				fees.POST("/deptors", fee.Deptors())
+				fees.POST("/search", fee.Search())
+				fees.POST("/pay", fee.Pay())
+				fees.POST("/deposit", fee.Deposit())
+				fees.POST("/exempt", fee.Exempt())
 			}
 		}
 	}

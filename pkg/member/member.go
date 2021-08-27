@@ -14,19 +14,20 @@ import (
 )
 
 const (
+	MASTER    = "MASTER"
 	Attending = iota
 	Absent
 	Graduate
 )
 
 var (
-	ErrPasswordMismatch = errors.New("password mismatch")
-	ErrAlreadyMember    = errors.New("already a member")
-	ErrUnderReview      = errors.New("under review")
-	ErrOnDelete         = errors.New("already on delete")
+	ErrIdentityMismatch = errors.New("계정 정보를 확인해주세요")
+	ErrAlreadyMember    = errors.New("이미 등록된 사용자입니다")
+	ErrUnderReview      = errors.New("승인 검토 중입니다")
+	ErrOnDelete         = errors.New("이미 탈퇴 신청하셨습니다")
 	ErrAlreadyActive    = errors.New("already active")
 	ErrAlreadyInactive  = errors.New("already inactive")
-	ErrPermissionDenied = errors.New("permission denied")
+	ErrPermissionDenied = errors.New("권한이 없습니다")
 )
 
 // Member represents a club member state.
@@ -100,37 +101,26 @@ func (ms Members) Public() []map[string]interface{} {
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
 func (m Member) SingIn() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	member := new(Member)
 
-	if err = client.Database("club").
-		Collection("members").
-		FindOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: m.ID}}).
-		Decode(member); err == mongo.ErrNoDocuments {
-		if err = client.Disconnect(ctx); err != nil {
-			return err
-		}
-		return mongo.ErrNoDocuments
+	if err = client.Database("club").Collection("members").FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err == mongo.ErrNoDocuments {
+		return ErrIdentityMismatch
 	} else if err != nil {
 		return err
 	}
-	if err = client.Disconnect(ctx); err != nil {
-		return err
-	}
-	if member.ID != "MASTER" && !member.Approved {
-		return ErrUnderReview
-	}
+
 	if m.Password != member.Password {
-		return ErrPasswordMismatch
+		return ErrIdentityMismatch
+	}
+	if member.ID != MASTER && !member.Approved {
+		return ErrUnderReview
 	}
 	return nil
 }
@@ -139,29 +129,20 @@ func (m Member) SingIn() error {
 // If m already exists (approved or not), nothing changes.
 // Else it registers an unapproved member.
 func (m Member) SignUp() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	collection := client.Database("club").Collection("members")
 	member := new(Member)
 
-	if err = collection.FindOne(
-		ctx,
-		bson.D{bson.E{Key: "id", Value: m.ID}}).
-		Decode(member); err == mongo.ErrNoDocuments {
-		if _, err = collection.InsertOne(ctx, m); err != nil {
-			return err
-		}
-		return client.Disconnect(ctx)
-	} else if err != nil {
+	if err = collection.FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err == mongo.ErrNoDocuments {
+		_, err = collection.InsertOne(ctx, m)
 		return err
-	}
-	if err = client.Disconnect(ctx); err != nil {
+	} else if err != nil {
 		return err
 	}
 	if member.Approved {
@@ -177,23 +158,18 @@ func (m Member) SignUp() error {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func SignUps() (members Members, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
-	cur, err := client.Database("club").
-		Collection("members").
-		Find(
-			ctx,
-			bson.D{
-				bson.E{Key: "id", Value: bson.D{bson.E{Key: "$not", Value: "MASTER"}}},
-				bson.E{Key: "approved", Value: false}})
-
+	cur, err := client.Database("club").Collection("members").Find(ctx, bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$ne", Value: MASTER}}}, bson.E{Key: "approved", Value: false}})
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			err = nil
+		}
 		return
 	}
 
@@ -206,10 +182,7 @@ func SignUps() (members Members, err error) {
 		members = append(members, *member)
 	}
 
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-	return members, client.Disconnect(ctx)
+	return members, cur.Close(ctx)
 }
 
 // Approve approves the signup requests of ids.
@@ -219,13 +192,12 @@ func SignUps() (members Members, err error) {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Approve(ids []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	filter := func() bson.D {
 		arr := make(bson.A, len(ids))
@@ -235,19 +207,14 @@ func Approve(ids []string) error {
 		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
 	}()
 
-	if _, err = client.Database("club").
-		Collection("members").
-		UpdateMany(
-			ctx,
-			filter,
-			bson.D{
-				bson.E{Key: "$set", Value: bson.D{
-					bson.E{Key: "approved", Value: true},
-					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}); err != nil {
-		return err
-	}
+	// FIXME
+	//
+	// there can be duplicated signup approval
+	//
+	// it needs to be handled in v1.1.0.
 
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("members").UpdateMany(ctx, filter, bson.D{bson.E{Key: "$set", Value: bson.D{bson.E{Key: "approved", Value: true}, bson.E{Key: "updated_at", Value: time.Now().Unix()}}}})
+	return err
 }
 
 // Delete deletes the members of ids.
@@ -257,13 +224,12 @@ func Approve(ids []string) error {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Delete(ids []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	filter := func() bson.D {
 		arr := make(bson.A, len(ids))
@@ -273,13 +239,8 @@ func Delete(ids []string) error {
 		return bson.D{bson.E{Key: "id", Value: bson.D{bson.E{Key: "$in", Value: arr}}}}
 	}()
 
-	if _, err = client.Database("club").
-		Collection("members").
-		DeleteMany(ctx, filter); err != nil {
-		return err
-	}
-
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("members").DeleteMany(ctx, filter)
+	return err
 }
 
 // Exit applies an exit of m.
@@ -289,28 +250,14 @@ func Delete(ids []string) error {
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
 func (m *Member) Exit() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
-	if err = client.Database("club").
-		Collection("members").
-		FindOneAndUpdate(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: m.ID}},
-			bson.D{
-				bson.E{Key: "$set", Value: bson.D{
-					bson.E{Key: "on_delete", Value: true},
-					bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}).
-		Decode(m); err != nil {
-		return err
-	}
-
-	if err = client.Disconnect(ctx); err != nil {
+	if err = client.Database("club").Collection("members").FindOneAndUpdate(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}, bson.D{bson.E{Key: "$set", Value: bson.D{bson.E{Key: "on_delete", Value: true}, bson.E{Key: "updated_at", Value: time.Now().Unix()}}}}).Decode(m); err != nil {
 		return err
 	}
 	if m.OnDelete {
@@ -326,21 +273,18 @@ func (m *Member) Exit() error {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Exits() (members Members, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
-	cur, err := client.Database("club").
-		Collection("members").
-		Find(
-			ctx,
-			bson.D{bson.E{Key: "on_delete", Value: true}})
-
+	cur, err := client.Database("club").Collection("members").Find(ctx, bson.D{bson.E{Key: "on_delete", Value: true}})
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			err = nil
+		}
 		return
 	}
 
@@ -353,56 +297,36 @@ func Exits() (members Members, err error) {
 		members = append(members, *member)
 	}
 
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-	return members, client.Disconnect(ctx)
+	return members, cur.Close(ctx)
 }
 
 // My returns the personal information of m.
 func (m *Member) My() (map[string]interface{}, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return nil, err
 	}
+	defer client.Disconnect(ctx)
 
 	member := new(Member)
 
-	if err = client.Database("club").
-		Collection("members").
-		FindOne(
-			ctx,
-			bson.D{
-				bson.E{Key: "id", Value: m.ID}}).
-		Decode(member); err == mongo.ErrNoDocuments {
-		if err = client.Disconnect(ctx); err != nil {
-			return nil, err
-		}
-		return nil, mongo.ErrNoDocuments
-	}
-	if err != nil {
-		return nil, err
+	if err = client.Database("club").Collection("members").FindOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}).Decode(member); err != nil {
+		return make(map[string]interface{}), err
 	}
 
 	if m.Password != member.Password {
-		if err = client.Disconnect(ctx); err != nil {
-			return nil, err
-		}
-		return nil, ErrPasswordMismatch
+		return make(map[string]interface{}), ErrIdentityMismatch
 	}
 
 	data := member.Public()
-
 	data["password"] = member.Password
 	data["phone"] = member.Phone
 	data["attendance"] = member.Attendance
 	data["approved"] = member.Approved
 	data["on_delete"] = member.OnDelete
 
-	return data, client.Disconnect(ctx)
+	return data, nil
 }
 
 // Search returns the search result with query.
@@ -412,13 +336,12 @@ func (m *Member) My() (map[string]interface{}, error) {
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
 func Search(query string) (members Members, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
 	filter := bson.D{
 		bson.E{Key: "approved", Value: true},
@@ -428,15 +351,13 @@ func Search(query string) (members Members, err error) {
 			bson.D{bson.E{Key: "department", Value: bson.D{bson.E{Key: "$regex", Value: query}}}},
 		}}}
 
+	member := new(Member)
 	cur, err := client.Database("club").Collection("members").Find(ctx, filter)
-
 	if err == mongo.ErrNoDocuments {
-		return members, client.Disconnect(ctx)
+		return members, nil
 	} else if err != nil {
 		return
 	}
-
-	member := new(Member)
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(member); err != nil {
@@ -445,10 +366,7 @@ func Search(query string) (members Members, err error) {
 		members = append(members, *member)
 	}
 
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-	return members, client.Disconnect(ctx)
+	return members, cur.Close(ctx)
 }
 
 // Update updates the state of m to update.
@@ -458,49 +376,36 @@ func Search(query string) (members Members, err error) {
 // It is a member-limited operation:
 //	Only the authenticated members can access to this operation.
 func (m Member) Update(update map[string]interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
 	update["updated_at"] = time.Now().Unix()
 
-	if _, err = client.Database("club").
-		Collection("members").
-		UpdateOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: m.ID}},
-			bson.D{bson.E{Key: "$set", Value: update}}); err != nil {
-		return err
-	}
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("members").UpdateOne(ctx, bson.D{bson.E{Key: "id", Value: m.ID}}, bson.D{bson.E{Key: "$set", Value: update}})
+	return err
 }
 
 // Active returns the activation status for member signup.
 func Active() (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return false, err
 	}
+	defer client.Disconnect(ctx)
 
 	active := new(struct {
 		Active bool `bson:"active"`
 	})
 
-	if err = client.Database("club").
-		Collection("signup").
-		FindOne(ctx, bson.D{}).
-		Decode(active); err != nil {
+	if err = client.Database("club").Collection("signup").FindOne(ctx, bson.D{}).Decode(active); err != nil {
 		return false, err
 	}
-
-	return active.Active, client.Disconnect(ctx)
+	return active.Active, nil
 }
 
 // Activate updates the activation status for member signup.
@@ -510,30 +415,19 @@ func Active() (bool, error) {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Activate(activate bool) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return false, err
 	}
+	defer client.Disconnect(ctx)
 
 	active := struct {
 		Active bool `bson:"active"`
 	}{Active: activate}
 
-	if err = client.Database("club").
-		Collection("signup").
-		FindOneAndUpdate(
-			ctx,
-			bson.D{},
-			bson.D{bson.E{Key: "$set", Value: active}}).
-		Decode(&active); err != nil {
+	if err = client.Database("club").Collection("signup").FindOneAndUpdate(ctx, bson.D{}, bson.D{bson.E{Key: "$set", Value: active}}).Decode(&active); err != nil {
 		return false, err
-	}
-
-	if err = client.Disconnect(ctx); err != nil {
-		return activate, err
 	}
 
 	if active.Active == activate {
@@ -543,7 +437,6 @@ func Activate(activate bool) (bool, error) {
 			return active.Active, ErrAlreadyInactive
 		}
 	}
-
 	return activate, nil
 }
 
@@ -554,34 +447,31 @@ func Activate(activate bool) (bool, error) {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func Graduates() (members Members, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return
 	}
+	defer client.Disconnect(ctx)
 
-	cur, err := client.Database("club").
-		Collection("members").
-		Find(ctx, bson.D{bson.E{Key: "attendance", Value: Graduate}})
+	cur, err := client.Database("club").Collection("members").Find(ctx, bson.D{bson.E{Key: "attendance", Value: Graduate}})
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			err = nil
+		}
 		return
 	}
 
-	memb := new(Member)
+	member := new(Member)
 
 	for cur.Next(ctx) {
-		if err = cur.Decode(memb); err != nil {
+		if err = cur.Decode(member); err != nil {
 			return
 		}
-		members = append(members, *memb)
+		members = append(members, *member)
 	}
 
-	if err = cur.Close(ctx); err != nil {
-		return
-	}
-	return members, client.Disconnect(ctx)
+	return members, cur.Close(ctx)
 }
 
 // UpdateRole updates the role of member of id.
@@ -591,25 +481,15 @@ func Graduates() (members Members, err error) {
 // It is a privileged operation:
 //	Only the club managers can access to this operation.
 func UpdateRole(id string, role Role) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(config.MongoURI))
 	if err != nil {
 		return err
 	}
+	defer client.Disconnect(ctx)
 
-	if _, err = client.Database("club").
-		Collection("members").
-		UpdateOne(
-			ctx,
-			bson.D{bson.E{Key: "id", Value: id}},
-			bson.D{bson.E{Key: "$set", Value: bson.D{
-				bson.E{Key: "role", Value: role}}}}); err != nil {
-		return err
-	}
-
-	return client.Disconnect(ctx)
+	_, err = client.Database("club").Collection("members").UpdateOne(ctx, bson.D{bson.E{Key: "id", Value: id}}, bson.D{bson.E{Key: "$set", Value: bson.D{bson.E{Key: "role", Value: role}}}})
+	return err
 }
 
 // String implements fmt.Stringer.
