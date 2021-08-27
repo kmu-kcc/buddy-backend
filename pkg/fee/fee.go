@@ -103,6 +103,9 @@ func Amount(year, semester int, id string) (amount int, err error) {
 	log := new(Log)
 
 	if err = client.Database("club").Collection("fees").FindOne(ctx, bson.M{"year": year, "semester": semester}).Decode(fee); err != nil {
+		if err == mongo.ErrNoDocuments {
+			err = nil
+		}
 		return
 	}
 
@@ -116,6 +119,9 @@ func Amount(year, semester int, id string) (amount int, err error) {
 
 	cur, err := client.Database("club").Collection("logs").Find(ctx, filter)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			err = nil
+		}
 		return
 	}
 
@@ -244,9 +250,6 @@ func (f *Fee) Deptors() (deptors member.Members, depts []int, err error) {
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(memb); err != nil {
-			if err == mongo.ErrNoDocuments {
-				err = nil
-			}
 			return
 		}
 		deptors = append(deptors, *memb)
@@ -276,9 +279,6 @@ func (f *Fee) Deptors() (deptors member.Members, depts []int, err error) {
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(log); err != nil {
-			if err == mongo.ErrNoDocuments {
-				err = nil
-			}
 			return
 		}
 		amounts[log.MemberID] += log.Amount
@@ -340,9 +340,6 @@ func (f *Fee) Search() (carryOver int, _ []map[string]interface{}, total int, er
 
 	for cur.Next(ctx) {
 		if err = cur.Decode(log); err != nil {
-			if err == mongo.ErrNoDocuments {
-				err = nil
-			}
 			return
 		}
 		logs = append(logs, *log)
@@ -378,7 +375,7 @@ func Pay(year, semester int, ids []string, amounts []int) error {
 	for idx, id := range ids {
 		log := NewLog(id, "회비 납부", amounts[idx], payment)
 		logs[idx] = log
-		logIDs = append(logIDs, log.ID)
+		logIDs[idx] = log.ID
 	}
 
 	if _, err = client.Database("club").Collection("logs").InsertMany(ctx, logs); err != nil {
