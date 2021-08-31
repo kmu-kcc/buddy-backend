@@ -325,12 +325,32 @@ func Search() gin.HandlerFunc {
 			return
 		}
 
+		role, err := token.Role()
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+
 		members, err := member.Search(query)
 		if err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
 			return
 		}
+
+		if role.MemberManagement {
+			resp := new(struct {
+				Data struct {
+					Members member.Members `json:"members"`
+				} `json:"data"`
+				Error string `json:"error,omitempty"`
+			})
+			resp.Data.Members = members
+			c.JSON(http.StatusOK, resp)
+			return
+		}
+
 		resp.Data.Members = members.Public()
 		c.JSON(http.StatusOK, resp)
 	}
