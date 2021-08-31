@@ -423,6 +423,38 @@
         }
         ```
 
+    - 회원 관리 권한이 있는 유저의 경우, Search가 각 회원의 모든 정보를 반환합니다. 즉, Response의 포맷이 다음과 같아집니다.
+
+    - Response Body example (case of member manager)
+        ```json
+        {
+            "data": {
+                "members": [
+                    {
+                        "id": "20210000",
+                        "password": "12341234",
+                        "name": "홍길동",
+                        "department": "소프트웨어융합대학 소프트웨어학부",
+                        "phone": "01012345678",
+                        "email": "gildong@kookmin.ac.kr",
+                        "grade": 1,
+                        "attendance": 0,
+                        "approved": true,
+                        "on_delete": false,
+                        "created_at": "1629080720",
+                        "updated_at": "1629081720",
+                        "role": {
+                            "member_management": false,
+                            "activity_management": false,
+                            "fee_management": false
+                        }
+                    }
+                ]
+            },
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
+        }
+        ```
+
     - Status Code
         - 200 OK: 회원 검색 성공
         - 500 Internal Server Error: 시스템 오류
