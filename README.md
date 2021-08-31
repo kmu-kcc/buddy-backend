@@ -2,7 +2,7 @@
 
 ## Buddy Backend
 
-Back-end module of the [Buddy System]()
+Back-end module of the [Buddy System](http://146.56.190.179/)
 
 ### Install dependencies
 
