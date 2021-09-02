@@ -165,7 +165,7 @@
 
     - Request
         - id: (string) 수정할 활동 ID
-        - update: (JSON) 수정할 활동 정보 (제목, 시작일, 종료일, 장소, 종류, 설명, 참여자 목록 중 0개 이상 택)
+        - update: (JSON) 수정할 활동 정보 (제목, 시작일, 종료일, 장소, 종류, 설명, 참여자 목록, 공개 여부, 파일명 목록)
 
     - Request Body example
         ```json
@@ -176,11 +176,16 @@
                 "start": "1628249722",
                 "end": "1628249722",
                 "place": "cafe",
-                "type": "study",
+                "type": 1,
                 "description": "Study End!",
                 "participants": [
                     "20192019",
                     "20182018"
+                ],
+                "private": true,
+                "files": [
+                    "a.png",
+                    "b.pdf"
                 ]
             }
         }

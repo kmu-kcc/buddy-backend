@@ -120,34 +120,49 @@ func Update() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := oauth2.Token(c.Request.Header.Get("Authorization"))
 		body := new(struct {
-			ID     string                 `json:"id"`
-			Update map[string]interface{} `json:"update"`
+			ID     string            `json:"id"`
+			Update activity.Activity `json:"update"`
 		})
 		resp := new(struct {
 			Error string `json:"error,omitempty"`
 		})
+		var err error
 
-		if err := json.NewDecoder(c.Request.Body).Decode(body); err != nil {
+		if err = json.NewDecoder(c.Request.Body).Decode(body); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusBadRequest, resp)
 			return
 		}
 
-		if err := token.Valid(); err != nil {
+		if err = token.Valid(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusUnauthorized, resp)
 			return
 		}
 
-		if objectID, err := primitive.ObjectIDFromHex(body.ID); err != nil {
+		if role, err := token.Role(); err != nil {
 			resp.Error = err.Error()
 			c.JSON(http.StatusInternalServerError, resp)
-		} else if err = (activity.Activity{ID: objectID}).Update(body.Update); err != nil {
-			resp.Error = err.Error()
-			c.JSON(http.StatusInternalServerError, resp)
-		} else {
-			c.JSON(http.StatusOK, resp)
+			return
+		} else if !role.ActivityManagement {
+			resp.Error = member.ErrPermissionDenied.Error()
+			c.JSON(http.StatusForbidden, resp)
+			return
 		}
+
+		body.Update.ID, err = primitive.ObjectIDFromHex(body.ID)
+		if err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+
+		if err = body.Update.Update(); err != nil {
+			resp.Error = err.Error()
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
