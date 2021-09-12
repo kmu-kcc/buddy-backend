@@ -12,16 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package member provides access to the club member of the Buddy System.
-package member
+package oauth2_test
 
-// Role represents the member role.
-type Role struct {
-	Master             bool `json:"-" bson:"master"`
-	MemberManagement   bool `json:"member_management" bson:"member_management"`
-	ActivityManagement bool `json:"activity_management" bson:"activity_management"`
-	FeeManagement      bool `json:"fee_management" bson:"fee_management"`
+import (
+	"testing"
+
+	"github.com/kmu-kcc/buddy-backend/pkg/oauth2"
+)
+
+func TestNewToken(t *testing.T) {
+	token, exp, err := oauth2.NewToken("20210001")
+	if err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("token: %s\nexpired_at: %d", token, exp)
+
+	if err = token.Valid(); err != nil {
+		t.Error(err)
+	}
+
+	t.Logf("ID: %s", token.ID())
 }
-
-// NewRole returns a new role without any authorities.
-func NewRole() *Role { return &Role{} }

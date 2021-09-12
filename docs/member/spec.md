@@ -2,7 +2,7 @@
 
 0. Server Domain:Port
 
-    http://132.226.170.200:3000
+    http://146.56.190.179:3000
 
 <br>
 
@@ -53,8 +53,9 @@
 
     - Status Code
         - 200 OK: 로그인 성공 (유효한 엑세스 토큰 발급)
-        - 422 Unprocessable Entity: 엑세스 토큰 발급 실패
         - 400 Bad Request: 요청 포맷/타입 오류
+        - 409 Conflict: ID/PW 오류
+        - 422 Unprocessable Entity: 엑세스 토큰 발급 실패
         - 500 Internal Server Error: ID/PW 오류, 가입 미승인 상태, 시스템 오류 등
 
 2. SignUp - 회원 가입 신청
@@ -410,6 +411,38 @@
                         "department": "소프트웨어융합대학 소프트웨어학부",
                         "email": "gildong@kookmin.ac.kr",
                         "grade": 1,
+                        "role": {
+                            "member_management": false,
+                            "activity_management": false,
+                            "fee_management": false
+                        }
+                    }
+                ]
+            },
+            "error": "argument to Unmarshal* must be a pointer to a type, but got ..."
+        }
+        ```
+
+    - 회원 관리 권한이 있는 유저의 경우, Search가 각 회원의 모든 정보를 반환합니다. 즉, Response의 포맷이 다음과 같아집니다.
+
+    - Response Body example (case of member manager)
+        ```json
+        {
+            "data": {
+                "members": [
+                    {
+                        "id": "20210000",
+                        "password": "12341234",
+                        "name": "홍길동",
+                        "department": "소프트웨어융합대학 소프트웨어학부",
+                        "phone": "01012345678",
+                        "email": "gildong@kookmin.ac.kr",
+                        "grade": 1,
+                        "attendance": 0,
+                        "approved": true,
+                        "on_delete": false,
+                        "created_at": "1629080720",
+                        "updated_at": "1629081720",
                         "role": {
                             "member_management": false,
                             "activity_management": false,

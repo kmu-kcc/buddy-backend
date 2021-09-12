@@ -1,3 +1,17 @@
+// Copyright 2021 KMU KCC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 		https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package activity_test
 
 import (
@@ -9,8 +23,8 @@ import (
 
 func TestCreate(t *testing.T) {
 	acts := []*activity.Activity{
-		activity.New(1, 1, "cafe", "study", 0, []string{}, true),
-		activity.New(2, 2, "school", "founding festival", 1, []string{}, true),
+		activity.New("study", 1, 1, "cafe", "study", 0, []string{}, true),
+		activity.New("founding event", 2, 2, "school", "founding event", 1, []string{}, true),
 	}
 
 	for _, act := range acts {
@@ -34,10 +48,7 @@ func TestUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	act := activity.Activity{ID: objectId}
-	if err := act.Update(map[string]interface{}{
-		"_id":  objectId,
-		"type": "meet"}); err != nil {
+	if err = (activity.Activity{ID: objectId, Type: 1}).Update(); err != nil {
 		t.Error(err)
 	}
 }

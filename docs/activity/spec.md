@@ -2,7 +2,7 @@
 
 0. Server Domain:Port
 
-    http://132.226.170.200:3000
+    http://146.56.190.179:3000
 
 <br>
 
@@ -13,6 +13,7 @@
     | POST | /api/v1/activity/create | activity manager |
 
     - Request
+        - title: (string) 활동명 (제목)
         - start: (string) 시작일, Unixtimestamp
         - end: (string) 종료일, Unixtimestamp
         - place: (string) 장소
@@ -24,6 +25,7 @@
     - Request Body example
         ```json
         {
+            "title": "2차 알고리즘 스터디",
             "start": "1628249722",
             "end": "1628250522",
             "place": "성곡도서관 2층 스터디실 2번방",
@@ -78,28 +80,21 @@
                 "activities": [
                     {
                         "id": "610d458b79e122ea1d150cd6",
+                        "title": "2021년 창립제",
                         "start": "1628249722",
                         "end": "1628249722",
                         "place": "공학관 209호",
                         "type": 0,
                         "description": "2021년 창립제",
                         "participants": [
-                            {
-                                "id": "20190000",
-                                "name": "홍길동",
-                                "department": "예술대학 도자기학과",
-                                "email": "gildong@gmail.com",
-                                "grade": 3
-                            },
-                            {
-                                "id": "20175271",
-                                "name": "김희동",
-                                "department": "와플대학 아이스크림학과",
-                                "email": "hdong@kookmin.ac.kr",
-                                "grade": 1
-                            }
+                            "20190000",
+                            "20175271"
                         ],
-                        "private": false
+                        "private": false,
+                        "files": [
+                            "image0.jpeg",
+                            "document1.pdf"
+                        ]
                     }
                 ]
             },
@@ -136,52 +131,21 @@
                 "activities": [
                     {
                         "id": "610d458b79e122ea1d150cd6",
+                        "title": "알고리즘 스터디 2차",
                         "start": "1628249722",
                         "end": "1628249722",
                         "place": "성곡도서관 2층 스터디룸",
                         "type": 1,
                         "description": "2021년 2차 알고리즘 스터디",
                         "participants": [
-                            {
-                                "id": "20190000",
-                                "password": "asdf232",
-                                "name": "홍길동",
-                                "department": "예술대학 도자기학과",
-                                "phone": "010-1234-5678",
-                                "email": "gildong@gmail.com",
-                                "grade": 3,
-                                "attendance": 0,
-                                "approved": true,
-                                "on_delete": false,
-                                "created_at": "1628974315",
-                                "updated_at": "1628974315",
-                                "role": {
-                                    "member_management": false,
-                                    "activity_management": false,
-                                    "fee_management": false
-                                }
-                            },
-                            {
-                                "id": "20175271",
-                                "password": "sfssll292",
-                                "name": "김희동",
-                                "department": "와플대학 아이스크림학과",
-                                "phone": "010-3131-3232",
-                                "email": "hdong@kookmin.ac.kr",
-                                "grade": 1,
-                                "attendace": 1,
-                                "approved": true,
-                                "on_delete": false,
-                                "created_at": "1629060720",
-                                "updated_at": "1629060720",
-                                "role": {
-                                    "member_management": false,
-                                    "activity_management": false,
-                                    "fee_management": false
-                                }
-                            }
+                            "20190000",
+                            "20175271"
                         ],
-                        "private": true
+                        "private": true,
+                        "files": [
+                            "image0.jpeg",
+                            "document1.pdf"
+                        ]
                     }
                 ]
             },
@@ -201,21 +165,27 @@
 
     - Request
         - id: (string) 수정할 활동 ID
-        - update: (JSON) 수정할 활동 정보 (시작일, 종료일, 장소, 종류, 설명, 참여자 목록 중 0개 이상 택)
+        - update: (JSON) 수정할 활동 정보 (제목, 시작일, 종료일, 장소, 종류, 설명, 참여자 목록, 공개 여부, 파일명 목록)
 
     - Request Body example
         ```json
         {
             "id": "610d458b79e122ea1d150cd6",
             "update": {
+                "title": "last study",
                 "start": "1628249722",
                 "end": "1628249722",
                 "place": "cafe",
-                "type": "study",
+                "type": 1,
                 "description": "Study End!",
                 "participants": [
                     "20192019",
                     "20182018"
+                ],
+                "private": true,
+                "files": [
+                    "a.png",
+                    "b.pdf"
                 ]
             }
         }
