@@ -27,4 +27,4 @@ Back-end module of the [Buddy System](http://146.56.190.179/)
   - [Soeun Kim](https://github.com/silver0108)
   - [Hoseok Kwon](https://github.com/Abrahamkwon)
 
-### [License](https://github.com/kmu-kcc/buddy-backend/blob/master/LICENSE)
+### [License](https://opensource.org/licenses/Apache-2.0)
